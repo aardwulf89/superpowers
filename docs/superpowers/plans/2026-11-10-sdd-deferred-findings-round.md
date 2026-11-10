@@ -51,18 +51,18 @@ Save as `/tmp/check-deferred-findings.sh`:
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 f=skills/subagent-driven-development/references/deferred-findings.md
+fl() { tr -s '[:space:]' ' ' < "$1"; }
 test -f "$f"
-grep -q 'Part of superpowers:subagent-driven-development.' "$f"
-grep -q 'Dispatch on the most capable available model (see SKILL.md' "$f"
-grep -q 'Never fix findings yourself in the controller session' "$f"
-grep -q 'whose ruling says the code stands' "$f"
-grep -q 'the plan file as the brief' "$f"
-grep -q 'Unfinished' "$f"
-grep -q 'Deferred findings: round 1/1' "$f"
-grep -q 'ordered them; it did not close them' "$f"
+fl "$f" | grep -qF 'Part of superpowers:subagent-driven-development.'
+fl "$f" | grep -qF 'Dispatch on the most capable available model (see SKILL.md'
+fl "$f" | grep -qF 'Never fix findings yourself in the controller session'
+fl "$f" | grep -qF 'whose ruling says the code stands'
+fl "$f" | grep -qF 'the plan file as the brief'
+fl "$f" | grep -qF 'Unfinished'
+fl "$f" | grep -qF 'Deferred findings: round 1/1'
+fl "$f" | grep -qF 'ordered them; it did not close them'
 r=skills/subagent-driven-development/references/final-review.md
 k=skills/subagent-driven-development/SKILL.md
-fl() { tr -s '[:space:]' ' ' < "$1"; }
 fl "$r" | grep -qF 'There is no second fix wave — residual findings go to the deferred-findings round: read references/deferred-findings.md and run it before you finish.'
 ! fl "$r" | grep -qF 'surface to your human partner when finishing-a-development-branch'
 fl "$r" | grep -qF 'When the deferred-findings round is done and its fixes are merged, delete'
