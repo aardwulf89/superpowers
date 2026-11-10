@@ -4,7 +4,7 @@
 
 **Goal:** Add a deferred-findings round to SDD that completes every finding the run deferred, working off the ledger, after the whole-branch review's fix wave.
 
-**Architecture:** One new reference file, `references/deferred-findings.md`, assembled from SDD's existing sentences, plus one pointer line in `references/final-review.md`. No other upstream file changes.
+**Architecture:** One new reference file, `references/deferred-findings.md`, assembled from SDD's existing sentences, plus three edits to upstream lines that say or imply the whole-branch review is the last step: two in `references/final-review.md`, one in the `SKILL.md` flowchart. No other upstream file changes.
 
 **Tech Stack:** Markdown skill references; bash tests under `tests/`.
 
@@ -12,8 +12,8 @@
 
 ## Global Constraints
 
-- The only edit to an existing upstream file is one added line (plus its separating blank line) in `skills/subagent-driven-development/references/final-review.md`, immediately before `### Finish`: `Before you finish, read references/deferred-findings.md and run it.`
-- No changes to ledger line formats, reviewer prompts, `fix-loop.md`, or `SKILL.md`.
+- Upstream edits are exactly the three in Task 1 Steps 4-6, and nothing else in those files changes.
+- No changes to ledger line formats, reviewer prompts, `fix-loop.md`, or any `SKILL.md` text outside the process flowchart.
 - No improvised wording: `deferred-findings.md` is the exact text in Task 1 Step 3. Every sentence there is copied from `final-review.md`, `fix-loop.md`, or `SKILL.md` with only nouns adjusted, except the lines marked NEW in the source table.
 - Prose calls the existing step "the final whole-branch review" (upstream's own phrase); upstream file names are unchanged.
 
@@ -25,7 +25,7 @@
 - New breakage the round's fix introduces that the re-review flags: it is listed under "Unfinished", since there is no second round.
 - The re-review template requires `[BRIEF_FILE]` and this round has no task brief: the plan file stands in for it.
 
-Each line is pinned by a sentence in Task 1 Step 3's text and checked by Step 4's greps.
+Each line is pinned by a sentence in Task 1 Step 3's text and checked by Step 1's check script.
 
 ---
 
@@ -33,7 +33,8 @@ Each line is pinned by a sentence in Task 1 Step 3's text and checked by Step 4'
 
 **Files:**
 - Create: `skills/subagent-driven-development/references/deferred-findings.md`
-- Modify: `skills/subagent-driven-development/references/final-review.md` (one line before `### Finish`)
+- Modify: `skills/subagent-driven-development/references/final-review.md:29-31,44`
+- Modify: `skills/subagent-driven-development/SKILL.md:79-97` (process flowchart)
 - Modify: `docs/superpowers/specs/2026-11-10-sdd-deferred-findings-round-design.md` (status line)
 - Test: `tests/sdd-helper-paths/test-sdd-helper-paths.sh`, `tests/skill-layout/test-no-dev-files-in-skills.sh`, `tests/skill-size/test-skill-size.sh`
 
@@ -58,9 +59,21 @@ grep -q 'whose ruling says the code stands' "$f"
 grep -q 'the plan file as the brief' "$f"
 grep -q 'Unfinished' "$f"
 grep -q 'Deferred findings: round 1/1' "$f"
-test "$(git diff --numstat main -- skills/subagent-driven-development/references/final-review.md)" = "2	0	skills/subagent-driven-development/references/final-review.md"
-grep -B2 -x '### Finish' skills/subagent-driven-development/references/final-review.md | head -n1 | grep -qx 'Before you finish, read references/deferred-findings.md and run it.'
-test -z "$(git diff --name-only main -- skills | grep -v -e references/final-review.md -e references/deferred-findings.md)"
+grep -q 'ordered them; it did not close them' "$f"
+r=skills/subagent-driven-development/references/final-review.md
+k=skills/subagent-driven-development/SKILL.md
+fl() { tr -s '[:space:]' ' ' < "$1"; }
+fl "$r" | grep -qF 'There is no second fix wave — residual findings go to the deferred-findings round: read references/deferred-findings.md and run it before you finish.'
+! fl "$r" | grep -qF 'surface to your human partner when finishing-a-development-branch'
+fl "$r" | grep -qF 'When the deferred-findings round is done and its fixes are merged, delete'
+! grep -qF 'When the final whole-branch review is clean' "$r"
+test "$(git diff --numstat main -- "$r" | cut -f1-2)" = "3	3"
+grep -qF '"Deferred-findings round: read references/deferred-findings.md" [shape=box];' "$k"
+grep -qF '"Final review and finish: read references/final-review.md" -> "Deferred-findings round: read references/deferred-findings.md";' "$k"
+grep -qF '"Deferred-findings round: read references/deferred-findings.md" -> "Deferred-findings round done: delete this plan'"'"'s workspace";' "$k"
+! grep -qF 'Final review clean: delete' "$k"
+test -z "$(git diff main -- "$k" | grep '^[-+][^-+]' | grep -v -e 'Deferred-findings round' -e 'Final review clean: delete')"
+test -z "$(git diff --name-only main -- skills | grep -v -e references/final-review.md -e references/deferred-findings.md -e subagent-driven-development/SKILL.md)"
 echo PASS
 ```
 
@@ -79,7 +92,9 @@ review's fix wave and its scoped re-review are done.
 
 Every finding the run deferred is still work: Minor findings, out-of-scope
 observations, findings parked at the cap, and the final whole-branch
-review's residuals. The ledger is the record of them.
+review's residuals. The ledger is the record of them. Where the final
+whole-branch review triaged deferred findings, it ordered them; it did not
+close them.
 
 Dispatch ONE fix subagent with the ledger — not one fixer per finding.
 Dispatch on the most capable available model (see SKILL.md's Model
@@ -128,7 +143,7 @@ Source of each paragraph (for the reviewer):
 | Paragraph | Source |
 |---|---|
 | Opening line | `final-review.md` line 3 shape ("Part of superpowers:subagent-driven-development. <precondition>.") |
-| "Every finding the run deferred…" | NEW (spec: the round runs off the ledger) |
+| "Every finding the run deferred…" | NEW (spec: the round runs off the ledger; triage sentence covers the triage wording left in `fix-loop.md` and `final-review.md`) |
 | "Dispatch ONE fix subagent…not one fixer per finding." | `final-review.md` fix-wave sentence, "complete findings list" → "ledger" |
 | "Dispatch on the most capable available model…" | `final-review.md` verbatim |
 | Report-file path and contract | `SKILL.md` "Report file" bullet |
@@ -142,22 +157,38 @@ Source of each paragraph (for the reviewer):
 | "There is no second round. Only the four things…" | `final-review.md` ("no second fix wave"; stop sentence verbatim) |
 | "Unfinished" sentence and "The list is exhaustive…" | NEW heading; exhaustiveness sentence from `final-review.md` Finish |
 
-- [ ] **Step 4: Insert the pointer line in `final-review.md`**
+- [ ] **Step 4: Point the fix-wave paragraph at the round (`final-review.md:29-31`)**
 
-Insert `Before you finish, read references/deferred-findings.md and run it.` followed by one blank line, directly above the `### Finish` line. Nothing else in the file changes.
+Replace `There is no second fix wave —` / `residual load-bearing findings surface to your human partner when` / `finishing-a-development-branch presents the options.` with these three lines, keeping the paragraph's wrap:
 
-- [ ] **Step 5: Set the spec's status**
+```
+plan (top of SKILL.md) stop you here. There is no second fix wave —
+residual findings go to the deferred-findings round: read
+references/deferred-findings.md and run it before you finish.
+```
+
+- [ ] **Step 5: Retarget the workspace deletion (`final-review.md:44`)**
+
+Replace `When the final whole-branch review is clean and its fixes are merged,` with `When the deferred-findings round is done and its fixes are merged,`. Lines 45-47 are unchanged.
+
+- [ ] **Step 6: Add the round to the `SKILL.md` process flowchart**
+
+- After the `"Final review and finish: read references/final-review.md" [shape=box];` line, add `    "Deferred-findings round: read references/deferred-findings.md" [shape=box];`
+- Rename `Final review clean: delete this plan's workspace` to `Deferred-findings round done: delete this plan's workspace` everywhere it appears (its node line and the two edges).
+- Change the edge from `"Final review and finish: read references/final-review.md"` so it points to `"Deferred-findings round: read references/deferred-findings.md"`, and add the edge `    "Deferred-findings round: read references/deferred-findings.md" -> "Deferred-findings round done: delete this plan's workspace";` directly after it.
+
+- [ ] **Step 7: Set the spec's status**
 
 In the spec, change `Status: awaiting owner approval.` to `Status: approved by the owner.`
 
-- [ ] **Step 6: Run the checks and the repo tests**
+- [ ] **Step 8: Run the checks and the repo tests**
 
 Run: `bash /tmp/check-deferred-findings.sh && bash tests/sdd-helper-paths/test-sdd-helper-paths.sh && bash tests/skill-layout/test-no-dev-files-in-skills.sh && bash tests/skill-size/test-skill-size.sh`
 Expected: `PASS`, then `PASS: all 15 relative helper references…`, `PASS: no skill ships…`, `PASS: every SKILL.md is under 20000 bytes`.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add skills/subagent-driven-development/references/deferred-findings.md skills/subagent-driven-development/references/final-review.md docs/superpowers/specs/2026-11-10-sdd-deferred-findings-round-design.md
+git add skills/subagent-driven-development/references/deferred-findings.md skills/subagent-driven-development/references/final-review.md skills/subagent-driven-development/SKILL.md docs/superpowers/specs/2026-11-10-sdd-deferred-findings-round-design.md
 git commit -m "feat(sdd): deferred-findings round after the final whole-branch review"
 ```

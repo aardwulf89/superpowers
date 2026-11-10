@@ -31,8 +31,8 @@ maintains a fork, so the fix goes in SDD itself.
 
 ## Anti-goals
 
-- Edits to upstream files beyond one pointer line. Every upstream edit is a
-  merge cost on each release.
+- Edits to upstream files beyond the three named in Design. Every upstream
+  edit is a merge cost on each release.
 - A step that re-derives the leftover list from a summary or category list
   instead of from the ledger itself.
 
@@ -83,9 +83,27 @@ whole-branch review's fix wave and re-review, working off the full ledger.
 
 - **New file:** `skills/subagent-driven-development/references/deferred-findings.md`,
   the deferred-findings round.
-- **Trigger:** the only upstream edit is one line in
-  `references/final-review.md`, immediately before `### Finish`:
-  "Before you finish, read references/deferred-findings.md and run it."
+- **Upstream edits (exactly three; each removes a line that says or implies
+  the whole-branch review is the last step):**
+  1. `references/final-review.md`, fix-wave paragraph: "There is no second
+     fix wave — residual load-bearing findings surface to your human partner
+     when finishing-a-development-branch presents the options." becomes
+     "There is no second fix wave — residual findings go to the
+     deferred-findings round: read references/deferred-findings.md and run
+     it before you finish." This is the round's only trigger.
+  2. `references/final-review.md`, Finish: "When the final whole-branch
+     review is clean and its fixes are merged," becomes "When the
+     deferred-findings round is done and its fixes are merged," — the only
+     workspace-deletion trigger.
+  3. `SKILL.md` process flowchart: a node "Deferred-findings round: read
+     references/deferred-findings.md" between the final review and the
+     workspace deletion; the deletion node's label "Final review clean:
+     delete this plan's workspace" becomes "Deferred-findings round done:
+     delete this plan's workspace".
+- **Reviewed and left as is:** the triage wording in `fix-loop.md` and
+  `final-review.md` (the new file says the triage ordered deferred findings
+  and did not close them); descriptive "at the end" wording in `SKILL.md`,
+  `re-review-prompt.md`, and finishing-a-development-branch's trigger.
 - **Naming:** prose in the new file calls the existing step "the whole-branch
   review". Upstream's file and text keep "final".
 - **The round:**
