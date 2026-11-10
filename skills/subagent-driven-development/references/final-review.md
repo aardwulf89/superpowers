@@ -27,8 +27,8 @@ Adjudicate any residual findings as in the fix loop's breaker
 (references/fix-loop.md): park with rulings, or rule on the load-bearing
 ones and ledger what you decided. Only the four things that stop a running
 plan (top of SKILL.md) stop you here. There is no second fix wave —
-residual load-bearing findings surface to your human partner when
-finishing-a-development-branch presents the options.
+residual findings go to the deferred-findings round: read
+references/deferred-findings.md and run it before you finish.
 
 ### Finish
 
@@ -41,7 +41,7 @@ took on your human partner's behalf reach them — they read it and rework
 whatever you got wrong. A ruling that dies with the workspace was a decision
 made in secret.
 
-When the final whole-branch review is clean and its fixes are merged,
+When the deferred-findings round is done and its fixes are merged,
 delete this plan's workspace (`rm -rf <workspace>`) — the git history is
 the record now. Sibling directories belong to other plans; leave them
 alone.

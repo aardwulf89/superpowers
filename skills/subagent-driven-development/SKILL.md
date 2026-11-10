@@ -77,7 +77,8 @@ digraph process {
     "Setup: worktree, ledger check, read plan, pre-flight review" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Final review and finish: read references/final-review.md" [shape=box];
-    "Final review clean: delete this plan's workspace" [shape=box];
+    "Deferred-findings round: read references/deferred-findings.md" [shape=box];
+    "Deferred-findings round done: delete this plan's workspace" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Setup: worktree, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -93,8 +94,9 @@ digraph process {
     "Append completion to ledger, mark todo complete" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Final review and finish: read references/final-review.md" [label="no"];
-    "Final review and finish: read references/final-review.md" -> "Final review clean: delete this plan's workspace";
-    "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
+    "Final review and finish: read references/final-review.md" -> "Deferred-findings round: read references/deferred-findings.md";
+    "Deferred-findings round: read references/deferred-findings.md" -> "Deferred-findings round done: delete this plan's workspace";
+    "Deferred-findings round done: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 

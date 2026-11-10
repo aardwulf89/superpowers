@@ -1,6 +1,6 @@
 # Design: SDD deferred-findings round
 
-Date: 2026-11-10. Size: small change. Status: awaiting owner approval.
+Date: 2026-11-10. Size: small change. Status: approved by the owner.
 
 ## Intent
 
