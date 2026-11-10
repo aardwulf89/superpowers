@@ -137,3 +137,23 @@ whole-branch review's fix wave and re-review, working off the full ledger.
   guess: the item goes to "Unfinished" with the question.
 - Exact ledger wording for the round's result line, and the re-reviewer's
   model per Model Selection.
+
+## Addendum: executing-plans counterpart
+
+Inline execution defers minors the same way (`Final: minor (deferred)`,
+listed under "Deferred minors" and never fixed). Same fix, same name:
+
+- New `skills/executing-plans/references/deferred-findings.md`, run after the
+  fix pass. The executor fixes every `minor (deferred)` line itself, using
+  the fix pass's own sentences (RED→GREEN, whole suite, `Final: fixed` lines,
+  no re-review), ledgers `Deferred findings: round 1/1 (...)` as SDD does
+  (shared ledger), and lists what stays open under "Unfinished".
+- `SKILL.md` edits, in upstream's wording: the flowchart gets the round
+  node; "no second fix pass" becomes the round's trigger; minors are ledgered
+  "for the deferred-findings round" instead of "Deferred minors"; Finish lists
+  "Unfinished"; workspace deletion waits for the round.
+- The "I'll fix the minors too while I'm in there" row stays: minors are
+  still never fixed during implementation or the fix pass. Its Reality now
+  ends "Ledger them; the deferred-findings round fixes them."
+- A new file, not a section: `SKILL.md` is at 18.4 KB of the 20 KB
+  skill-size limit.
