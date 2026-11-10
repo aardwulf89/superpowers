@@ -42,6 +42,24 @@ maintains a fork, so the fix goes in SDD itself.
   was deferred. The round runs off it as written.
 - The controller never fixes findings itself (SDD rule).
 - Every dispatch names its model (SDD Model Selection).
+- **No improvised wording.** `deferred-findings.md` mirrors the existing
+  references (`final-review.md`, `fix-loop.md`) in structure, voice, and
+  phrasing, so it carries no behavior the rest of SDD doesn't already have:
+  - Open the way the other references do: `# <Title>`, then
+    `Part of superpowers:subagent-driven-development. <when this applies>.`
+  - Where a step matches an existing one, copy that text verbatim and adjust
+    only the nouns: the fix wave's dispatch and its single scoped re-review
+    (`final-review.md`), the fixer's "fixes, re-runs the tests covering the
+    amended code, appends its fix report" contract and the check that the
+    fix report holds the covering tests, the command run, and the output
+    (`fix-loop.md`).
+  - Use the existing fixed phrases as they are: "by its absolute path, from
+    the working tree you're executing in"; "on the most capable available
+    model (see SKILL.md's Model Selection)"; "Never fix findings yourself in
+    the controller session"; and backticked ledger lines shaped like
+    `Task <N>: fix round <R>/5 (...)`.
+  - New wording only where this step really differs: the fixer reads the
+    whole ledger to infer what is open, and the "Unfinished" heading.
 
 ## Approaches
 
@@ -89,7 +107,10 @@ whole-branch review's fix wave and re-review, working off the full ledger.
 ## Left to the builder (my calls, owner to check)
 
 - The fixer's dispatch text lives inline in `deferred-findings.md`, as the
-  whole-branch fix wave's does, rather than in a new template file.
+  whole-branch fix wave's does, rather than in a new template file. The
+  re-review is a separate dispatch from `re-review-prompt.md`, as in every
+  other fix round; the fixer's list of what it treated as open is that
+  template's findings list.
 - Findings ruled "the reviewer is wrong" (code stands) are not reopened; the
   fixer reads the ruling and leaves them. They still appear under "Rulings I
   made".
