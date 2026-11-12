@@ -66,11 +66,17 @@ to the phase's `branch` and `base` to the record's `base`.
    has it, it was built in place: use the main checkout.
 2. **Look for an open PR:** `gh pr view "$b" --json state -q .state
    2>/dev/null` prints `OPEN`. Then `git ops` is merging that PR.
-3. **No open PR: check the push first,** from the main checkout:
-   `git push --dry-run origin "$base"`. If it fails, that is a refused
-   push: stop now. Option 1 deletes the branch and removes the worktree
-   before the push, so a push that fails after it cannot leave them in
-   place.
+3. **No open PR: bring `base` up to date, then check the push,** in the
+   main checkout with `base` checked out, before anything merges:
+   `git pull --ff-only origin "$base"`, then
+   `git push --dry-run origin "$base"`. For a phase built in place,
+   check out `base` for these two and `"$b"` again after. If either
+   fails, or there is no `origin` to run them against, that is a refused
+   push: stop now. Run both; never skip one. Option 1 deletes the branch
+   and removes the worktree before the push, so a push that fails after
+   it cannot leave them in place. A dry run does not catch server-side
+   hooks or branch protection; those refuse only the real push, which
+   still stops, but after the cleanup.
 4. **Invoke `finishing-a-development-branch`** fresh through the Skill
    tool, from the branch's worktree. Give it the record's `base` at its
    Step 3. Its safeguards run as it words them: the full suite before
@@ -87,9 +93,13 @@ to the phase's `branch` and `base` to the record's `base`.
 
 **If any safeguard fails, stop.** That means a red suite, a merge
 conflict, a refused worktree removal, a refused push (the dry run or the
-real one), or a failed `gh pr merge`. Report what failed, and leave
-everything as it is: no force, no other route, no undoing a merge
-already made. Your human partner decides what happens next. Do not pick.
+real one), or a failed `gh pr merge`. A part of `git ops` that cannot
+run, such as a push with no remote, is a failure too, not a step to
+skip: your human partner is away for this merge, so it is the whole of
+`git ops` or none of it. Only they can narrow it. Report what failed,
+and leave everything as it is: no force, no other route, no undoing a
+merge already made. Your human partner decides what happens next. Do not
+pick.
 
 **Report each merge done this way first,** at the top of your first
 message to your human partner: the phase, its branch, `base`, and that
@@ -105,9 +115,10 @@ Run `pick`. It prints one of:
   `depends_on`, with its `phase-state`; a `dropped` dependency will
   never be done), and stop. Your human partner decides.
 - **`id:<id>`:** the phase this session runs. Read its `status`:
-  - `waiting`: a close should have resolved it. Report the
-    inconsistency (the phase, its `waits_on`, and the close that should
-    have answered them) and stop. Do not design it.
+  - `waiting`: a close should have resolved it, so the record is
+    inconsistent. Say so in that word, report the phase, its
+    `waits_on`, and the close that should have answered them, and stop.
+    Do not design it.
   - `needs-partner`: start at the Intent round.
   - `known`: start at the first stage whose link (`spec`, `plan`) is
     null.

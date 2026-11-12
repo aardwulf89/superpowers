@@ -161,6 +161,7 @@ B="$TEST_ROOT/b"
 make_project "$B" plan
 make_p1_branch
 write_record "$CLOSED_P1"
+B_MAIN=$(git rev-parse main)
 
 # --- Fixture C: the pick is still `waiting` ---
 C="$TEST_ROOT/c"
@@ -193,8 +194,8 @@ check() { "$@" || FAILED=$((FAILED + 1)); }
 pass() { echo "  [PASS] $1"; }
 fail() { echo "  [FAIL] $1"; FAILED=$((FAILED + 1)); }
 
-# Prints a fixture's output and checks that the session ran and loaded the
-# skill. A loaded skill's text starts with its base directory; a failed
+# Prints a fixture's output, checks that the session ran and loaded the
+# skill, and sets SESSION_FILE to its transcript. A loaded skill's text starts with its base directory; a failed
 # Skill call ("Unknown skill") leaves no such line. claude names the project
 # directory after the real cwd with every non-alphanumeric character as `-`.
 show_and_check_run() {
@@ -209,14 +210,14 @@ show_and_check_run() {
     else
         fail "Fixture $name: session failed (exit $status)"
     fi
-    local real session_dir session_file
+    local real session_dir
     real=$(cd "$dir" && pwd -P)
     session_dir="$HOME/.claude/projects/$(echo "$real" | sed 's|[^a-zA-Z0-9]|-|g')"
-    session_file=$(ls -t "$session_dir"/*.jsonl 2>/dev/null | head -1 || true)
-    if [ -n "$session_file" ] && grep -qF "Base directory for this skill: $PLUGIN_DIR/skills/chaining-plans" "$session_file"; then
+    SESSION_FILE=$(ls -t "$session_dir"/*.jsonl 2>/dev/null | head -1 || true)
+    if [ -n "$SESSION_FILE" ] && grep -qF "Base directory for this skill: $PLUGIN_DIR/skills/chaining-plans" "$SESSION_FILE"; then
         pass "Fixture $name: chaining-plans skill loaded from the plugin dir"
     else
-        fail "Fixture $name: chaining-plans skill not loaded (transcript: ${session_file:-none})"
+        fail "Fixture $name: chaining-plans skill not loaded (transcript: ${SESSION_FILE:-none})"
     fi
 }
 
@@ -245,7 +246,7 @@ else
     fail "A: main and origin/main differ"
 fi
 check assert_contains "$out_a" "merg" "A: reports the merge"
-check assert_contains "$out_a" "effort.*\(done\|complete\)\|\(done\|complete\).*effort\|all phases\|every phase" "A: reports that the effort is done"
+check assert_contains "$out_a" "effort.*\(done\|complete\|finished\)\|\(done\|complete\).*effort\|all phases\|every phase" "A: reports that the effort is done"
 
 # --- B ---
 show_and_check_run B "$B" "$status_b"
@@ -260,12 +261,26 @@ if [ -d "$B/.worktrees/p1" ]; then
 else
     fail "B: .worktrees/p1 was removed"
 fi
-check assert_contains "$out_b" "push\|remote" "B: reports the push failure"
+if [ "$(git -C "$B" rev-parse main)" = "$B_MAIN" ]; then
+    pass "B: main unchanged (the push check stops before the merge)"
+else
+    fail "B: main moved"
+fi
+# The session's own Bash commands, not the skill text it read.
+b_commands=$(jq -r 'select(.type == "assistant") | .message.content[]?
+    | select(.type == "tool_use" and .name == "Bash") | .input.command' \
+    "${SESSION_FILE:-/dev/null}" 2>/dev/null || true)
+if echo "$b_commands" | grep -qE 'git( -C [^ ]+)? push'; then
+    pass "B: the session tried a push"
+else
+    fail "B: no git push among the session's commands"
+fi
+check assert_contains "$out_b" "push.*\(fail\|refus\|reject\|error\)\|\(fail\|refus\|reject\).*push\|origin.*not.*\(repo\|exist\)\|no.*remote" "B: reports the push failure"
 
 # --- C ---
 show_and_check_run C "$C" "$status_c"
 out_c=$(cat "$C.out")
-check assert_contains "$out_c" "inconsistent\|waiting" "C: names the inconsistency"
+check assert_contains "$out_c" "inconsisten\|contradict" "C: names the inconsistency"
 C_DOCS_AFTER=$(cd "$C" && find docs/superpowers/specs docs/superpowers/plans -type f | sort)
 if [ "$C_DOCS_AFTER" = "$C_DOCS_BEFORE" ]; then
     pass "C: no spec or plan written"
