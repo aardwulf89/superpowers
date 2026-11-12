@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# The inputs assigned before each eval are read by the command blocks it runs.
+# shellcheck disable=SC2034
 # Tests the named shell commands in skills/chaining-plans/references/record.md
 # against fixture git repos.
 #
@@ -132,7 +134,7 @@ git -C "$R" merge -q --no-ff b-fin -m merge
 git -C "$R" branch -q -d b-fin
 check "phase-state close-missed" close-missed \
   "$(state_of "$R" "{\"status\":\"known\",\"plan\":\"$PLAN\",\"branch\":\"b-fin\",\"closing\":null}")"
-check "phase-state done" done \
+check "phase-state done" "done" \
   "$(state_of "$R" "{\"status\":\"known\",\"plan\":\"$PLAN\",\"branch\":\"b-fin\",\"closing\":{\"replan\":[]}}")"
 
 # merged through a PR (a squash: the branch is not an ancestor): gh says so
@@ -149,7 +151,7 @@ sq() { # GH_STATE CLOSING_JSON
     "{\"status\":\"known\",\"plan\":\"$PLAN\",\"branch\":\"b-sq\",\"closing\":$2}"
 }
 check "phase-state close-missed when gh says MERGED" close-missed "$(sq MERGED null)"
-check "phase-state done when gh says MERGED" done "$(sq MERGED '{"replan":[]}')"
+check "phase-state done when gh says MERGED" "done" "$(sq MERGED '{"replan":[]}')"
 check "phase-state finished-unclosed when gh says OPEN" finished-unclosed "$(sq OPEN null)"
 
 # pick and open-efforts

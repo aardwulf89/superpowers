@@ -19,6 +19,7 @@ echo ""
 
 TEST_PROJECT=$(create_test_project)
 echo "Test project: $TEST_PROJECT"
+# shellcheck disable=SC2064 # the path is fixed now, on purpose
 trap "cleanup_test_project $TEST_PROJECT" EXIT
 
 cd "$TEST_PROJECT"
