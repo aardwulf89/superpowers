@@ -84,6 +84,7 @@ tests=(
 integration_tests=(
     "test-subagent-driven-development-integration.sh"
     "test-chaining-plans-create.sh"
+    "test-chaining-plans-resume.sh"
 )
 
 # Add integration tests if requested
