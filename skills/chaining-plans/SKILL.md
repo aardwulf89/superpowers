@@ -113,8 +113,8 @@ the directory; it resolves the same from any worktree. `.superpowers/` is
 git-ignored, so the record is never committed.
 - `references/record.md` holds its shape and every command you run against
   it. Run its named blocks (`chain-dir`, `open-efforts`, `phase-state`,
-  `pick`, `set`) as written. Never edit the record by hand or rewrite it from
-  memory.
+  `pick`, `set`, `set-phases`) as written. Never edit the record by hand
+  or rewrite it from memory.
 - Your human partner never reads the record. They review through your
   reports.
 

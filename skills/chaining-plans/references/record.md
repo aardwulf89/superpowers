@@ -92,8 +92,8 @@ discarded).
 
 Each block is named by the comment above it. Run it as written. Every Bash
 call starts a fresh shell, so assign the block's inputs (`rec`, `id`,
-`field`, `value_json`, `chain_dir`) on lines in the same Bash call, before
-the block. Blocks
+`field`, `value_json`, `phases_json`, `chain_dir`) on lines in the same
+Bash call, before the block. Blocks
 that classify phases (`phase-state`, `pick`, `open-efforts`) carry the same
 `phase_state` function; run them from inside the repo.
 
@@ -269,4 +269,16 @@ to the JSON value, in place. Example: `field=branch value_json='"p2-x"'`.
 ```bash
 jq --arg id "$id" --arg field "$field" --argjson v "$value_json" \
   '(.phases[] | select(.id == $id) | .[$field]) = $v' "$rec" > "$rec.tmp" && mv "$rec.tmp" "$rec"
+```
+
+### set-phases
+
+Reads `rec` and `phases_json`, a JSON array of whole phases. Replaces
+`phases` with it, in place, and leaves `umbrella` and `base` alone. For
+a split, merge, reorder or drop: build `phases_json` from the current
+`.phases` with jq in the same Bash call, never from memory.
+
+<!-- cmd: set-phases -->
+```bash
+jq --argjson v "$phases_json" '.phases = $v' "$rec" > "$rec.tmp" && mv "$rec.tmp" "$rec"
 ```

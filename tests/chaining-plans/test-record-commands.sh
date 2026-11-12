@@ -36,7 +36,7 @@ trap 'rm -rf "$TMP"' EXIT
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
 
-for name in chain-dir open-efforts phase-state pick set; do
+for name in chain-dir open-efforts phase-state pick set set-phases; do
   if [[ -z "$(cmd_block "$name")" ]]; then fail "block '$name' exists in record.md"; fi
 done
 
@@ -174,6 +174,17 @@ check "set changes the named phase" '"p2"' "$(jq -c '.phases[1].branch' "$S")"
 check "set leaves other phases alone" "$before" "$(jq -c '.phases[0]' "$S")"
 if jq -e . "$S" >/dev/null; then pass "set leaves valid JSON"; else fail "set leaves valid JSON"; fi
 if [[ ! -e "$S.tmp" ]]; then pass "set leaves no .tmp file"; else fail "set leaves no .tmp file"; fi
+
+# set-phases
+P="$TMP/set-phases.json"
+write_rec "$P" "$(phase p1 known null '[]')" "$(phase p2 known null '["p1"]')"
+new_phases="[$(phase p1 known null '[]'),$(phase p2a known null '["p1"]'),$(phase p2b known null '["p2a"]')]"
+(rec="$P" phases_json="$new_phases" && eval "$(cmd_block set-phases)")
+if jq -e . "$P" >/dev/null; then pass "set-phases leaves valid JSON"; else fail "set-phases leaves valid JSON"; fi
+check "set-phases replaces the phases with exactly the new ones" \
+  "$(jq -c . <<<"$new_phases")" "$(jq -c '.phases' "$P")"
+check "set-phases keeps umbrella and base" '"u.md" "main"' "$(jq -c '.umbrella, .base' "$P" | paste -sd' ')"
+if [[ ! -e "$P.tmp" ]]; then pass "set-phases leaves no .tmp file"; else fail "set-phases leaves no .tmp file"; fi
 
 if ((failures > 0)); then
   echo "$failures failure(s)" >&2
