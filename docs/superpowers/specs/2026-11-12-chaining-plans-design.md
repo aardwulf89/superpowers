@@ -286,9 +286,15 @@ the branch). This is the only lane.
   the previous phase's code, so that code must be on `base`. The merge
   menu is where the human partner comes in anyway, so `git ops` is their
   one reply at each boundary.
-- **Not merging** (option 2 or 3) is supported only as a wait. Phases that
-  depend on the unmerged phase stay blocked until it merges, and Resume
-  goes on with phases that don't depend on it.
+- **A missed `git ops` is done for the human partner, at the next
+  Resume** (human partner's decision). It never happens automatically at
+  the end of a plan. The merge menu still comes at the end of every
+  plan, so the human partner can ask for fixes before anything merges.
+  - If they choose option 2 or 3, or clear the session without
+    answering, the phase stays finished but unmerged.
+  - The next Resume merges it before it starts anything new, so the human
+    partner never does this housekeeping themselves.
+  - Invoking Resume is the approval for that merge.
 - **Docs live on `base`.** The umbrella spec, its Phases section, each
   phase's design, and each plan are committed on `base` in the main
   checkout, before the build's worktree is created.
@@ -345,15 +351,30 @@ The human partner is present, having just approved the spec.
 3. **Pick the phase.** It is the first, in array order, that is not done
    and not `dropped`, and whose `depends_on` are all done. First, read
    the state of any phase whose `branch` is set from what git and the disk
-   show (my call):
+   show, and settle each finished phase before picking (my call):
 
    | Branch | Its SDD workspace | `closing.replan` | State | Action |
    |---|---|---|---|---|
-   | exists, not merged | exists | null | Build cut off | Re-invoke the executor in the branch's worktree (`git worktree list`). It resumes from its own ledger |
-   | exists, not merged | gone | null | Build done, finishing not run | Invoke finishing, then close |
-   | merged or gone | — | null | Close missed | Close first, reconstructing `learned` from the plan and the branch's commits |
-   | exists, not merged | — | set | Awaiting merge (option 2 or 3) | Skip; its dependants stay blocked |
+   | exists, not merged | exists | — | Build cut off | Re-invoke the executor in the branch's worktree (`git worktree list`). It resumes from its own ledger |
+   | exists, not merged | gone | null | Finished; not closed or merged | Close it, then do its `git ops` (below) |
+   | exists, not merged | gone | set | Closed, `git ops` missed | Do its `git ops` (below) |
+   | merged or gone | — | null | Close missed | Close it, reconstructing `learned` from the plan and the branch's commits |
    | merged or gone | — | set | Done | — |
+
+   **Doing a missed `git ops`.**
+   - Invoke `finishing-a-development-branch` fresh, from the branch's
+     worktree. Answer its menu with the human partner's `git ops`:
+     - option 1, then push `base`, then delete the remote branch;
+     - or, if the branch has an open PR, merge that PR (`gh pr merge`).
+   - Finishing's own safeguards still run: the full suite before the
+     menu, the suite again on the merged result, and its worktree
+     cleanup rules.
+   - **If any safeguard fails, stop.** That means a red suite, a merge
+     conflict, a refused worktree removal, or a refused push. Report what
+     failed and leave everything in place, because the human partner
+     decides what happens next.
+   - Report each merge done this way at the top of the session's first
+     message.
 
    - If the pick is `waiting`, a close should have resolved it. Report the
      inconsistency and stop.
