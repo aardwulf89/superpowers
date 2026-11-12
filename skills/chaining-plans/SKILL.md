@@ -52,8 +52,12 @@ It covers:
 - **The execution method.** Pick it by `writing-plans`' recommendation rule,
   and log the choice as a ruling.
 - **The worktree consent of `using-git-worktrees`.** The stated preference is
-  a worktree, unless the project's instructions say to build in place. This
-  also answers "never start implementation on main without consent".
+  a worktree, unless the project's instructions say to build in place; then
+  the phase builds on its own branch in the main checkout. The approval
+  covers implementing on the phase's own branch, never on `base`. It is not
+  the consent the executors ask for in "Never start implementation on a
+  main/master branch without your human partner's explicit consent": a
+  phase never starts on `base`, so that rule does not come up.
 - **Resume's missed git ops.** A finished phase your human partner did not
   merge is merged at the next Resume, before anything new starts.
 
@@ -120,7 +124,10 @@ git-ignored, so the record is never committed.
 
 **Branches: one lane.** Each phase gets its own branch and worktree, created
 from `base` by the executor's own worktree setup, and is merged into `base`
-before the next phase starts. Docs (the Phases section, phase designs, plans)
+before the next phase starts. A project whose instructions say to build in
+place builds on the phase's own branch in the main checkout instead,
+created from `base` before the executor starts; the lane is otherwise the
+same. Docs (the Phases section, phase designs, plans)
 are committed on `base` in the main checkout, never on a phase branch.
 
 **What carries forward is `closing`.** The executor deletes its workspace when

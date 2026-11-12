@@ -52,8 +52,10 @@ prints:
 
 - **Close it** means: invoke `chaining-plans` through the Skill tool with
   `close <effort id> <phase id>`. When it has reported, come back here
-  and go on settling.
-- **After each action, run `phase-state` again.** A settled phase reads
+  and go on with the row's action.
+- **After each row's whole action, run `phase-state` again** (for
+  `finished-unclosed`, the whole action is the close and then the git
+  ops; check after both, not between them). A settled phase reads
   `done`. If it does not, report what is left and stop.
 
 ### Doing a missed git ops
@@ -104,8 +106,8 @@ route, no undoing a merge already made. Your human partner decides what
 happens next. Do not pick.
 
 **Report each merge done this way first,** at the top of your first
-message to your human partner: the phase, its branch, `base`, and that
-`base` was pushed.
+message to your human partner: the phase, its branch, `base`, and
+whether `base` was pushed.
 
 ## 4. Pick
 
@@ -123,7 +125,7 @@ Run `pick`. It prints one of:
     Do not design it.
   - `needs-partner`: start at the Intent round.
   - `known`: start at the first stage whose link (`spec`, `plan`) is
-    null.
+    null, else at Build.
 
 ## 5. Run the stages straight through to the merge menu
 
@@ -137,12 +139,14 @@ the Skill tool. A stage is done only when its "Done when" holds.
 | Plan (only if no `plan`) | Invoke `writing-plans`, with the standing approval line from `SKILL.md`. Pick the execution method by its recommendation rule, as a ruling | The plan file, with `writing-plans`' header, is committed and linked |
 | Build | Invoke the chosen executor. It runs unchanged, with its own four stop conditions | The executor's final message holds "Rulings I made" and "Unfinished", and both are copied into `closing` before finishing starts |
 | Finish | Invoke `finishing-a-development-branch`. Your human partner answers its menu | The menu was shown as `finishing` words it, and answered |
-| Close | Invoke `chaining-plans` again, to close | `closing.replan` is written and the report given |
+| Close | Invoke `chaining-plans` again, to close | `closing.replan` is written and the report given, or, after a discard, `branch` reset and that reported |
 
-**Log rulings as each stage ends.** Add the stage's rulings to
-`closing.rulings` with `set`: `field=closing`, and the whole object as
-`value_json` (the current `rulings` plus the new ones, `unfinished` as
-it is, `learned` and `replan` null). A null `closing` starts as
+**Log rulings as the Design, Plan and Build stages end.** Read the
+current `closing` with jq, as in `close.md` step 0, never from memory:
+`jq -c --arg id "$id" '.phases[] | select(.id == $id) | .closing' "$rec"`.
+Append the stage's rulings to its `rulings`, keep every other key as
+read, and `set` it: `field=closing`, the whole object as `value_json`. A
+null `closing` starts as
 `{"rulings": [...], "unfinished": [], "learned": null, "replan": null}`.
 
 ### Design
@@ -169,7 +173,10 @@ it is, `learned` and `replan` null). A null `closing` starts as
 - **Commit the plan on `base` before the build,** then `set` `plan`.
   The executor resolves it from inside the worktree.
 - **A further split from `writing-plans`' Scope Check is a re-plan
-  ruling,** with no change to intent: split the phase in the record, log
+  ruling,** with no change to intent: split the phase in the record by
+  the rules under `set-phases` in `references/record.md`, and commit the
+  Phases section to match, on `base`. The first part keeps this phase's
+  id, `spec` and `closing`, so the session goes on with the same id. Log
   the ruling, and plan the first part.
 
 ### Build
@@ -177,14 +184,18 @@ it is, `learned` and `replan` null). A null `closing` starts as
 - **The worktree preference:** a worktree, unless the project's
   instructions say to build in place. This answers
   `using-git-worktrees`' consent prompt.
+- **Building in place:** in the main checkout, on `base`, run
+  `git checkout -b <phase id>` before invoking the executor. Never
+  implement on `base`.
 - **Record `branch` as soon as it exists:** `set` `branch` once the
   executor's setup has created its SDD workspace (its ledger), not
   before. A branch with no workspace and no commits reads as
   `close-missed`.
 - **Between the executor's final message and finishing,** copy its
   "Rulings I made" into `closing.rulings` and its "Unfinished" into
-  `closing.unfinished`, with `set`. When an orchestrator subagent ran
-  the plan, copy them from its final message.
+  `closing.unfinished`, with `set`, reading `closing` fresh as above.
+  When an orchestrator subagent ran the plan, copy them from its final
+  message.
 
 ### Finish
 

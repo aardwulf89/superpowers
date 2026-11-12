@@ -86,7 +86,9 @@ There is no `head` key and no stored "done".
 
 Merged means the branch is missing, or is an ancestor of `base`, or `gh pr
 view` says `MERGED` (gh runs only when both git checks fail, stderr
-discarded).
+discarded). A branch deleted without a merge, such as a discard whose
+reset to null was missed, also reads as merged; the close finds no work
+of it on `base` and stops (`close.md` step 1).
 
 ## Commands
 
@@ -277,6 +279,42 @@ Reads `rec` and `phases_json`, a JSON array of whole phases. Replaces
 `phases` with it, in place, and leaves `umbrella` and `base` alone. For
 a split, merge, reorder or drop: build `phases_json` from the current
 `.phases` with jq in the same Bash call, never from memory.
+
+These rules hold for every split, merge, reorder or drop, from a close or
+from Resume's Plan stage:
+
+- **Only a phase whose `branch` is null** is split, merged or dropped.
+- **The array order is the order of work:** each phase after every phase
+  it depends on or waits on.
+- **A split:** the first part keeps the split phase's id, `spec` and
+  `closing`. Every other part is a new phase with all ten keys, an id not
+  used in the record, the split phase's `spec` (its design, or the
+  umbrella, covers every part, and each part's plan says which part it
+  builds), and null `plan`, `branch` and `closing`. Each part gets the
+  `depends_on`, `waits_on` and `partner_questions` that concern it, and
+  a later part that builds on an earlier part's code depends on it.
+- **A merge:** the merged phase keeps the id of the first of them, in
+  array order, and joins their `depends_on`, `waits_on` and
+  `partner_questions`, without its own id. Its `spec` is null, so its
+  Design stage writes one design for the whole. Merges happen only in a
+  close: name any design file the merged phases had in a `learned` line
+  for the merged phase.
+- **A new or merged phase's `status`:** `needs-partner` if it has
+  `partner_questions`, else `waiting` if any of its `waits_on` has a
+  `from` that is not closed yet, else `known`. A part that inherits only
+  answered `waits_on` is `known`.
+- **Every other phase:** a `depends_on` on a split id adds every new
+  part; a `waits_on` that a new part will answer gets that part as its
+  `from`. A merged id is replaced by the merged phase's id, once.
+- **A drop:** the phase stays in the array with `status` `dropped`. Take
+  its id out of every other phase's `depends_on` and `waits_on`.
+- **Every `waits_on[].from` is also in that phase's `depends_on`.** A
+  change that adds or moves a `waits_on` adds its `from` there too.
+- **Make the umbrella's Phases section match,** committed on `base` in
+  the main checkout: one entry per phase, under its id, in array order.
+  New entries carry the old entries' words, divided or joined, with
+  nothing added, and their "Depends on" and "Waits on" lines match the
+  record.
 
 <!-- cmd: set-phases -->
 ```bash

@@ -69,6 +69,13 @@ they added.
   `git -C <main checkout> log --merges --grep=<branch> <base>`, and read
   `<merge>^1..<merge>^2`. With no merge commit (a fast-forward or a
   squash), read the commits on `base` since the plan was committed.
+- **None of its work is on `base`:** no merge names the branch, `gh pr
+  view <branch> --json state -q .state 2>/dev/null` does not print
+  `MERGED`, and no commit on `base` since the plan was committed does
+  the plan's tasks. Then the branch was deleted without a merge, most
+  likely a discard whose reset was missed. Stop, write nothing, and
+  report that to your human partner. Never read unrelated commits as the
+  branch's work.
 
 Leave `rulings` and `unfinished` as they are: there is no final message
 to check them against.
@@ -94,27 +101,18 @@ test**. Does the change alter any of these?
   with `set`. Leave its `waits_on` in place: its Design stage reads the
   answers through them.
 - **Reordering, a split, a merge, or a drop that keeps the outcome:**
-  build the new array from the current `.phases` with jq, in the same
-  Bash call as `set-phases`. Never write it from memory.
-  - The array order is the order of work: each phase after every phase
-    it depends on or waits on.
-  - A new phase has all ten keys, an id not used in the record, and
-    null links and `closing`.
-  - Replace a split or merged id in every other phase's `depends_on`
-    and `waits_on`.
-  - A dropped phase stays in the array with `status` `dropped`. Take
-    its id out of every other phase's `depends_on` and `waits_on`.
-  - Every `waits_on[].from` is also in that phase's `depends_on`. A
-    change that adds or moves a `waits_on` adds its `from` there too.
-  - Make the umbrella's Phases section match: the new entries carry the
-    old entries' words, divided or joined, with nothing added. Commit it
-    on `base`.
+  follow the rules under `set-phases` in `references/record.md`, and
+  commit the umbrella's Phases section to match, on `base`. In a close,
+  this phase counts as closed for a new phase's `status`.
 - **A phase's technical design:** a phase with a design file (`spec`)
   gets the change in that file, committed on `base`. A phase with no
-  design yet has no file: add the change to `learned` as a line naming
-  that phase, since its Design stage reads `learned`.
+  design yet has no file: add the change to this phase's `learned` as a
+  line naming that phase, since its Design stage reads `learned`. Write
+  it now with `set` (read `closing`, then `learned` plus the line), so
+  the `replan` write's fresh read keeps it.
 - **Each unfinished finding:** move it to the phase it belongs to, the
-  same way as a technical design change.
+  same way as a technical design change, and note that phase in its
+  line in `unfinished`, with `set` the same way.
 
 **Yes: do not rule.** Add the question to the affected phase's
 `partner_questions` (read the list with jq, then `set` it with the
@@ -164,6 +162,7 @@ In this order:
   superpowers:chaining-plans to continue the effort."). Do not start
   another phase in this session.
 - **From Resume's settle step:** leave out item 4 of the report and do
-  not ask for a clear. Go back to Resume's settle step: run
-  `phase-state` for this phase, and go on settling, then pick, in this
-  session.
+  not ask for a clear. Go back to Resume's settle step and go on with
+  the row's action: for a `finished-unclosed` phase, its missed git ops
+  come next. Then Resume runs `phase-state`, settles the rest, and
+  picks, in this session.
