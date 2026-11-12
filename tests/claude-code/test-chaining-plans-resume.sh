@@ -360,10 +360,12 @@ fi
 b_commands=$(jq -r 'select(.type == "assistant") | .message.content[]?
     | select(.type == "tool_use" and .name == "Bash") | .input.command' \
     "${SESSION_FILE:-/dev/null}" 2>/dev/null || true)
-if echo "$b_commands" | grep -qE 'git( -C [^ ]+)? push'; then
-    pass "B: the session tried a push"
+# resume.md pulls base before the push dry run and stops at the first that
+# fails, so a correct session may stop at the pull and never run the push.
+if echo "$b_commands" | grep -qE 'git( -C [^ ]+)? (pull|push)'; then
+    pass "B: the session tried to reach origin (pull or push)"
 else
-    fail "B: no git push among the session's commands"
+    fail "B: no git pull or push among the session's commands"
 fi
 check assert_contains "$out_b" "push.*\(fail\|refus\|reject\|error\)\|\(fail\|refus\|reject\).*push\|origin.*not.*\(repo\|exist\)\|unreachable" "B: reports the push failure"
 
