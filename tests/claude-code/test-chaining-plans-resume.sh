@@ -5,8 +5,9 @@
 #   A. The last phase is closed but its git ops were missed. Resume merges
 #      it, pushes base, removes the branch and the worktree, and reports the
 #      merge and that the effort is done.
-#   B. As A, but with no remote, so the push is refused. Resume stops with
-#      the branch and the worktree still in place.
+#   B. As A, but `origin` is unreachable (its URL is a missing path), so
+#      the push check fails. Resume stops before merging, with the branch
+#      and the worktree still in place.
 #   C. The pick is a phase still marked `waiting`. Resume reports the
 #      inconsistency and starts nothing.
 # The three run in parallel; each is its own `claude -p` session.
@@ -156,9 +157,10 @@ make_p1_branch
 write_record "$CLOSED_P1"
 A_TIP=$(git rev-parse p1)
 
-# --- Fixture B: as A, with no remote ---
+# --- Fixture B: as A, with an unreachable origin ---
 B="$TEST_ROOT/b"
 make_project "$B" plan
+git remote add origin "$TEST_ROOT/missing-origin.git"
 make_p1_branch
 write_record "$CLOSED_P1"
 B_MAIN=$(git rev-parse main)
@@ -275,12 +277,12 @@ if echo "$b_commands" | grep -qE 'git( -C [^ ]+)? push'; then
 else
     fail "B: no git push among the session's commands"
 fi
-check assert_contains "$out_b" "push.*\(fail\|refus\|reject\|error\)\|\(fail\|refus\|reject\).*push\|origin.*not.*\(repo\|exist\)\|no.*remote" "B: reports the push failure"
+check assert_contains "$out_b" "push.*\(fail\|refus\|reject\|error\)\|\(fail\|refus\|reject\).*push\|origin.*not.*\(repo\|exist\)\|unreachable" "B: reports the push failure"
 
 # --- C ---
 show_and_check_run C "$C" "$status_c"
 out_c=$(cat "$C.out")
-check assert_contains "$out_c" "inconsisten\|contradict" "C: names the inconsistency"
+check assert_contains "$out_c" "inconsistent" "C: names the inconsistency"
 C_DOCS_AFTER=$(cd "$C" && find docs/superpowers/specs docs/superpowers/plans -type f | sort)
 if [ "$C_DOCS_AFTER" = "$C_DOCS_BEFORE" ]; then
     pass "C: no spec or plan written"

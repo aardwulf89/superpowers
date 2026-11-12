@@ -59,20 +59,21 @@ prints:
 ### Doing a missed git ops
 
 Your human partner's invocation of Resume is their approval for this
-merge. You answer the merge menu for them, with their `git ops`. Set `b`
-to the phase's `branch` and `base` to the record's `base`.
+merge. You answer the merge menu for them, with their `git ops`: their
+own definition when their instructions give one, else the one in
+`SKILL.md`. Set `b` to the phase's `branch` and `base` to the record's
+`base`.
 
 1. **Find the branch's worktree** in `git worktree list`. If no worktree
    has it, it was built in place: use the main checkout.
 2. **Look for an open PR:** `gh pr view "$b" --json state -q .state
    2>/dev/null` prints `OPEN`. Then `git ops` is merging that PR.
-3. **No open PR: bring `base` up to date, then check the push,** in the
-   main checkout with `base` checked out, before anything merges:
-   `git pull --ff-only origin "$base"`, then
-   `git push --dry-run origin "$base"`. For a phase built in place,
+3. **No open PR, and `git ops` calls for the push: bring `base` up to
+   date, then check the push,** in the main checkout with `base` checked
+   out, before anything merges: `git pull --ff-only origin "$base"`,
+   then `git push --dry-run origin "$base"`. For a phase built in place,
    check out `base` for these two and `"$b"` again after. If either
-   fails, or there is no `origin` to run them against, that is a refused
-   push: stop now. Run both; never skip one. Option 1 deletes the branch
+   fails, that is a refused push: stop now. Option 1 deletes the branch
    and removes the worktree before the push, so a push that fails after
    it cannot leave them in place. A dry run does not catch server-side
    hooks or branch protection; those refuse only the real push, which
@@ -83,7 +84,7 @@ to the phase's `branch` and `base` to the record's `base`.
    the menu, the suite again on the merged result, and its worktree
    cleanup rules.
 5. **Answer its menu with `git ops`:**
-   - No open PR: option 1. Then push `base`:
+   - No open PR: option 1. Then, as `git ops` calls for them, push `base`:
      `git -C <main checkout> push origin "$base"`. Then delete the
      remote branch, only if `git ls-remote --heads origin "$b"` lists
      it: `git push origin --delete "$b"`.
@@ -93,13 +94,14 @@ to the phase's `branch` and `base` to the record's `base`.
 
 **If any safeguard fails, stop.** That means a red suite, a merge
 conflict, a refused worktree removal, a refused push (the dry run or the
-real one), or a failed `gh pr merge`. A part of `git ops` that cannot
-run, such as a push with no remote, is a failure too, not a step to
-skip: your human partner is away for this merge, so it is the whole of
-`git ops` or none of it. Only they can narrow it. Report what failed,
-and leave everything as it is: no force, no other route, no undoing a
-merge already made. Your human partner decides what happens next. Do not
-pick.
+real one), or a failed `gh pr merge`. A step that `git ops` calls for
+and that fails, such as a configured remote that is unreachable or
+refuses the push, is a stop, not a step to skip. (When your human
+partner's definition is "the relevant subset" and no remote is
+configured, the push is not relevant, and a local merge is correct.)
+Report what failed, and leave everything as it is: no force, no other
+route, no undoing a merge already made. Your human partner decides what
+happens next. Do not pick.
 
 **Report each merge done this way first,** at the top of your first
 message to your human partner: the phase, its branch, `base`, and that
