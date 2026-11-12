@@ -9,7 +9,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/test-helpers.sh"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd -P)"
 PLUGIN_DIR="$REPO_ROOT"
 
 echo "========================================"
@@ -82,7 +82,7 @@ PROMPT="Use the superpowers:chaining-plans skill to create an effort from docs/s
 OUTPUT_FILE=$(mktemp)
 echo "Running Claude (plugin-dir: $PLUGIN_DIR, cwd: $TEST_PROJECT)..."
 echo "================================================================================"
-timeout 900 claude -p "$PROMPT" --plugin-dir "$PLUGIN_DIR" --permission-mode bypassPermissions < /dev/null 2>&1 | tee "$OUTPUT_FILE" || {
+timeout 840 claude -p "$PROMPT" --plugin-dir "$PLUGIN_DIR" --permission-mode bypassPermissions < /dev/null 2>&1 | tee "$OUTPUT_FILE" || {
     echo ""
     echo "EXECUTION FAILED"
     rm -f "$OUTPUT_FILE"
@@ -116,15 +116,26 @@ fi
 check assert_contains "$output" "storage" "Names the storage phase"
 check assert_contains "$output" "search" "Names the search phase"
 check assert_contains "$output" "export" "Names the export phase"
+check assert_contains "$output" "p[0-9]-export" "Gives the export phase a p<n>-<slug> id"
 check assert_order "$output" "storage" "export" "Storage comes before export"
 check assert_contains "$output" "wait\|depends\|after" "Says what export waits on"
 check assert_contains "$output" "?" "Asks the human partner"
 
-if [ -e "$TEST_PROJECT/.superpowers/chain/2026-01-01-notes-design/effort.json" ]; then
-    echo "  [FAIL] effort.json written before the sitting was answered"
+if [ -e "$TEST_PROJECT/.superpowers/chain" ]; then
+    echo "  [FAIL] A record was written before the sitting was answered:"
+    find "$TEST_PROJECT/.superpowers/chain" | sed 's/^/    /'
     FAILED=$((FAILED + 1))
 else
-    echo "  [PASS] No effort.json yet"
+    echo "  [PASS] No record yet (no .superpowers/chain)"
+fi
+
+dirty=$(git -C "$TEST_PROJECT" status --porcelain)
+if [ -z "$dirty" ]; then
+    echo "  [PASS] Working tree clean"
+else
+    echo "  [FAIL] Working tree changed:"
+    echo "$dirty" | sed 's/^/    /'
+    FAILED=$((FAILED + 1))
 fi
 
 plans=$(find "$TEST_PROJECT/docs/superpowers/plans" -type f 2>/dev/null || true)

@@ -61,21 +61,34 @@ line of its "Rulings I made" must be in `rulings`, and every line of its
 
 **From Resume's settle step,** that final message is gone. Reconstruct
 `learned` from the plan (`plan`, when set) and the branch's commits: read
-the plan, the commits' messages and their diffs, and any notes or findings files
-they added.
-- The branch exists: `git -C <main checkout> log -p <base>..<branch>`
-  when it is not merged; when it is, the commits its merge brought in.
-- The branch is gone: find its merge on `base`,
-  `git -C <main checkout> log --merges --grep=<branch> <base>`, and read
-  `<merge>^1..<merge>^2`. With no merge commit (a fast-forward or a
-  squash), read the commits on `base` since the plan was committed.
+the plan, the commits' messages and their diffs, and any notes or
+findings files they added. Find the commits this way, with `<base>` the
+record's `base` and `<branch>` the phase's `branch`, every command as
+`git -C <main checkout>` and every range read with `log -p`:
+- **The anchor** is the commit that added the plan:
+  `git log --diff-filter=A --format=%H -1 -- <plan>`. With `plan` null,
+  the commit that added the phase's own design file, or, when `spec`
+  is null or the umbrella, the commit that added the umbrella's Phases
+  section: `git log -S'## Phases' --format=%H --reverse -- <umbrella> | head -1`.
+- **The branch exists, not merged:** read `<base>..<branch>`.
+- **The branch exists, merged:** its merge is the oldest merge on
+  `base`'s first-parent line that holds the branch's tip:
+  `git rev-list --merges --first-parent --reverse --ancestry-path <branch>..<base> | head -1`.
+  Read `<merge>^1..<branch>`. With no such merge, or an empty range (a
+  fast-forward), read `<anchor>..<branch>`.
+- **The branch is gone:** find its merge on `base`'s first-parent line
+  by a message that names the branch exactly, as `Merge branch
+  '<branch>'` or a PR's `from <owner>/<branch>` does:
+  `git log --merges --first-parent --format='%H %s' <base> | grep -E -e "'<branch>'" -e "/<branch>\$"`.
+  Read `<merge>^1..<merge>^2`. With no merge commit (a fast-forward or a
+  squash), read `<anchor>..<base>`.
 - **None of its work is on `base`:** no merge names the branch, `gh pr
   view <branch> --json state -q .state 2>/dev/null` does not print
-  `MERGED`, and no commit on `base` since the plan was committed does
-  the plan's tasks. Then the branch was deleted without a merge, most
-  likely a discard whose reset was missed. Stop, write nothing, and
-  report that to your human partner. Never read unrelated commits as the
-  branch's work.
+  `MERGED`, and no commit in `<anchor>..<base>` does the plan's tasks
+  (or, with no plan, the phase's purpose). Then the branch was deleted
+  without a merge, most likely a discard whose reset was missed. Stop,
+  write nothing, and report that to your human partner. Never read
+  unrelated commits as the branch's work.
 
 Leave `rulings` and `unfinished` as they are: there is no final message
 to check them against.
@@ -104,12 +117,17 @@ test**. Does the change alter any of these?
   follow the rules under `set-phases` in `references/record.md`, and
   commit the umbrella's Phases section to match, on `base`. In a close,
   this phase counts as closed for a new phase's `status`.
-- **A phase's technical design:** a phase with a design file (`spec`)
-  gets the change in that file, committed on `base`. A phase with no
-  design yet has no file: add the change to this phase's `learned` as a
-  line naming that phase, since its Design stage reads `learned`. Write
-  it now with `set` (read `closing`, then `learned` plus the line), so
-  the `replan` write's fresh read keeps it.
+- **A phase's technical design:** the umbrella holds intent only, so a
+  technical change never goes into it. A phase with a `plan` gets the
+  change in its plan file, and in its own design file if it has one,
+  committed on `base`. Else a phase whose `spec` is its own design file
+  gets it in that file, committed on `base`. Else (`spec` null, or the
+  umbrella) the phase has no file of its own: add the change to this
+  phase's `learned` as a line naming that phase, since its Design stage
+  reads `learned`; when its `spec` is the umbrella, `set` it to null so
+  that its Design stage runs. Write the line now with `set` (read
+  `closing`, then `learned` plus the line), so the `replan` write's
+  fresh read keeps it.
 - **Each unfinished finding:** move it to the phase it belongs to, the
   same way as a technical design change, and note that phase in its
   line in `unfinished`, with `set` the same way.

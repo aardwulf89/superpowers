@@ -92,32 +92,38 @@ of it on `base` and stops (`close.md` step 1).
 
 ## Commands
 
-Each block is named by the comment above it. Run it as written. Every Bash
-call starts a fresh shell, so assign the block's inputs (`rec`, `id`,
-`field`, `value_json`, `phases_json`, `chain_dir`) on lines in the same
-Bash call, before the block. Blocks
-that classify phases (`phase-state`, `pick`, `open-efforts`) carry the same
-`phase_state` function; run them from inside the repo.
+Each block is named by the comment above it. Run it as written. Every
+Bash call starts a fresh shell, so assign the block's inputs (`rec`, `id`,
+`field`, `value_json`, `phases_json`, `record_json`, `chain_dir`) on lines
+in the same Bash call, before the block. Run every block from inside the
+repo. The blocks that classify phases (`phase-state`, `pick`,
+`open-efforts`) carry the same `phase_state` function. A block that
+cannot do its job says why on stderr, exits non-zero, and changes nothing.
 
 ### chain-dir
 
 Reads nothing. Sets and prints `chain_dir`, the absolute
 `<main checkout>/.superpowers/chain`, the same from any worktree.
+Outside a git repo it prints nothing and fails.
 
 <!-- cmd: chain-dir -->
 ```bash
-chain_dir="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.superpowers/chain"
-echo "$chain_dir"
+common=$(git rev-parse --path-format=absolute --git-common-dir) &&
+  chain_dir="$(dirname "$common")/.superpowers/chain" &&
+  echo "$chain_dir"
 ```
 
 ### open-efforts
 
-Reads `chain_dir` (defaults to the `chain-dir` value when unset). Prints one `effort.json` path per line, for each effort
-with at least one phase that is not `done` or `dropped`.
+Reads `chain_dir`; when it is unset, finds it as `chain-dir` does.
+Prints one `effort.json` path per line, for each effort with at least
+one phase that is not `done` or `dropped`. Outside a git repo it prints
+nothing and fails.
 
 <!-- cmd: open-efforts -->
 ```bash
-chain_dir=${chain_dir:-$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.superpowers/chain}
+[ -n "${chain_dir:-}" ] || { common=$(git rev-parse --path-format=absolute --git-common-dir) &&
+  chain_dir="$(dirname "$common")/.superpowers/chain"; }
 phase_state() (
   pid=$1
   base=$(jq -r '.base' "$rec")
@@ -148,7 +154,7 @@ phase_state() (
     no,yes) echo closed-unmerged ;;
   esac
 )
-for rec in "$chain_dir"/*/effort.json; do
+[ -n "${chain_dir:-}" ] && for rec in "$chain_dir"/*/effort.json; do
   [ -f "$rec" ] || continue
   for id in $(jq -r '.phases[].id' "$rec"); do
     case "$(phase_state "$id")" in
@@ -244,6 +250,7 @@ states=""
 for p in $ids; do states="$states$p $(phase_state "$p")
 "; done
 first_open=""
+picked=""
 for p in $ids; do
   s=$(printf '%s' "$states" | awk -v p="$p" '$1 == p {print $2}')
   case "$s" in done|dropped) continue ;; esac
@@ -253,30 +260,64 @@ for p in $ids; do
   for d in $(jq -r --arg id "$p" '.phases[] | select(.id == $id) | .depends_on[]?' "$rec"); do
     printf '%s' "$states" | grep -Fxq "$d done" || { ready=no; break; }
   done
-  [ "$ready" = yes ] && { echo "id:$p"; first_open=picked; break; }
+  [ "$ready" = yes ] && { picked=$p; break; }
 done
-case "$first_open" in
-  picked) ;;
-  "") echo none ;;
-  *) echo "blocked:$first_open" ;;
-esac
+if [ -n "$picked" ]; then echo "id:$picked"
+elif [ -n "$first_open" ]; then echo "blocked:$first_open"
+else echo none
+fi
+```
+
+### new-record
+
+Reads `rec` and `record_json`, the whole record in the shape above.
+Create's one write: it creates `rec` and its directory. It fails, and
+writes nothing, when `rec` already exists, or `record_json` lacks
+`umbrella` or `base`, or a phase lacks one of the ten keys, has one more,
+or repeats an id. Assign `record_json` in the same Bash call, from a
+quoted heredoc or `jq -n`.
+
+<!-- cmd: new-record -->
+```bash
+if [ -e "$rec" ]; then
+  echo "new-record: $rec already exists" >&2; false
+elif printf '%s' "$record_json" | jq -e '(.umbrella | type) == "string"
+    and (.base | type) == "string" and (.phases | type) == "array"
+    and all(.phases[]; type == "object" and (keys | sort) == ["branch","closing","depends_on",
+      "id","partner_questions","plan","spec","status","title","waits_on"])
+    and (.phases | map(.id) | unique | length) == (.phases | length)' >/dev/null; then
+  mkdir -p "$(dirname "$rec")" && printf '%s\n' "$record_json" | jq . > "$rec.tmp" &&
+    mv "$rec.tmp" "$rec" || { rm -f "$rec.tmp"; echo "new-record: nothing written" >&2; false; }
+else
+  echo "new-record: record_json is not a whole record of the shape above" >&2; false
+fi
 ```
 
 ### set
 
 Reads `rec`, `id`, `field` and `value_json`. Sets that field of the phase
 to the JSON value, in place. Example: `field=branch value_json='"p2-x"'`.
+It fails, and writes nothing, when the record has no phase `id` with
+that field, or `value_json` is not JSON.
 
 <!-- cmd: set -->
 ```bash
-jq --arg id "$id" --arg field "$field" --argjson v "$value_json" \
-  '(.phases[] | select(.id == $id) | .[$field]) = $v' "$rec" > "$rec.tmp" && mv "$rec.tmp" "$rec"
+if jq -e --arg id "$id" --arg field "$field" \
+    'any(.phases[]; .id == $id and has($field))' "$rec" >/dev/null; then
+  jq --arg id "$id" --arg field "$field" --argjson v "$value_json" \
+    '(.phases[] | select(.id == $id) | .[$field]) = $v' "$rec" > "$rec.tmp" &&
+    mv "$rec.tmp" "$rec" || { rm -f "$rec.tmp"; echo "set: nothing written" >&2; false; }
+else
+  echo "set: no phase '$id' with a field '$field' in $rec" >&2; false
+fi
 ```
 
 ### set-phases
 
 Reads `rec` and `phases_json`, a JSON array of whole phases. Replaces
-`phases` with it, in place, and leaves `umbrella` and `base` alone. For
+`phases` with it, in place, and leaves `umbrella` and `base` alone. It
+fails, and writes nothing, unless every phase has exactly the ten keys of
+the shape above and no id repeats. For
 a split, merge, reorder or drop: build `phases_json` from the current
 `.phases` with jq in the same Bash call, never from memory.
 
@@ -290,19 +331,26 @@ from Resume's Plan stage:
   `closing`. Every other part is a new phase with all ten keys, an id not
   used in the record, the split phase's `spec` (its design, or the
   umbrella, covers every part, and each part's plan says which part it
-  builds), and null `plan`, `branch` and `closing`. Each part gets the
-  `depends_on`, `waits_on` and `partner_questions` that concern it, and
-  a later part that builds on an earlier part's code depends on it.
+  builds), and null `plan`, `branch` and `closing`. Every part, the
+  first included, has a null `plan`: a plan for the whole phase is not a
+  plan for a part. Each part gets the `depends_on`, `waits_on` and
+  `partner_questions` that concern it, and a later part that builds on
+  an earlier part's code depends on it.
 - **A merge:** the merged phase keeps the id of the first of them, in
   array order, and joins their `depends_on`, `waits_on` and
-  `partner_questions`, without its own id. Its `spec` is null, so its
-  Design stage writes one design for the whole. Merges happen only in a
-  close: name any design file the merged phases had in a `learned` line
-  for the merged phase.
-- **A new or merged phase's `status`:** `needs-partner` if it has
-  `partner_questions`, else `waiting` if any of its `waits_on` has a
-  `from` that is not closed yet, else `known`. A part that inherits only
-  answered `waits_on` is `known`.
+  `partner_questions`, without its own id. Its `spec` and `plan` are
+  null, so its Design stage writes one design for the whole. Its
+  `closing` is null when all of theirs are; else it joins their
+  `rulings` and `unfinished`, with `learned` and `replan` null. Merges
+  happen only in a close: name any design file the merged phases had in
+  a line of the closing phase's `learned` that names the merged phase,
+  and write that line at once with `set` (read `closing`, then `learned`
+  plus the line), as `close.md` step 2 does for a design change.
+- **The `status` of every part of a split, the first included, and of a
+  merged phase:** `needs-partner` if it has `partner_questions`, else
+  `waiting` if any of its `waits_on` has a `from` that is not closed
+  yet, else `known`. A part that inherits only answered `waits_on` is
+  `known`.
 - **Every other phase:** a `depends_on` on a split id adds every new
   part; a `waits_on` that a new part will answer gets that part as its
   `from`. A merged id is replaced by the merged phase's id, once.
@@ -318,5 +366,13 @@ from Resume's Plan stage:
 
 <!-- cmd: set-phases -->
 ```bash
-jq --argjson v "$phases_json" '.phases = $v' "$rec" > "$rec.tmp" && mv "$rec.tmp" "$rec"
+if printf '%s' "$phases_json" | jq -e 'type == "array"
+    and all(.[]; type == "object" and (keys | sort) == ["branch","closing","depends_on",
+      "id","partner_questions","plan","spec","status","title","waits_on"])
+    and (map(.id) | unique | length) == length' >/dev/null; then
+  jq --argjson v "$phases_json" '.phases = $v' "$rec" > "$rec.tmp" &&
+    mv "$rec.tmp" "$rec" || { rm -f "$rec.tmp"; echo "set-phases: nothing written" >&2; false; }
+else
+  echo "set-phases: phases_json is not an array of whole phases with distinct ids" >&2; false
+fi
 ```

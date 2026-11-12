@@ -117,8 +117,9 @@ the directory; it resolves the same from any worktree. `.superpowers/` is
 git-ignored, so the record is never committed.
 - `references/record.md` holds its shape and every command you run against
   it. Run its named blocks (`chain-dir`, `open-efforts`, `phase-state`,
-  `pick`, `set`, `set-phases`) as written. Never edit the record by hand
-  or rewrite it from memory.
+  `pick`, `new-record`, `set`, `set-phases`) as written. Create writes the
+  record once with `new-record`; every later change is `set` or
+  `set-phases`. Never edit the record by hand or rewrite it from memory.
 - Your human partner never reads the record. They review through your
   reports.
 
@@ -154,7 +155,7 @@ or the executor. Both skip steps.
 
 ## Red Flags
 
-These thoughts mean STOP—you're working from memory:
+These thoughts mean STOP—you're leaving the rails:
 
 | Thought | Reality |
 |---------|---------|

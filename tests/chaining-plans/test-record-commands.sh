@@ -36,7 +36,7 @@ trap 'rm -rf "$TMP"' EXIT
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
 
-for name in chain-dir open-efforts phase-state pick set set-phases; do
+for name in chain-dir open-efforts phase-state pick new-record set set-phases; do
   if [[ -z "$(cmd_block "$name")" ]]; then fail "block '$name' exists in record.md"; fi
 done
 
@@ -78,6 +78,17 @@ check "chain-dir in the main checkout" "$R/.superpowers/chain" \
   "$(cd "$R" && eval "$(cmd_block chain-dir)")"
 check "chain-dir in a linked worktree" "$R/.superpowers/chain" \
   "$(cd "$TMP/chain-wt" && eval "$(cmd_block chain-dir)")"
+
+# chain-dir and open-efforts outside a git repo: print nothing, fail
+NOREPO="$TMP/norepo"
+mkdir -p "$NOREPO"
+for name in chain-dir open-efforts; do
+  st=0
+  out=$(cd "$NOREPO" && export GIT_CEILING_DIRECTORIES="$TMP" && unset chain_dir &&
+    eval "$(cmd_block "$name")" 2>/dev/null) || st=$?
+  if [[ -z "$out" && $st -ne 0 ]]; then pass "$name outside a git repo prints nothing and fails"
+  else fail "$name outside a git repo: printed '$out', exit $st"; fi
+done
 
 # phase-state
 R="$TMP/s"
@@ -124,11 +135,28 @@ check "phase-state close-missed" close-missed \
 check "phase-state done" done \
   "$(state_of "$R" "{\"status\":\"known\",\"plan\":\"$PLAN\",\"branch\":\"b-fin\",\"closing\":{\"replan\":[]}}")"
 
+# merged through a PR (a squash: the branch is not an ancestor): gh says so
+R="$TMP/gh"
+new_repo "$R"
+git -C "$R" checkout -q -b b-sq
+echo y > "$R/y"; git -C "$R" add y; git -C "$R" commit -q -m y
+git -C "$R" checkout -q main
+mkdir -p "$TMP/ghbin"
+printf '#!/bin/sh\necho "$GH_STATE"\n' > "$TMP/ghbin/gh"
+chmod +x "$TMP/ghbin/gh"
+sq() { # GH_STATE CLOSING_JSON
+  PATH="$TMP/ghbin:$PATH" GH_STATE="$1" state_of "$R" \
+    "{\"status\":\"known\",\"plan\":\"$PLAN\",\"branch\":\"b-sq\",\"closing\":$2}"
+}
+check "phase-state close-missed when gh says MERGED" close-missed "$(sq MERGED null)"
+check "phase-state done when gh says MERGED" done "$(sq MERGED '{"replan":[]}')"
+check "phase-state finished-unclosed when gh says OPEN" finished-unclosed "$(sq OPEN null)"
+
 # pick and open-efforts
-phase() { # id status branch depends_on_json -> JSON; a set branch means done
+phase() { # id status branch depends_on_json -> JSON, all ten keys; a set branch means done
   local closing=null
   [[ "$3" != null ]] && closing='{"replan":[]}'
-  echo "{\"id\":\"$1\",\"status\":\"$2\",\"depends_on\":$4,\"plan\":\"$PLAN\",\"branch\":$3,\"closing\":$closing}"
+  echo "{\"id\":\"$1\",\"title\":\"$1\",\"status\":\"$2\",\"depends_on\":$4,\"waits_on\":[],\"partner_questions\":[],\"spec\":null,\"plan\":\"$PLAN\",\"branch\":$3,\"closing\":$closing}"
 }
 write_rec() { # file phase_json...
   local f="$1"; shift
@@ -146,6 +174,8 @@ write_rec "$TMP/pick3.json" "$(phase p1 known '"b-fin"' '[]')"
 check "pick with everything done" none "$(run_pick "$TMP/pick3.json")"
 write_rec "$TMP/pick4.json" "$(phase p1 known null '[]')" "$(phase p2 known null '["p1"]')"
 check "pick takes a phase with no dependencies" "id:p1" "$(run_pick "$TMP/pick4.json")"
+write_rec "$TMP/pick5.json" "$(phase x dropped null '[]')" "$(phase picked known null '["x"]')"
+check "pick blocks on a phase whose id is 'picked'" "blocked:picked" "$(run_pick "$TMP/pick5.json")"
 
 CD="$TMP/chains"
 write_rec "$CD/e1/effort.json" "$(phase p1 known null '[]')"
@@ -174,6 +204,19 @@ check "set changes the named phase" '"p2"' "$(jq -c '.phases[1].branch' "$S")"
 check "set leaves other phases alone" "$before" "$(jq -c '.phases[0]' "$S")"
 if jq -e . "$S" >/dev/null; then pass "set leaves valid JSON"; else fail "set leaves valid JSON"; fi
 if [[ ! -e "$S.tmp" ]]; then pass "set leaves no .tmp file"; else fail "set leaves no .tmp file"; fi
+# refuses NAME FILE BLOCK ASSIGNMENT...: with the assignments made, BLOCK fails, FILE is
+# unchanged, and no .tmp is left.
+refuses() {
+  local name="$1" file="$2" block="$3"; shift 3
+  local before; before="$(cat "$file" 2>/dev/null || echo MISSING)"
+  if (eval "$*" && eval "$(cmd_block "$block")") 2>/dev/null; then fail "$name: block succeeded"
+  elif [[ "$(cat "$file" 2>/dev/null || echo MISSING)" != "$before" ]]; then fail "$name: file changed"
+  elif [[ -e "$file.tmp" ]]; then fail "$name: .tmp left"
+  else pass "$name"; fi
+}
+refuses "set refuses an unknown id" "$S" set rec="$S" id=p9 field=branch "value_json='\"x\"'"
+refuses "set refuses an unknown field" "$S" set rec="$S" id=p1 field=brnch "value_json='\"x\"'"
+refuses "set refuses a value that is not JSON" "$S" set rec="$S" id=p1 field=branch "value_json='not json'"
 
 # set-phases
 P="$TMP/set-phases.json"
@@ -185,6 +228,25 @@ check "set-phases replaces the phases with exactly the new ones" \
   "$(jq -c . <<<"$new_phases")" "$(jq -c '.phases' "$P")"
 check "set-phases keeps umbrella and base" '"u.md" "main"' "$(jq -c '.umbrella, .base' "$P" | paste -sd' ')"
 if [[ ! -e "$P.tmp" ]]; then pass "set-phases leaves no .tmp file"; else fail "set-phases leaves no .tmp file"; fi
+one="$(phase p1 known null '[]')"
+refuses "set-phases refuses an object" "$P" set-phases rec="$P" "phases_json='$one'"
+refuses "set-phases refuses a phase missing a key" "$P" set-phases rec="$P" \
+  "phases_json='[$(jq -c 'del(.title)' <<<"$one")]'"
+refuses "set-phases refuses a repeated id" "$P" set-phases rec="$P" "phases_json='[$one,$one]'"
+
+# new-record
+N="$TMP/new/e/effort.json"
+good="$(printf '%s\n' "$one" "$(phase p2 known null '["p1"]')" | jq -sc '{umbrella:"u.md", base:"main", phases:.}')"
+(rec="$N" record_json="$good" && eval "$(cmd_block new-record)")
+check "new-record writes the record it is given" "$good" "$(jq -c . "$N" 2>/dev/null || true)"
+if [[ ! -e "$N.tmp" ]]; then pass "new-record leaves no .tmp file"; else fail "new-record leaves no .tmp file"; fi
+refuses "new-record refuses an existing record" "$N" new-record rec="$N" "record_json='$good'"
+N2="$TMP/new/e2/effort.json"
+refuses "new-record refuses a record without base" "$N2" new-record rec="$N2" \
+  "record_json='$(jq -c 'del(.base)' <<<"$good")'"
+refuses "new-record refuses a phase with an extra key" "$N2" new-record rec="$N2" \
+  "record_json='$(jq -c '.phases[0].head = 1' <<<"$good")'"
+refuses "new-record refuses malformed JSON" "$N2" new-record rec="$N2" "record_json='{'"
 
 if ((failures > 0)); then
   echo "$failures failure(s)" >&2

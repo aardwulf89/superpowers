@@ -15,7 +15,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/test-helpers.sh"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd -P)"
 PLUGIN_DIR="$REPO_ROOT"
 EFFORT=2026-01-01-notes-design
 UMBRELLA=docs/superpowers/specs/$EFFORT.md
@@ -189,7 +189,8 @@ else
 fi
 
 echo "  Record after the run:"
-jq '.phases[] | {id, status, partner_questions, closing}' "$TEST_PROJECT/$REC" 2>&1 | sed 's/^/    /'
+jq '.phases[] | {id, status, partner_questions, closing}' "$TEST_PROJECT/$REC" 2>&1 | sed 's/^/    /' ||
+    echo "    (the record is not readable JSON)"
 
 jq_check "p1's closing.learned is written" '.phases[0].closing.learned | length > 0'
 jq_check "p1's closing.replan is set (p1 is closed)" '.phases[0].closing.replan != null'
@@ -200,7 +201,13 @@ else
     fail "p2's status is '$p2_status', not needs-partner"
 fi
 jq_check "p2 has a question for the human partner" '.phases[1].partner_questions | length > 0'
+jq_check "p2's questions are worded as questions" '.phases[1].partner_questions | all(type == "string" and test("\\?\\s*$"))'
+jq_check "p2's question names the dependency conflict" \
+    '.phases[1].partner_questions | any(test("depend|librar|third.party"; "i"))'
+jq_check "p1's replan records the question as an intent entry for p2" \
+    '.phases[0].closing.replan | any(.intent == true and (.affects | index("p2")))'
 check assert_contains "$output" "?" "Asks the human partner"
+check assert_contains "$output" "depend\|librar\|third.party" "The question shown names the dependency conflict"
 
 plans=$(find "$TEST_PROJECT/docs/superpowers/plans" -type f 2>/dev/null || true)
 if [ -n "$plans" ]; then

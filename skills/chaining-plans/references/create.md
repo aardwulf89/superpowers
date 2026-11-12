@@ -13,6 +13,11 @@ section, no record, no commit, no plan.
 - **Find the umbrella spec.** It is the `<spec path>` argument, or the spec
   this session just approved. If the session holds no spec, ask which one to
   use, and stop until your human partner answers.
+- **Find `base`,** the branch every phase merges into. When the main
+  checkout is on the repository's default branch, that branch is `base`:
+  the one `git symbolic-ref --short refs/remotes/origin/HEAD` names,
+  without `origin/`, or, with no remote, `main` or `master`. On any other
+  branch, which branch is `base` is a question for the sitting.
 - **Check for an existing effort.** The effort id is the spec's basename
   without `.md`. Run `chain-dir` from `references/record.md`; if
   `<chain_dir>/<id>/effort.json` already exists, this spec is already an
@@ -39,7 +44,8 @@ the spec does not answer: who a feature is for, what is in or out of scope,
 a preference between outcomes, a rule that cuts across phases.
 
 Technical questions are not on this list: how to build it, which library,
-which data structure, the format a measurement should decide. They are
+which data structure, the format a measurement should decide, a technical
+choice every phase will share, such as the language or the runtime. They are
 decided when the phase is designed, with what earlier phases learned. Asking
 them now freezes a guess.
 
@@ -53,8 +59,7 @@ Show your human partner, in one message:
 - an invitation to correct the phase list (add, drop, merge, split, reorder)
   in the same reply.
 
-If the main checkout is not on the branch the phases should merge into, ask
-which branch is `base` in the same round.
+If `base` is a question (step 1), ask it in the same round.
 
 Then end your turn and wait for the answers. Do not write anything while the
 sitting is open. If an answer opens a new intent question, ask it before writing.
@@ -82,9 +87,11 @@ All of this happens in the main checkout, on `base`.
    an untracked record would leave the tree dirty for Resume.
 4. **Commit** the spec, any plan you linked, and `.gitignore` if it changed,
    on `base`.
-5. **Write `effort.json`** at `<chain_dir>/<id>/effort.json` (run
-   `chain-dir`, then `mkdir -p` the effort's directory). This one write
-   creates the whole file, in the shape `references/record.md` gives:
+5. **Write the record** with `new-record` from `references/record.md`:
+   run `chain-dir`, then, in one Bash call, assign
+   `rec=<chain_dir>/<id>/effort.json` and `record_json`, and run the
+   block. This one write creates the whole file, in the shape
+   `references/record.md` gives:
    - `umbrella`: the spec's repo-relative path; `base`: the branch;
    - `phases`: in the order of work, every phase with all ten keys, and
      every `waits_on[].from` also listed in that phase's `depends_on`;
@@ -93,8 +100,8 @@ All of this happens in the main checkout, on `base`.
    - `spec` and `plan`: null, except for a linked plan; `branch` and
      `closing`: null.
 
-   Pipe it through `jq .` so a malformed record fails here. Every later change
-   goes through `set`.
+   If the block fails, it wrote nothing: correct `record_json` and run it
+   again. Every later change goes through `set` or `set-phases`.
 
 ### The Phases section
 
@@ -110,7 +117,7 @@ The order below is the order of work. Each phase gets its own plan, branch
 and session.
 
 **Across phases:** <rules that cut across phases, from your human partner's
-answers; or "none">
+answers: intent only, never a technical choice; or "none">
 
 ### p1-storage: Storage
 

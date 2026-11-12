@@ -487,8 +487,12 @@ skill does (from its text), and what `chaining-plans` does about it.
   through `using-git-worktrees`. Its Step 0 asks for consent before
   creating a worktree, unless the human partner's instructions already
   state a preference. The standing approval states one: use a worktree,
-  unless the project's instructions say to build in place (my call). This
-  also covers "never start implementation on main without consent".
+  unless the project's instructions say to build in place (my call); then
+  the phase builds on its own branch in the main checkout. The approval
+  covers implementing on the phase's own branch, never on `base`. It is
+  not the consent the executors ask for in "Never start implementation on
+  a main/master branch without your human partner's explicit consent": a
+  phase never starts on `base`, so that rule does not come up.
 - **The SDD ledger** lives in the worktree, at
   `<worktree>/.superpowers/sdd/<plan>/`. The record lives in the main
   checkout, and the agent finds it from inside the worktree through

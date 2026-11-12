@@ -1,21 +1,30 @@
 #!/usr/bin/env bash
 # Integration Test: chaining-plans Resume
 #
-# Three fresh sessions, each asked to continue an effort:
-#   A. The last phase is closed but its git ops were missed. Resume merges
-#      it, pushes base, removes the branch and the worktree, and reports the
-#      merge and that the effort is done.
+# Four fresh sessions, each asked to continue an effort:
+#   A. The last phase is closed but its git ops were missed, and origin
+#      has a commit main lacks. Resume pulls base, merges the phase, pushes
+#      base, removes the branch and the worktree, and reports the merge and
+#      that the effort is done.
 #   B. As A, but `origin` is unreachable (its URL is a missing path), so
 #      the push check fails. Resume stops before merging, with the branch
 #      and the worktree still in place.
 #   C. The pick is a phase still marked `waiting`. Resume reports the
 #      inconsistency and starts nothing.
-# The three run in parallel; each is its own `claude -p` session.
+#   D. As A, but the branch has an open PR (a `gh` stub on PATH stands in
+#      for GitHub). Resume merges the PR with a method flag, pulls base, and
+#      removes the local branch, the worktree and the remote branch.
+# The four run in parallel; each is its own `claude -p` session.
+#
+# Isolation: each session loads the human partner's ~/.claude/CLAUDE.md,
+# which may define "git ops" (for example "the relevant subset of merge +
+# push + delete branch"). Every fixture has an origin configured, so that
+# definition and the one in SKILL.md call for the same steps here.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/test-helpers.sh"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd -P)"
 PLUGIN_DIR="$REPO_ROOT"
 EFFORT=2026-01-01-notes-design
 UMBRELLA=docs/superpowers/specs/$EFFORT.md
@@ -29,7 +38,14 @@ echo ""
 
 TEST_ROOT=$(create_test_project)
 echo "Test root: $TEST_ROOT"
-trap "cleanup_test_project $TEST_ROOT" EXIT
+pids=""
+cleanup() {
+    [ -n "$pids" ] && kill $pids 2>/dev/null
+    wait 2>/dev/null
+    cleanup_test_project "$TEST_ROOT"
+}
+trap cleanup EXIT
+trap 'exit 130' INT TERM
 
 # A project with a passing `node --test` suite (finishing runs it) and an
 # umbrella spec with a Phases section, on main. With "plan", p1's plan too.
@@ -153,6 +169,12 @@ make_project "$A" plan
 git init -q --bare -b main "$TEST_ROOT/a-origin.git"
 git remote add origin "$TEST_ROOT/a-origin.git"
 git push -q -u origin main
+# origin moves ahead of the local main, from another clone.
+git clone -q "$TEST_ROOT/a-origin.git" "$TEST_ROOT/a-other"
+git -C "$TEST_ROOT/a-other" -c user.email=o@test.com -c user.name=Other \
+    commit -q --allow-empty -m "chore: a commit made elsewhere"
+git -C "$TEST_ROOT/a-other" push -q origin main
+A_REMOTE=$(git -C "$TEST_ROOT/a-other" rev-parse HEAD)
 make_p1_branch
 write_record "$CLOSED_P1"
 A_TIP=$(git rev-parse p1)
@@ -175,21 +197,80 @@ write_record "$(jq -n '{
 }')"
 C_DOCS_BEFORE=$(cd "$C" && find docs/superpowers/specs docs/superpowers/plans -type f | sort)
 
+# --- Fixture D: as A, with an open PR for p1 ---
+D="$TEST_ROOT/d"
+make_project "$D" plan
+git init -q --bare -b main "$TEST_ROOT/d-origin.git"
+git remote add origin "$TEST_ROOT/d-origin.git"
+git push -q -u origin main
+make_p1_branch
+git push -q origin p1
+write_record "$CLOSED_P1"
+D_TIP=$(git rev-parse p1)
+D_BIN="$TEST_ROOT/d-bin"
+D_GH_LOG="$TEST_ROOT/d-gh.log"
+mkdir -p "$D_BIN"
+echo OPEN > "$TEST_ROOT/d-pr-state"
+: > "$D_GH_LOG"
+# A stand-in for gh: PR #1, from p1 into main. `gh pr merge` merges it on
+# origin with a merge commit, as GitHub would; then the PR reads MERGED.
+cat > "$D_BIN/gh" <<EOF
+#!/usr/bin/env bash
+state_file="$TEST_ROOT/d-pr-state"
+origin="$TEST_ROOT/d-origin.git"
+echo "gh \$*" >> "$D_GH_LOG"
+st=\$(cat "\$state_file")
+q=""
+args=("\$@")
+for ((i = 0; i < \${#args[@]}; i++)); do
+    case "\${args[i]}" in -q|--jq) q="\${args[i+1]}" ;; esac
+done
+out() { if [ -n "\$q" ]; then jq -r "\$q" <<<"\$1"; else echo "\$1"; fi; }
+pr='{"number":1,"state":"'"\$st"'","headRefName":"p1","baseRefName":"main","title":"p1","url":"https://example.invalid/pull/1","mergeable":"MERGEABLE"}'
+case "\$1 \$2" in
+    "pr view") out "\$pr" ;;
+    "pr list"|"pr status") if [ "\$st" = OPEN ]; then out "[\$pr]"; else out "[]"; fi ;;
+    "repo view") out '{"nameWithOwner":"owner/notes","mergeCommitAllowed":true,"squashMergeAllowed":true,"rebaseMergeAllowed":true,"deleteBranchOnMerge":false}' ;;
+    "auth status") echo "Logged in to github.com as owner" ;;
+    "pr merge")
+        [ "\$st" = OPEN ] || { echo "Pull request #1 is not open" >&2; exit 1; }
+        tmp=\$(mktemp -d)
+        git clone -q "\$origin" "\$tmp/c" &&
+            git -C "\$tmp/c" -c user.email=gh@example.invalid -c user.name=GitHub \
+                merge -q --no-ff origin/p1 -m "Merge pull request #1 from owner/p1" &&
+            git -C "\$tmp/c" push -q origin main || exit 1
+        case " \$* " in *" -d "*|*" --delete-branch "*) git -C "\$tmp/c" push -q origin --delete p1 ;; esac
+        rm -rf "\$tmp"
+        echo MERGED > "\$state_file"
+        echo "Merged pull request #1 (p1)" ;;
+    *) echo "gh stub: unsupported: \$*" >&2; exit 1 ;;
+esac
+EOF
+chmod +x "$D_BIN/gh"
+
 cd "$TEST_ROOT"
 
+# Run in the background only: it replaces its subshell with timeout, so $!
+# is timeout's pid and killing it ends the claude session too. An optional
+# second argument is put first on PATH.
 run_fixture() {
-    local dir=$1
-    (cd "$dir" && timeout 900 claude -p "$PROMPT" --plugin-dir "$PLUGIN_DIR" \
-        --permission-mode bypassPermissions < /dev/null > "$dir.out" 2>&1)
+    local dir=$1 bin=${2:-}
+    cd "$dir" || exit 1
+    PATH="${bin:+$bin:}$PATH" exec timeout 840 claude -p "$PROMPT" --plugin-dir "$PLUGIN_DIR" \
+        --permission-mode bypassPermissions < /dev/null > "$dir.out" 2>&1
 }
 
-echo "Running Claude on fixtures A, B and C in parallel (plugin-dir: $PLUGIN_DIR)..."
+echo "Running Claude on fixtures A, B, C and D in parallel (plugin-dir: $PLUGIN_DIR)..."
 run_fixture "$A" & pid_a=$!
 run_fixture "$B" & pid_b=$!
 run_fixture "$C" & pid_c=$!
+run_fixture "$D" "$D_BIN" & pid_d=$!
+pids="$pid_a $pid_b $pid_c $pid_d"
 status_a=0; wait "$pid_a" || status_a=$?
 status_b=0; wait "$pid_b" || status_b=$?
 status_c=0; wait "$pid_c" || status_c=$?
+status_d=0; wait "$pid_d" || status_d=$?
+pids=""
 
 FAILED=0
 check() { "$@" || FAILED=$((FAILED + 1)); }
@@ -241,13 +322,20 @@ if [ -e "$A/.worktrees/p1" ]; then
 else
     pass "A: .worktrees/p1 removed"
 fi
-git -C "$A" fetch -q origin
-if [ "$(git -C "$A" rev-parse main)" = "$(git -C "$A" rev-parse origin/main)" ]; then
+if git -C "$A" merge-base --is-ancestor "$A_REMOTE" main 2>/dev/null; then
+    pass "A: origin's newer commit is on main (base pulled before the merge)"
+else
+    fail "A: origin's newer commit is not on main"
+fi
+if git -C "$A" fetch -q origin 2>/dev/null &&
+    [ "$(git -C "$A" rev-parse main)" = "$(git -C "$A" rev-parse origin/main)" ]; then
     pass "A: main is pushed to origin"
 else
-    fail "A: main and origin/main differ"
+    fail "A: main and origin/main differ (or the fetch failed)"
 fi
-check assert_contains "$out_a" "merg" "A: reports the merge"
+check assert_contains "$(echo "$out_a" | grep -v '^[[:space:]]*$' | head -3)" "merg" "A: reports the merge at the top"
+check assert_contains "$out_a" "\bp1\b" "A: names the merged branch"
+check assert_contains "$out_a" "push" "A: reports whether main was pushed"
 check assert_contains "$out_a" "effort.*\(done\|complete\|finished\)\|\(done\|complete\).*effort\|all phases\|every phase" "A: reports that the effort is done"
 
 # --- B ---
@@ -295,6 +383,43 @@ if [ "$c_branches" = "main" ]; then
 else
     fail "C: branches: $(echo $c_branches)"
 fi
+
+# --- D ---
+show_and_check_run D "$D" "$status_d"
+out_d=$(cat "$D.out")
+echo "  gh calls:"
+sed 's/^/    /' "$D_GH_LOG"
+if grep -qE '^gh pr merge .*(--merge|--squash|--rebase|-m|-s|-r)( |$)' "$D_GH_LOG"; then
+    pass "D: gh pr merge ran, with a merge method"
+else
+    fail "D: no gh pr merge with --merge, --squash or --rebase"
+fi
+if git -C "$D" log --merges --format=%s main | grep -qF "Merge branch 'p1'"; then
+    fail "D: p1 was merged locally instead of through its PR"
+else
+    pass "D: no local merge of p1"
+fi
+if git -C "$D" merge-base --is-ancestor "$D_TIP" main 2>/dev/null; then
+    pass "D: main pulled the PR's merge"
+else
+    fail "D: p1's tip is not on main (base not pulled after the PR merge)"
+fi
+if git -C "$D" rev-parse -q --verify refs/heads/p1 >/dev/null; then
+    fail "D: local branch p1 still exists"
+else
+    pass "D: local branch p1 deleted"
+fi
+if [ -e "$D/.worktrees/p1" ]; then
+    fail "D: .worktrees/p1 still exists"
+else
+    pass "D: .worktrees/p1 removed"
+fi
+if [ -z "$(git -C "$D" ls-remote --heads origin p1 2>/dev/null)" ]; then
+    pass "D: origin's p1 deleted"
+else
+    fail "D: origin still has p1"
+fi
+check assert_contains "$out_d" "PR\|pull request" "D: reports the PR merge"
 
 echo ""
 if bash "$REPO_ROOT/tests/skill-size/test-skill-size.sh"; then

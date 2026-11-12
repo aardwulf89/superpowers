@@ -31,8 +31,10 @@ gets `rec=<path to effort.json>`.
   anything, report the files and stop. They are your human partner's
   work in progress.
 - **On `base`:** the main checkout has the record's `base` checked out,
-  unless a phase built in place has its branch checked out there.
-  Anything else: report it and stop.
+  unless it has a phase's own branch checked out: the `branch` of a
+  phase built in place, or a branch named after a phase whose `branch`
+  is still null (a session ended before recording it; the Build stage
+  reuses it). Anything else: report it and stop.
 
 ## 3. Settle every phase under way
 
@@ -74,12 +76,14 @@ own definition when their instructions give one, else the one in
    date, then check the push,** in the main checkout with `base` checked
    out, before anything merges: `git pull --ff-only origin "$base"`,
    then `git push --dry-run origin "$base"`. For a phase built in place,
-   check out `base` for these two and `"$b"` again after. If either
-   fails, that is a refused push: stop now. Option 1 deletes the branch
-   and removes the worktree before the push, so a push that fails after
-   it cannot leave them in place. A dry run does not catch server-side
-   hooks or branch protection; those refuse only the real push, which
-   still stops, but after the cleanup.
+   check out `base` for these two, and `"$b"` again after, whether they
+   pass or fail. If either fails, that is a refused push: stop now. If
+   the pull had already moved `base`, say so in the report: it is a
+   fast-forward to `origin`, with nothing to undo. Option 1 deletes the
+   branch and removes the worktree before the push, so a push that
+   fails after it cannot leave them in place. A dry run does not catch
+   server-side hooks or branch protection; those refuse only the real
+   push, which still stops, but after the cleanup.
 4. **Invoke `finishing-a-development-branch`** fresh through the Skill
    tool, from the branch's worktree. Give it the record's `base` at its
    Step 3. Its safeguards run as it words them: the full suite before
@@ -90,9 +94,20 @@ own definition when their instructions give one, else the one in
      `git -C <main checkout> push origin "$base"`. Then delete the
      remote branch, only if `git ls-remote --heads origin "$b"` lists
      it: `git push origin --delete "$b"`.
-   - An open PR: `gh pr merge "$b"`, with a merge method the repo
-     allows. Then `git -C <main checkout> pull` on `base`, so the next
-     phase builds on the merged code.
+   - An open PR: `gh pr merge "$b" --merge`, or `--squash` or
+     `--rebase` when the repo allows no merge commits (`gh repo view
+     --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed`).
+     Then, in the main checkout on `base` (for a phase built in place,
+     check out `base` first), `git pull --ff-only origin "$base"`, so the
+     next phase builds on the merged code. The work has landed, so do
+     the cleanup option 1 would have done: remove the branch's worktree
+     if it is under `.worktrees/` or `worktrees/` (`git worktree remove
+     <path>`, never `--force`); once `gh pr view "$b" --json state -q
+     .state` prints `MERGED`, delete the local branch with
+     `git branch -D "$b"` (a squash's branch is never an ancestor of
+     `base`, so `-d` refuses it); and delete the remote branch only if
+     `git ls-remote --heads origin "$b"` lists it:
+     `git push origin --delete "$b"`.
 
 **If any safeguard fails, stop.** That means a red suite, a merge
 conflict, a refused worktree removal, a refused push (the dry run or the
@@ -172,6 +187,11 @@ null `closing` starts as
 
 - **Commit the plan on `base` before the build,** then `set` `plan`.
   The executor resolves it from inside the worktree.
+- **The plan covers this phase only.** When `spec` links the umbrella,
+  or a design that other phases share (the parts of a split), tell
+  `writing-plans` in the same message which phase it plans: this
+  phase's id and its Phases entry, word for word, and that the other
+  phases get plans of their own.
 - **A further split from `writing-plans`' Scope Check is a re-plan
   ruling,** with no change to intent: split the phase in the record by
   the rules under `set-phases` in `references/record.md`, and commit the
@@ -184,9 +204,15 @@ null `closing` starts as
 - **The worktree preference:** a worktree, unless the project's
   instructions say to build in place. This answers
   `using-git-worktrees`' consent prompt.
-- **Building in place:** in the main checkout, on `base`, run
-  `git checkout -b <phase id>` before invoking the executor. Never
-  implement on `base`.
+- **Building in place,** for a phase whose `branch` is null: in the
+  main checkout, on `base`, run `git checkout -b <phase id>` before
+  invoking the executor. If a branch of that name exists already, an
+  earlier session ended before recording it: when
+  `git rev-list --count <base>..<phase id>` prints `0`, check it out
+  (unless it is checked out already) and go on; otherwise report it and
+  stop. Never implement on `base`. A `cut-off` phase's branch is
+  checked out already: re-invoke the executor there, with no
+  `checkout -b`.
 - **Record `branch` as soon as it exists:** `set` `branch` once the
   executor's setup has created its SDD workspace (its ledger), not
   before. A branch with no workspace and no commits reads as
