@@ -98,7 +98,8 @@ limits, your human partner's answers, and what it depends on and waits on.
 **Each phase's technical design** goes in
 `docs/superpowers/specs/<date>-<umbrella topic>-<phase id>-design.md`,
 committed on `base`. It copies the phase's entry from the Phases section word
-for word, because the executor reads only the plan and its Spec. When the
+for word, with the section's "Across phases" line, which is part of every
+entry's copy, because the executor reads only the plan and its Spec. When the
 umbrella already covers a phase in enough detail, the phase needs no separate
 design, and its `spec` links the umbrella.
 

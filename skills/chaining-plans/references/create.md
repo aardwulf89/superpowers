@@ -99,7 +99,9 @@ All of this happens in the main checkout, on `base`.
 ### The Phases section
 
 Append it to the umbrella spec. Resume copies a phase's entry word for word
-into that phase's design, so each entry must stand on its own.
+into that phase's design, together with the "Across phases" line, which is
+part of every entry's copy. So each entry, read with that line, must stand on
+its own; don't repeat a cross-phase rule inside the entries.
 
 ```markdown
 ## Phases
