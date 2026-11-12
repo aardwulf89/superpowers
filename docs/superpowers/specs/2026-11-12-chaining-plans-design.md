@@ -269,6 +269,45 @@ phase needs no separate design, and its `spec` links the umbrella.
   does not depend on context surviving compaction. `learned` and
   `replan` stay null until the close.
 
+### Branches and worktrees: one lane
+
+**Each phase gets its own branch and worktree, and is merged into `base`
+before the next phase starts.** The human partner merges it with `git
+ops` at the merge menu (their global instructions: merge, push, delete
+the branch). This is the only lane.
+
+- **Worktrees.** The human partner never creates one. The executor's own
+  setup (`using-git-worktrees`) creates a fresh worktree and branch from
+  `base` at the start of each build. The standing approval answers its
+  consent prompt. Finishing's option 1 removes the worktree after the
+  merge. A project whose instructions say to build in place builds on a
+  branch in the main checkout instead; the lane is otherwise the same.
+- **Git ops between plans: yes, every time.** The next phase builds on
+  the previous phase's code, so that code must be on `base`. The merge
+  menu is where the human partner comes in anyway, so `git ops` is their
+  one reply at each boundary.
+- **Not merging** (option 2 or 3) is supported only as a wait. Phases that
+  depend on the unmerged phase stay blocked until it merges, and Resume
+  goes on with phases that don't depend on it.
+- **Docs live on `base`.** The umbrella spec, its Phases section, each
+  phase's design, and each plan are committed on `base` in the main
+  checkout, before the build's worktree is created.
+
+**Why this lane (my call).** Every existing skill runs as written:
+- `using-git-worktrees` makes one worktree per build;
+- the executor's final review diffs against the merge base with `base`,
+  which is exactly this phase's work;
+- `finishing` runs its menu once per plan.
+
+**The rejected lane: one long-lived branch and worktree per effort,**
+merged once at the end. It would spare the `git ops` at each boundary,
+but at the cost of overriding two existing behaviors on every plan:
+- the executor's final review would diff from the effort's start, taking
+  in every earlier phase;
+- finishing would have to be skipped between phases.
+
+Overrides like these are what agents drop when they work from memory.
+
 ### Create: the intent sitting
 
 The human partner is present, having just approved the spec.
