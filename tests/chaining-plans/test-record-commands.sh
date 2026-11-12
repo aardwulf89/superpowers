@@ -157,6 +157,14 @@ check "open-efforts lists only efforts with open phases" \
 $CD/e2/effort.json" \
   "$(cd "$R" && chain_dir="$CD" && eval "$(cmd_block open-efforts)")"
 
+# open-efforts with chain_dir unset finds the repo's own chain dir
+mkdir -p "$R/.superpowers"
+cp -r "$CD" "$R/.superpowers/chain"
+check "open-efforts defaults chain_dir when unset" \
+  "$R/.superpowers/chain/e1/effort.json
+$R/.superpowers/chain/e2/effort.json" \
+  "$(cd "$R" && unset chain_dir && eval "$(cmd_block open-efforts)")"
+
 # set
 S="$TMP/set.json"
 write_rec "$S" "$(phase p1 known null '[]')" "$(phase p2 known null '["p1"]')"

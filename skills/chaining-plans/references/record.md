@@ -90,7 +90,10 @@ discarded).
 
 ## Commands
 
-Each block is named by the comment above it. Run it as written. Blocks
+Each block is named by the comment above it. Run it as written. Every Bash
+call starts a fresh shell, so assign the block's inputs (`rec`, `id`,
+`field`, `value_json`, `chain_dir`) on lines in the same Bash call, before
+the block. Blocks
 that classify phases (`phase-state`, `pick`, `open-efforts`) carry the same
 `phase_state` function; run them from inside the repo.
 
@@ -107,11 +110,12 @@ echo "$chain_dir"
 
 ### open-efforts
 
-Reads `chain_dir`. Prints one `effort.json` path per line, for each effort
+Reads `chain_dir` (defaults to the `chain-dir` value when unset). Prints one `effort.json` path per line, for each effort
 with at least one phase that is not `done` or `dropped`.
 
 <!-- cmd: open-efforts -->
 ```bash
+chain_dir=${chain_dir:-$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.superpowers/chain}
 phase_state() (
   pid=$1
   base=$(jq -r '.base' "$rec")
