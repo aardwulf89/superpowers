@@ -26,6 +26,9 @@ section, no record, no commit, no plan.
   - `depends_on`: the phases whose code it builds on (build order);
   - `waits_on`: each question an earlier phase's plan must answer before this
     phase can be designed, and which phase answers it (knowledge order).
+    Every phase a phase waits on is also in its `depends_on`: it cannot start
+    before its question is answered, and Resume's pick reads only
+    `depends_on`.
 - **Order the phases.** The order is the order of work: each phase comes after
   every phase it depends on and every phase it waits on.
 
@@ -83,7 +86,8 @@ All of this happens in the main checkout, on `base`.
    `chain-dir`, then `mkdir -p` the effort's directory). This one write
    creates the whole file, in the shape `references/record.md` gives:
    - `umbrella`: the spec's repo-relative path; `base`: the branch;
-   - `phases`: in the order of work, every phase with all ten keys;
+   - `phases`: in the order of work, every phase with all ten keys, and
+     every `waits_on[].from` also listed in that phase's `depends_on`;
    - `status`: `needs-partner` if it has `partner_questions`, else `waiting`
      if it has `waits_on`, else `known`;
    - `spec` and `plan`: null, except for a linked plan; `branch` and
