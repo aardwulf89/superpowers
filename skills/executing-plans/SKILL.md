@@ -146,7 +146,8 @@ and the new one resumes from the same ledger.
 Read the plan once, note its context and Global Constraints, and call
 `TaskCreate` once per plan task (load it with `ToolSearch` first if it's
 deferred), each titled with its task number and name ("Task 3: Add retry
-wrapper"). Never one task for a range ("Tasks 1-14").
+wrapper"). Never one task for a range ("Tasks 1-14"). After the last plan
+task, create two more: "Final whole-branch review" and "Deferred-findings round".
 If the plan names a Spec, read that too: the spec is the
 authority the plan argues from, and conflicts inside the plan resolve
 against it. A plan with no reachable spec gets a ledger note saying so —
