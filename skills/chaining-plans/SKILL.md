@@ -95,24 +95,34 @@ rules all three share.
 
 ## Where Things Live
 
+**Ids.** The umbrella's spec letter (`K`, from the first line `# K: …`)
+is the effort id. A phase id is that letter plus a number (`K3`), issued
+by Create in work order; a split appends a lowercase letter (`K3a`), and
+the bare id still names the whole. The phase id is also the plan id that
+`writing-plans` uses (its tasks are `K3.1`, `K3.2`, …), the branch name,
+and the scope of the phase's docs commits (`docs(K3): …`). Ids are fixed
+once committed: never renumbered, reused, or given to other work. Copy
+them verbatim into everything you write to the record or report.
+
 **The intent lives in the umbrella spec,** committed on `base`. Create adds a
 `## Phases` section to the approved spec: for each phase, its purpose and
 limits, your human partner's answers, and what it depends on and waits on.
 
 **Each phase's technical design** goes in
-`docs/superpowers/specs/<date>-<umbrella topic>-<phase id>-design.md`,
-committed on `base`. It copies the phase's entry from the Phases section word
+`docs/superpowers/specs/<phase id>.md`, with first line
+`# <phase id>: <title>`, committed on `base`. It copies the phase's entry from the Phases section word
 for word, with the section's "Across phases" line, which is part of every
 entry's copy, because the executor reads only the plan and its Spec. When the
 umbrella already covers a phase in enough detail, the phase needs no separate
 design, and its `spec` links the umbrella.
 
-**Each plan** goes where `writing-plans` puts it, committed on `base` before
+**Each plan** goes where `writing-plans` puts it
+(`docs/superpowers/plans/<phase id>.md`), committed on `base` before
 the build starts: the executor resolves it from inside the worktree.
 
 **The record holds the machine state:** one `effort.json` per effort, at
 `<main checkout>/.superpowers/chain/<id>/effort.json`, where `<id>` is the
-umbrella spec's basename. Run `chain-dir` from `references/record.md` to find
+umbrella's spec letter. Run `chain-dir` from `references/record.md` to find
 the directory; it resolves the same from any worktree. `.superpowers/` is
 git-ignored, so the record is never committed.
 - `references/record.md` holds its shape and every command you run against
@@ -123,7 +133,8 @@ git-ignored, so the record is never committed.
 - Your human partner never reads the record. They review through your
   reports.
 
-**Branches: one lane.** Each phase gets its own branch and worktree, created
+**Branches: one lane.** Each phase gets its own branch, named by its phase
+id, and worktree, created
 from `base` by the executor's own worktree setup, and is merged into `base`
 before the next phase starts. A project whose instructions say to build in
 place builds on the phase's own branch in the main checkout instead,

@@ -18,14 +18,22 @@ section, no record, no commit, no plan.
   the one `git symbolic-ref --short refs/remotes/origin/HEAD` names,
   without `origin/`, or, with no remote, `main` or `master`. On any other
   branch, which branch is `base` is a question for the sitting.
-- **Check for an existing effort.** The effort id is the spec's basename
-  without `.md`. Run `chain-dir` from `references/record.md`; if
+- **Find the spec's letter.** It is the id on the spec's first line
+  (`# K: …`), and it is the effort id. A spec that predates ids (a dated
+  file name, no letter on its first line) gets one now: run
+  `bash ../brainstorming/scripts/next-spec-id` by its absolute path, from
+  the main checkout. The letter is not issued until step 4 commits it, so
+  until then it and the phase ids may change.
+- **Check for an existing effort.** The effort id is the spec's letter. Run `chain-dir` from `references/record.md`; if
   `<chain_dir>/<id>/effort.json` already exists, this spec is already an
   effort. Say so, and point your human partner at Resume.
 - **Work from the spec and from the reasons for the split** that the session
   holds, such as `writing-plans`' Scope Check finding several subsystems.
 - **For each phase, draft:**
-  - an id, `p<n>-<slug>` (for example `p1-storage`), and a title;
+  - an id, the spec's letter plus a number in work order (`K1`, `K2`,
+    …), and a title. Ids carry no words. A plan already written for this
+    spec has an id (`K1`): its phase keeps that number, and the other
+    phases take the numbers no plan has used, in work order;
   - its purpose and its limits (what it builds, and what it leaves to other
     phases);
   - `depends_on`: the phases whose code it builds on (build order);
@@ -73,7 +81,11 @@ phase comes up.
 All of this happens in the main checkout, on `base`.
 
 1. **Add the Phases section** to the umbrella spec, in the format below, with
-   your human partner's answers and corrections folded in.
+   your human partner's answers and corrections folded in. For a spec that
+   predates ids, run `bash ../brainstorming/scripts/next-spec-id` by its
+   absolute path again: if it now prints a different letter, use that one
+   and renumber the phase ids to match. Stamp the letter into the spec's
+   first line as `# K: <its existing title>`; the file keeps its name.
 2. **Plans already written.** By the time Create runs, the session may have
    written plans for this spec: none, the first phase's, or several.
    - **Link a plan only to a phase with no `waits_on`.** That phase's `plan`
@@ -81,12 +93,14 @@ All of this happens in the main checkout, on `base`.
      neither designs nor re-plans it. Don't rewrite the plan.
    - **A plan for a waiting phase** assumed answers nobody has yet. Don't link
      it. Name it in the hand-over, and leave it for your human partner to keep
-     or delete.
+     or delete. Its phase keeps the plan's number either way; if the plan is
+     deleted, that number is not given to anything else.
 3. **Check that the record is ignored:** `git check-ignore -q
    .superpowers/chain`. If it is not, add `.superpowers/` to `.gitignore`;
    an untracked record would leave the tree dirty for Resume.
 4. **Commit** the spec, any plan you linked, and `.gitignore` if it changed,
-   on `base`.
+   on `base`, with the letter in the subject (`docs(K): phases`). This
+   commit issues the ids: from here on they are never renumbered.
 5. **Write the record** with `new-record` from `references/record.md`:
    run `chain-dir`, then, in one Bash call, assign
    `rec=<chain_dir>/<id>/effort.json` and `record_json`, and run the
@@ -119,7 +133,7 @@ and session.
 **Across phases:** <rules that cut across phases, from your human partner's
 answers: intent only, never a technical choice; or "none">
 
-### p1-storage: Storage
+### K1: Storage
 
 - **Purpose:** <what this phase builds and why>
 - **Limits:** <what it does not do, and which phase does>

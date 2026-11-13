@@ -106,6 +106,33 @@ lacks $E/references/deferred-findings.md '`Final: '
 has $E/references/deferred-findings.md '<plan id>: Final: fixed'
 has $E/references/deferred-findings.md 'fix(<plan id>):'
 
+# --- chaining-plans ---
+C=skills/chaining-plans
+for f in $C/SKILL.md $C/references/create.md $C/references/resume.md $C/references/close.md $C/references/record.md; do
+  lacks "$f" 'p<n>-<slug>'
+  lacks "$f" 'p1-storage'
+  lacks "$f" 'p1-executor'
+  lacks "$f" 'p2-runtime'
+  lacks "$f" 'p3-types'
+  lacks "$f" '<date>-<umbrella topic>'
+  lacks "$f" '<date>-<topic>-design.md'
+  lacks "$f" '"p2-x"'
+done
+has $C/SKILL.md 'docs/superpowers/specs/<phase id>.md'
+has $C/SKILL.md "umbrella's spec letter"
+has $C/references/create.md 'next-spec-id'
+has $C/references/create.md '### K1: Storage'
+has $C/references/create.md 'docs(K):'
+has $C/references/resume.md 'docs/superpowers/specs/<phase id>.md'
+has $C/references/resume.md 'K2a'
+has $C/references/record.md '"id": "K2"'
+has $C/references/record.md '"depends_on": ["K1"]'
+has $C/references/record.md '"affects": ["K3"]'
+has $C/references/record.md 'K2a1'
+has $C/references/record.md '**Merged from:**'
+has $C/references/close.md '"affects": ["K3"]'
+has $C/references/close.md '**Merged from:**'
+
 if ((failures)); then
   echo "FAIL: $failures of $checks id-form checks" >&2
   exit 1

@@ -173,19 +173,23 @@ null `closing` starts as
   `base`. The design copies the phase's Phases entry word for word, with
   the section's "Across phases" line.
 - **Where it goes:**
-  `docs/superpowers/specs/<date>-<umbrella topic>-<phase id>-design.md`,
-  with today's date and the umbrella's topic. When the umbrella already
+  `docs/superpowers/specs/<phase id>.md`, with first line
+  `# <phase id>: <title>`. When the umbrella already
   covers the phase in enough detail, write no design: `spec` links the
   umbrella.
 - **The reviewer prompt** is `../brainstorming/builder-check-prompt.md`,
   relative to this skill's base directory (the installed plugin, not the
   project).
-- **Commit the design on `base`,** in the main checkout, then `set`
-  `spec`.
+- **Commit the design on `base`,** in the main checkout, with the phase
+  id in the subject (`docs(K3): design`), then `set` `spec`.
 
 ### Plan
 
-- **Commit the plan on `base` before the build,** then `set` `plan`.
+- **The plan id is this phase's id.** Tell `writing-plans` so in the
+  same message, so the plan is `docs/superpowers/plans/<phase id>.md`
+  and its tasks are `<phase id>.1`, `<phase id>.2`, ….
+- **Commit the plan on `base` before the build,** with the phase id in
+  the subject (`docs(K3): plan`), then `set` `plan`.
   The executor resolves it from inside the worktree.
 - **The plan covers this phase only.** When `spec` links the umbrella,
   or a design that other phases share (the parts of a split), tell
@@ -195,9 +199,11 @@ null `closing` starts as
 - **A further split from `writing-plans`' Scope Check is a re-plan
   ruling,** with no change to intent: split the phase in the record by
   the rules under `set-phases` in `references/record.md`, and commit the
-  Phases section to match, on `base`. The first part keeps this phase's
-  id, `spec` and `closing`, so the session goes on with the same id. Log
-  the ruling, and plan the first part.
+  Phases section to match, on `base`. Every part gets this phase's id
+  plus a letter (K3 into `K3a`, `K3b`); the first part takes its `spec`
+  and `closing`, and the session goes on as that part: from here on, `id`
+  is `K3a`. Log the ruling, and plan the first part with `K3a` as its
+  plan id. (K2a, split again, becomes `K2a1` and `K2a2`.)
 
 ### Build
 

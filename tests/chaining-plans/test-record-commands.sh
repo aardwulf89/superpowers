@@ -61,8 +61,8 @@ new_repo() {
 # state_of DIR PHASE_JSON: run phase-state in DIR for a one-phase record.
 state_of() {
   local dir="$1" phase="$2"
-  local rec="$dir/effort.json" id=p1
-  jq -n --argjson ph "$phase" '{umbrella:"u.md", base:"main", phases:[$ph + {id:"p1"}]}' > "$rec"
+  local rec="$dir/effort.json" id=K1
+  jq -n --argjson ph "$phase" '{umbrella:"u.md", base:"main", phases:[$ph + {id:"K1"}]}' > "$rec"
   (cd "$dir" && rec="$rec" id="$id" && eval "$(cmd_block phase-state)")
 }
 
@@ -168,22 +168,22 @@ write_rec() { # file phase_json...
 run_pick() { (cd "$R" && rec="$1" && eval "$(cmd_block pick)"); }
 
 # R still has b-fin merged and deleted, so branch "b-fin" is done.
-write_rec "$TMP/pick1.json" "$(phase p1 known '"b-fin"' '[]')" "$(phase p2 known null '["p1"]')"
-check "pick returns the first startable phase" "id:p2" "$(run_pick "$TMP/pick1.json")"
-write_rec "$TMP/pick2.json" "$(phase p1 dropped null '[]')" "$(phase p2 known null '["p1"]')"
-check "pick blocks on a dropped dependency" "blocked:p2" "$(run_pick "$TMP/pick2.json")"
-write_rec "$TMP/pick3.json" "$(phase p1 known '"b-fin"' '[]')"
+write_rec "$TMP/pick1.json" "$(phase K1 known '"b-fin"' '[]')" "$(phase K2 known null '["K1"]')"
+check "pick returns the first startable phase" "id:K2" "$(run_pick "$TMP/pick1.json")"
+write_rec "$TMP/pick2.json" "$(phase K1 dropped null '[]')" "$(phase K2 known null '["K1"]')"
+check "pick blocks on a dropped dependency" "blocked:K2" "$(run_pick "$TMP/pick2.json")"
+write_rec "$TMP/pick3.json" "$(phase K1 known '"b-fin"' '[]')"
 check "pick with everything done" none "$(run_pick "$TMP/pick3.json")"
-write_rec "$TMP/pick4.json" "$(phase p1 known null '[]')" "$(phase p2 known null '["p1"]')"
-check "pick takes a phase with no dependencies" "id:p1" "$(run_pick "$TMP/pick4.json")"
+write_rec "$TMP/pick4.json" "$(phase K1 known null '[]')" "$(phase K2 known null '["K1"]')"
+check "pick takes a phase with no dependencies" "id:K1" "$(run_pick "$TMP/pick4.json")"
 write_rec "$TMP/pick5.json" "$(phase x dropped null '[]')" "$(phase picked known null '["x"]')"
 check "pick blocks on a phase whose id is 'picked'" "blocked:picked" "$(run_pick "$TMP/pick5.json")"
 
 CD="$TMP/chains"
-write_rec "$CD/e1/effort.json" "$(phase p1 known null '[]')"
-write_rec "$CD/e2/effort.json" "$(phase p1 known '"b-fin"' '[]')" "$(phase p2 known null '["p1"]')"
-write_rec "$CD/e3/effort.json" "$(phase p1 known '"b-fin"' '[]')"
-write_rec "$CD/e4/effort.json" "$(phase p1 dropped null '[]')" "$(phase p2 known '"b-fin"' '[]')"
+write_rec "$CD/e1/effort.json" "$(phase K1 known null '[]')"
+write_rec "$CD/e2/effort.json" "$(phase K1 known '"b-fin"' '[]')" "$(phase K2 known null '["K1"]')"
+write_rec "$CD/e3/effort.json" "$(phase K1 known '"b-fin"' '[]')"
+write_rec "$CD/e4/effort.json" "$(phase K1 dropped null '[]')" "$(phase K2 known '"b-fin"' '[]')"
 check "open-efforts lists only efforts with open phases" \
   "$CD/e1/effort.json
 $CD/e2/effort.json" \
@@ -199,10 +199,10 @@ $R/.superpowers/chain/e2/effort.json" \
 
 # set
 S="$TMP/set.json"
-write_rec "$S" "$(phase p1 known null '[]')" "$(phase p2 known null '["p1"]')"
+write_rec "$S" "$(phase K1 known null '[]')" "$(phase K2 known null '["K1"]')"
 before="$(jq -c '.phases[0]' "$S")"
-(rec="$S" id=p2 field=branch value_json='"p2"' && eval "$(cmd_block set)")
-check "set changes the named phase" '"p2"' "$(jq -c '.phases[1].branch' "$S")"
+(rec="$S" id=K2 field=branch value_json='"K2"' && eval "$(cmd_block set)")
+check "set changes the named phase" '"K2"' "$(jq -c '.phases[1].branch' "$S")"
 check "set leaves other phases alone" "$before" "$(jq -c '.phases[0]' "$S")"
 if jq -e . "$S" >/dev/null; then pass "set leaves valid JSON"; else fail "set leaves valid JSON"; fi
 if [[ ! -e "$S.tmp" ]]; then pass "set leaves no .tmp file"; else fail "set leaves no .tmp file"; fi
@@ -216,21 +216,21 @@ refuses() {
   elif [[ -e "$file.tmp" ]]; then fail "$name: .tmp left"
   else pass "$name"; fi
 }
-refuses "set refuses an unknown id" "$S" set rec="$S" id=p9 field=branch "value_json='\"x\"'"
-refuses "set refuses an unknown field" "$S" set rec="$S" id=p1 field=brnch "value_json='\"x\"'"
-refuses "set refuses a value that is not JSON" "$S" set rec="$S" id=p1 field=branch "value_json='not json'"
+refuses "set refuses an unknown id" "$S" set rec="$S" id=K9 field=branch "value_json='\"x\"'"
+refuses "set refuses an unknown field" "$S" set rec="$S" id=K1 field=brnch "value_json='\"x\"'"
+refuses "set refuses a value that is not JSON" "$S" set rec="$S" id=K1 field=branch "value_json='not json'"
 
 # set-phases
 P="$TMP/set-phases.json"
-write_rec "$P" "$(phase p1 known null '[]')" "$(phase p2 known null '["p1"]')"
-new_phases="[$(phase p1 known null '[]'),$(phase p2a known null '["p1"]'),$(phase p2b known null '["p2a"]')]"
+write_rec "$P" "$(phase K1 known null '[]')" "$(phase K2 known null '["K1"]')"
+new_phases="[$(phase K1 known null '[]'),$(phase K2a known null '["K1"]'),$(phase K2b known null '["K2a"]')]"
 (rec="$P" phases_json="$new_phases" && eval "$(cmd_block set-phases)")
 if jq -e . "$P" >/dev/null; then pass "set-phases leaves valid JSON"; else fail "set-phases leaves valid JSON"; fi
 check "set-phases replaces the phases with exactly the new ones" \
   "$(jq -c . <<<"$new_phases")" "$(jq -c '.phases' "$P")"
 check "set-phases keeps umbrella and base" '"u.md" "main"' "$(jq -c '.umbrella, .base' "$P" | paste -sd' ')"
 if [[ ! -e "$P.tmp" ]]; then pass "set-phases leaves no .tmp file"; else fail "set-phases leaves no .tmp file"; fi
-one="$(phase p1 known null '[]')"
+one="$(phase K1 known null '[]')"
 refuses "set-phases refuses an object" "$P" set-phases rec="$P" "phases_json='$one'"
 refuses "set-phases refuses a phase missing a key" "$P" set-phases rec="$P" \
   "phases_json='[$(jq -c 'del(.title)' <<<"$one")]'"
@@ -238,7 +238,7 @@ refuses "set-phases refuses a repeated id" "$P" set-phases rec="$P" "phases_json
 
 # new-record
 N="$TMP/new/e/effort.json"
-good="$(printf '%s\n' "$one" "$(phase p2 known null '["p1"]')" | jq -sc '{umbrella:"u.md", base:"main", phases:.}')"
+good="$(printf '%s\n' "$one" "$(phase K2 known null '["K1"]')" | jq -sc '{umbrella:"u.md", base:"main", phases:.}')"
 (rec="$N" record_json="$good" && eval "$(cmd_block new-record)")
 check "new-record writes the record it is given" "$good" "$(jq -c . "$N" 2>/dev/null || true)"
 if [[ ! -e "$N.tmp" ]]; then pass "new-record leaves no .tmp file"; else fail "new-record leaves no .tmp file"; fi

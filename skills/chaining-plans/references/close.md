@@ -23,6 +23,10 @@ with its inputs assigned in the same Bash call.
   as `git -C <main checkout>`. If the phase was built in place and its
   branch is still checked out there, switch to `base` before a commit and
   back after.
+- **Ids are copied, never shortened.** Every line you write to
+  `rulings`, `unfinished`, `learned` or `replan` keeps the full ids it
+  names (`Task K3.4: …`, `K3: …`), and names a phase by its phase id.
+  Commits on `base` carry the narrowest id (`docs(K3): …`).
 - **Read the current `closing`** with jq before you compose any
   `value_json` for it, every time, never from memory:
   `jq -c --arg id "$id" '.phases[] | select(.id == $id) | .closing' "$rec"`.
@@ -115,12 +119,17 @@ test**. Does the change alter any of these?
   answers through them.
 - **Reordering, a split, a merge, or a drop that keeps the outcome:**
   follow the rules under `set-phases` in `references/record.md`, and
-  commit the umbrella's Phases section to match, on `base`. In a close,
-  this phase counts as closed for a new phase's `status`.
+  commit the umbrella's Phases section to match, on `base`: split parts
+  get their own entries (`### K2a: …`), and a merged entry gets a line
+  `**Merged from:** K5`. In a close, this phase counts as closed for a
+  new phase's `status`.
 - **A phase's technical design:** the umbrella holds intent only, so a
   technical change never goes into it. A phase with a `plan` gets the
   change in its plan file, and in its own design file if it has one,
-  committed on `base`. Else a phase whose `spec` is its own design file
+  committed on `base`. The plan's task ids are already issued: a task
+  added takes the next unused number, and a task split keeps its parent
+  heading with the parts nested under it (`#### Task K3.4a: …`), as
+  `writing-plans`' Ids section says. Else a phase whose `spec` is its own design file
   gets it in that file, committed on `base`. Else (`spec` null, or the
   umbrella) the phase has no file of its own: add the change to this
   phase's `learned` as a line naming that phase, since its Design stage
@@ -129,8 +138,9 @@ test**. Does the change alter any of these?
   `closing`, then `learned` plus the line), so the `replan` write's
   fresh read keeps it.
 - **Each unfinished finding:** move it to the phase it belongs to, the
-  same way as a technical design change, and note that phase in its
-  line in `unfinished`, with `set` the same way.
+  same way as a technical design change, naming the id it came from
+  (`from K2: Task K2.3: …`), and note that phase in its line in
+  `unfinished`, with `set` the same way.
 
 **Yes: do not rule.** Add the question to the affected phase's
 `partner_questions` (read the list with jq, then `set` it with the
@@ -148,7 +158,7 @@ answer does that, in the phase's intent round.
 per change, a question included:
 
 ```json
-{ "intent": false, "borderline": false, "change": "...", "affects": ["p3-types"], "why": "...", "alternative": "..." }
+{ "intent": false, "borderline": false, "change": "...", "affects": ["K3"], "why": "...", "alternative": "..." }
 ```
 
 - `intent`: true for a question to your human partner; `change` is then

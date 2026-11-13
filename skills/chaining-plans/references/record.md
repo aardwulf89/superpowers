@@ -2,7 +2,7 @@
 
 The record is the machine state of one effort: one JSON file per effort,
 at `<main checkout>/.superpowers/chain/<id>/effort.json`. `<id>` is the
-basename of the umbrella spec. `.superpowers/` is git-ignored, so the
+umbrella's spec letter (`K`, from its first line `# K: …`). `.superpowers/` is git-ignored, so the
 record is never committed. It is kept after the effort is done.
 
 Update it in place with `jq`, never by hand-editing and never by
@@ -12,16 +12,16 @@ rewriting the whole file from memory. It keeps no history.
 
 ```json
 {
-  "umbrella": "docs/superpowers/specs/<date>-<topic>-design.md",
+  "umbrella": "docs/superpowers/specs/K.md",
   "base": "main",
   "phases": [
     {
-      "id": "p2-runtime",
+      "id": "K2",
       "title": "Runtime libraries",
       "status": "waiting",
-      "depends_on": ["p1-executor"],
+      "depends_on": ["K1"],
       "waits_on": [
-        { "from": "p1-executor", "question": "Which intrinsics differ from the reference in the executor's calibration?" }
+        { "from": "K1", "question": "Which intrinsics differ from the reference in the executor's calibration?" }
       ],
       "partner_questions": [],
       "spec": null,
@@ -60,7 +60,7 @@ There is no `head` key and no stored "done".
   "unfinished": ["each 'Unfinished' line, with the phase it was moved to, or 'none' and why"],
   "learned": ["the answer to each waits_on question, then the surprises"],
   "replan": [
-    { "intent": false, "borderline": false, "change": "...", "affects": ["p3-types"], "why": "...", "alternative": "..." }
+    { "intent": false, "borderline": false, "change": "...", "affects": ["K3"], "why": "...", "alternative": "..." }
   ]
 }
 ```
@@ -296,7 +296,7 @@ fi
 ### set
 
 Reads `rec`, `id`, `field` and `value_json`. Sets that field of the phase
-to the JSON value, in place. Example: `field=branch value_json='"p2-x"'`.
+to the JSON value, in place. Example: `field=branch value_json='"K2"'`.
 It fails, and writes nothing, when the record has no phase `id` with
 that field, or `value_json` is not JSON.
 
@@ -327,9 +327,13 @@ from Resume's Plan stage:
 - **Only a phase whose `branch` is null** is split, merged or dropped.
 - **The array order is the order of work:** each phase after every phase
   it depends on or waits on.
-- **A split:** the first part keeps the split phase's id, `spec` and
-  `closing`. Every other part is a new phase with all ten keys, an id not
-  used in the record, the split phase's `spec` (its design, or the
+- **A split:** every part gets the split phase's id plus one lowercase
+  letter, in work order (K2 splits into `K2a`, `K2b`, …, skipping i, l
+  and o); none keeps the bare id, which still names the whole. A part
+  that splits again alternates to a number (`K2a` into `K2a1`, `K2a2`).
+  The first part takes the split phase's `spec` and `closing`. Every
+  other part is a new phase with all ten keys, the split phase's `spec`
+  (its design, or the
   umbrella, covers every part, and each part's plan says which part it
   builds), and null `plan`, `branch` and `closing`. Every part, the
   first included, has a null `plan`: a plan for the whole phase is not a
@@ -337,7 +341,9 @@ from Resume's Plan stage:
   `partner_questions` that concern it, and a later part that builds on
   an earlier part's code depends on it.
 - **A merge:** the merged phase keeps the id of the first of them, in
-  array order, and joins their `depends_on`, `waits_on` and
+  array order; the others leave the record, and their ids are never
+  issued again. Its Phases entry gets a line `**Merged from:** K5`,
+  naming each id it absorbed. It joins their `depends_on`, `waits_on` and
   `partner_questions`, without its own id. Its `spec` and `plan` are
   null, so its Design stage writes one design for the whole. Its
   `closing` is null when all of theirs are; else it joins their
@@ -351,10 +357,11 @@ from Resume's Plan stage:
   `waiting` if any of its `waits_on` has a `from` that is not closed
   yet, else `known`. A part that inherits only answered `waits_on` is
   `known`.
-- **Every other phase:** a `depends_on` on a split id adds every new
-  part; a `waits_on` that a new part will answer gets that part as its
+- **Every other phase:** a `depends_on` on a split id is replaced by
+  every part; a `waits_on` that a part will answer gets that part as its
   `from`. A merged id is replaced by the merged phase's id, once.
-- **A drop:** the phase stays in the array with `status` `dropped`. Take
+- **A drop:** the phase stays in the array with `status` `dropped`, and
+  its id is never issued again. Take
   its id out of every other phase's `depends_on` and `waits_on`.
 - **Every `waits_on[].from` is also in that phase's `depends_on`.** A
   change that adds or moves a `waits_on` adds its `from` there too.
