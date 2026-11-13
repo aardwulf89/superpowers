@@ -32,7 +32,8 @@ without stopping.
 **Rulings, not stalls.** Conflicts, ambiguities, plan defects — decide them.
 The spec is the binding authority, the plan is its argument, and your
 judgment settles what neither answers. Record every decision in the ledger
-as `Ruling: <what you decided> — <why> — <what it costs if wrong>`, and keep
+as `<plan id>: Ruling: <what you decided> — <why> — <what it costs if wrong>`
+(`Task <id>: Ruling: …` when it concerns one task), and keep
 going. Deviating from the plan without a ledgered ruling is a decision made
 in secret.
 
@@ -132,8 +133,11 @@ and the new one resumes from the same ledger.
   artifact for THIS plan: ledger, briefs, review packages. Another plan's
   directory is never yours to read or write.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
-  line names your plan file, tasks with a `Task <N>: complete` line are
-  DONE — do not redo them; resume at the first task without one. Their
+  line names your plan file, tasks with a `Task <id>: complete` line are
+  DONE — do not redo them; resume at the first task without one. A task
+  the ledger split during the build (`Task <id>: Ruling: split into …`)
+  is DONE when every part the ruling names has its own completion line;
+  resume at the first part without one. Their
   commits exist in git even when your context no longer remembers making
   them: after compaction, trust the ledger and `git log` over your own
   recollection. A ledger whose first line names a different plan file is
@@ -145,14 +149,26 @@ and the new one resumes from the same ledger.
 
 Read the plan once, note its context and Global Constraints, and call
 `TaskCreate` once per plan task (load it with `ToolSearch` first if it's
-deferred), each titled with its task number and name ("Task 3: Add retry
-wrapper"). Never one task for a range ("Tasks 1-14"). After the last plan
-task, create two more: "Final whole-branch review" and
-"Deferred-findings round and finish".
+deferred), each titled with its task id and name
+("Task K3.4: Add retry wrapper"). Never one task for a range ("Tasks 1-14").
+After the last plan task, create two more:
+"<plan id>: Final whole-branch review" and
+"<plan id>: Deferred-findings round and finish".
 If the plan names a Spec, read that too: the spec is the
 authority the plan argues from, and conflicts inside the plan resolve
 against it. A plan with no reachable spec gets a ledger note saying so —
 rulings made without one are provisional.
+
+**Ids.** In every form below, `<id>` is the task's id
+as its plan heading writes it: `K3.4` in a plan with ids, `3` in one without.
+`<plan id>` is the plan's id from its first line (`# K3: …`); a plan
+without one has none, and a line that would start with `<plan id>:` starts
+bare. Every todo, ledger line, commit subject and final-message line names
+its id in full, never a short form. Commit subjects carry the narrowest
+id: a task's commits its task id (`feat(K3.4): …` in a repo that uses
+conventional commits, else `K3.4: …`); the final review's fix pass and the
+deferred-findings round the plan id (`fix(K3): …`). When setup creates a
+branch, it is named after the plan's id (`K3`).
 
 **REQUIRED SUB-SKILL:** load superpowers:test-driven-development now,
 before Task 1. It governs every step of every task below; a plan whose
@@ -177,7 +193,7 @@ in the workspace and read its tail; read a brief, not the whole plan.
 
 ### 1. Take the task
 
-- Run this skill's `scripts/task-start PLAN_FILE N` by its absolute path,
+- Run this skill's `scripts/task-start PLAN_FILE <id>` by its absolute path,
   from the working tree you're executing in. It prints the brief
   path and BASE (the commit the task's range is cut from) in one call.
   Read the brief for every task, including ones you remember from setup:
@@ -206,9 +222,17 @@ read its output, and compare. Three outcomes:
 - **The plan is wrong** — a step contradicts the spec, an interface from an
   earlier task doesn't match what this task consumes, a command that
   cannot work. Rule on the smallest change that satisfies the spec, ledger
-  it as `Task <N>: Ruling: <finding> — <what you decided and why>`, and
+  it as `Task <id>: Ruling: <finding> — <what you decided and why>`, and
   continue. The ruling is carried, not remembered: later tasks that touch
   the same interface read it from the ledger.
+- **The task must be done in parts.** Do not edit the plan. Ledger
+  `Task <id>: Ruling: split into <id>a (<what>) and <id>b (<what>) — <why>`,
+  one lowercase letter per part, skipping i, l and o; a part that splits
+  again alternates to a number (`<id>a1`). Start each part with
+  `task-start` on the parent id, work it against the parent's brief as the
+  ruling describes the part, and close it with its own `task-done` on the
+  part id. Use the part ids from then on, in todos, commits and the final
+  message.
 
 Commit as the plan's commit steps say. A task that spans several commits
 is fine; BASE is what the review range is cut from, never `HEAD~1`.
@@ -230,12 +254,12 @@ the claim. If any item is missing, the task is not complete: finish it.
 
 ### 4. Complete the task
 
-Run this skill's `scripts/task-done PLAN_FILE N BASE -- <test command>`
+Run this skill's `scripts/task-done PLAN_FILE <id> BASE -- <test command>`
 by its absolute path, from the working tree you're executing in, with the test command the brief names for the whole task. It runs the
 tests, keeps the full output in the workspace, prints the tail, and — only
 if they pass — appends the completion line to the ledger:
 
-`Task <N>: complete (commits <base7>..<head7>, tests: <command> → <result>)`
+`Task <id>: complete (commits <base7>..<head7>, tests: <command> → <result>)`
 
 A failing run records nothing; the task is not complete. When it records,
 mark the todo complete (`TaskUpdate`) and take the next task.
@@ -269,7 +293,7 @@ is enough before merge.
 Sort the findings before you act on any of them. The reviewer's severity
 labels are advice; the gate is yours. Its "Declined to judge" list is
 yours too: every line there is a ruling you make and ledger, exactly like
-a plan conflict — `Final: Ruling: <behavior the reviewer set aside> —
+a plan conflict — `<plan id>: Final: Ruling: <behavior the reviewer set aside> —
 <what a reasonable person using this software gets, and why that stands
 or why it is now a finding> — <cost if wrong>`. Re-grade first, by effect: the
 spec is a vision document, and a finding's grade is what a reasonable
@@ -278,7 +302,7 @@ the input that triggers it — a reviewer who set a finding at Minor
 because the spec was silent has graded the spec, not the effect. Then:
 
 - **Critical and Important** enter the fix pass.
-- **Minor** goes to the ledger as `Final: minor (deferred): <one-liner>`
+- **Minor** goes to the ledger as `<plan id>: Final: minor (deferred): <one-liner>`
   for the deferred-findings round. Minors never enter
   the fix pass, and never become rulings — a ruling is a decision about a
   conflict, not a note that you declined a polish suggestion.
@@ -287,13 +311,13 @@ Fix the Critical and Important findings yourself — you are the
 implementer here — in ONE pass. Each fix is verified by TDD, not by a
 second reviewer: write the test that reproduces the finding, watch it
 fail, make it pass, then run the whole suite. Record each in the ledger as
-`Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`. A fix
+`<plan id>: Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`. A fix
 without a test that failed first is not verified; a suite that is not
 green after the pass means the pass is not over. Do not dispatch a
 re-review: it would re-read a diff whose covering tests already answer
 "addressed" and whose suite run already answers "broke nothing".
 
-A finding you decide not to fix is a ruling — `Final: Ruling: <finding> —
+A finding you decide not to fix is a ruling — `<plan id>: Final: Ruling: <finding> —
 <why the code stands> — <cost if wrong>` — and reaches your human partner
 in the rulings list. There is no second fix pass — deferred minors go to
 the deferred-findings round: read references/deferred-findings.md and run
@@ -303,8 +327,10 @@ it before you finish.
 
 Before you delete anything, collect every ledger line containing
 `Ruling:` into your final message under "Rulings I made", in the order you
-made them, each with what it costs if wrong, and every finding the deferred-findings
-round left open under "Unfinished". Both lists are exhaustive. Your final
+made them, each with what it costs if wrong and starting with the id the
+ledger line names (`Task K3.4: …`, `K3: …`), and every finding the
+deferred-findings round left open under "Unfinished", each starting with
+the id it concerns. Both lists are exhaustive. Your final
 message is the only place the decisions you took on your human partner's
 behalf — and the findings left unfinished — reach them.
 
@@ -318,7 +344,7 @@ Use superpowers:finishing-a-development-branch.
 
 | Excuse | Reality |
 |--------|---------|
-| "I remember what Task N says" | You remember a summary. The brief has the exact values. Read it. |
+| "I remember what Task <id> says" | You remember a summary. The brief has the exact values. Read it. |
 | "The plan's code is right, skip watching the test fail" | A test you never saw fail proves nothing. It is one step. Run it. |
 | "I'll run the full suite at the end instead of per step" | Per-step runs are how you learn which step broke it. The end-of-task run is the contract, not a substitute. |
 | "The plan is wrong here, I'll just do the right thing" | Do the right thing and ledger the ruling. Unledgered deviation is a decision made in secret. |

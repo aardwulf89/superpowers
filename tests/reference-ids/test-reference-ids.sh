@@ -86,6 +86,26 @@ has $S/references/fix-loop.md 'Task <id>: parked'
 has $S/references/final-review.md 'fix(<plan id>):'
 has $S/references/deferred-findings.md 'fix(<plan id>):'
 
+# --- executing-plans ---
+E=skills/executing-plans
+lacks $E/SKILL.md '"Task 3: Add retry'
+lacks $E/SKILL.md 'Task <N>'
+lacks $E/SKILL.md 'Task N says'
+lacks $E/SKILL.md '`Final: '
+has $E/SKILL.md 'as its plan heading writes it'
+has $E/SKILL.md '"Task K3.4: Add retry wrapper"'
+has $E/SKILL.md '"<plan id>: Final whole-branch review"'
+has $E/SKILL.md 'scripts/task-start PLAN_FILE <id>'
+has $E/SKILL.md 'scripts/task-done PLAN_FILE <id> BASE'
+has $E/SKILL.md '<plan id>: Final: Ruling:'
+has $E/SKILL.md '<plan id>: Ruling:'
+has $E/SKILL.md 'split into <id>a'
+has $E/SKILL.md 'every part the ruling names'
+has $E/SKILL.md "named after the plan's id"
+lacks $E/references/deferred-findings.md '`Final: '
+has $E/references/deferred-findings.md '<plan id>: Final: fixed'
+has $E/references/deferred-findings.md 'fix(<plan id>):'
+
 if ((failures)); then
   echo "FAIL: $failures of $checks id-form checks" >&2
   exit 1

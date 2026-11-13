@@ -10,7 +10,8 @@ Fix the deferred minors yourself — you are the implementer here — in ONE
 pass. Each fix is verified by TDD, not by a second reviewer: write the test
 that reproduces the finding, watch it fail, make it pass, then run the
 whole suite. Record each in the ledger as
-`Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`. A fix
+`<plan id>: Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`,
+with commit subjects that carry the plan id (`fix(<plan id>): …`). A fix
 without a test that failed first is not verified; a suite that is not
 green after the pass means the pass is not over. Do not dispatch a
 re-review: it would re-read a diff whose covering tests already answer
@@ -25,7 +26,7 @@ guessed at: leave that finding open, with the question.
 There is no second round. Only the four things that stop a running plan
 (top of SKILL.md) stop you here. Every finding the round leaves open goes
 into your final message under "Unfinished", after "Rulings I made", each
-with what was tried. The list is exhaustive: if the round left a finding
+starting with the id it concerns and with what was tried. The list is exhaustive: if the round left a finding
 open, the list holds it.
 
 Then continue with Finish in [SKILL.md](../SKILL.md).
