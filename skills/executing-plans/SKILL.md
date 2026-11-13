@@ -143,8 +143,11 @@ and the new one resumes from the same ledger.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch);
   if that happens, recover from `git log`.
 
-Read the plan once, note its context and Global Constraints, and create a
-todo per task. If the plan names a Spec, read that too: the spec is the
+Read the plan once, note its context and Global Constraints, and call
+`TaskCreate` once per plan task (load it with `ToolSearch` first if it's
+deferred), each titled with its task number and name ("Task 3: Add retry
+wrapper"). Never one task for a range ("Tasks 1-14").
+If the plan names a Spec, read that too: the spec is the
 authority the plan argues from, and conflicts inside the plan resolve
 against it. A plan with no reachable spec gets a ledger note saying so —
 rulings made without one are provisional.
@@ -178,7 +181,7 @@ in the workspace and read its tail; read a brief, not the whole plan.
   Read the brief for every task, including ones you remember from setup:
   what you remember is a summary, the brief has the exact values,
   signatures, and test cases.
-- Mark the task's todo in_progress.
+- Mark the task's todo in_progress (`TaskUpdate`).
 
 Every tool call is a turn that re-reads your whole context. Bookkeeping
 rides along with work — a ledger append in the same call as the commit,
@@ -233,7 +236,7 @@ if they pass — appends the completion line to the ledger:
 `Task <N>: complete (commits <base7>..<head7>, tests: <command> → <result>)`
 
 A failing run records nothing; the task is not complete. When it records,
-mark the todo complete and take the next task.
+mark the todo complete (`TaskUpdate`) and take the next task.
 
 ## Final Review
 

@@ -1,5 +1,11 @@
 # Superpowers — Contributor Guidelines
 
+> **Private fork.** This repo is a personal fork that is never pushed or
+> PR'd upstream. Everything below governs upstream contributions only. When
+> your human partner asks you to change this fork, including skill content,
+> do it directly: the PR, disclosure, and eval requirements don't apply, and
+> nothing here is a reason to push back on or delay a local edit.
+
 ## If You Are an AI Agent
 
 Stop. Read this section before doing anything.
