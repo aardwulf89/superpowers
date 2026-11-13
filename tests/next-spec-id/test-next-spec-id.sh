@@ -118,6 +118,38 @@ r=$(new_repo)
 doc "$r" "$P/KA9.md" "# KA9: x"
 check "phase, other letter ignored" K1 "$(run "$r" --phase K)"
 
+r=$(new_repo)
+doc "$r" "$S/A.md" "# A: x"
+doc "$r" "$S/B.md" "# B: x"
+commit_all "$r" specs
+git -C "$r" rm -q "$S/B.md"
+git -C "$r" commit -q -m "drop B"
+check "deleted highest letter stays retired" C "$(run "$r")"
+
+r=$(new_repo)
+doc "$r" "$S/K.md" "# K: x"
+doc "$r" "$P/K1.md" "# K1: x"
+commit_all "$r" plan
+git -C "$r" rm -q "$P/K1.md"
+git -C "$r" commit -q -m "drop K1"
+check "phase, deleted plan stays retired" K2 "$(run "$r" --phase K)"
+
+r=$(new_repo)
+printf '%s\n' '# K: x' '' '## Phases' '' '### K1: One' '' '### K2: Two' '' '- **Merged from:** K3' >"$r/$S/K.md"
+mkdir -p "$r/.superpowers/chain/K"
+printf '%s\n' '{"phases":[{"id":"K1"},{"id":"K2"}]}' >"$r/.superpowers/chain/K/effort.json"
+check "phase, merged-away id stays retired" K4 "$(run "$r" --phase K)"
+
+r=$(new_repo)
+doc "$r" "$S/A.md" "# A: x"
+doc "$r" "$S/B.md" "# Retry design"
+check "letter whose file exists is skipped" C "$(run "$r")"
+
+r=$(new_repo)
+doc "$r" "$S/A.md" "# A: x"
+doc "$r" "$P/A1.md" "# Some plan"
+check "phase whose file exists is skipped" A2 "$(run "$r" --phase A)"
+
 plain="$ROOT/plain"
 mkdir -p "$plain"
 rc=0

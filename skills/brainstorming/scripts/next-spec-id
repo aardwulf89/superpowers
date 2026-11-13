@@ -15,12 +15,17 @@
 #   *.md directly in either dir, in the working tree and in the base
 #   branch's tree, so a branch that is behind base can't hand out a letter
 #   base already holds;
+# - the same for every such doc deleted in the history of base and HEAD,
+#   so an abandoned spec's or plan's id stays retired;
 # - every directory under <main checkout>/.superpowers/chain/ named by a
-#   spec letter, and with --phase K, every phase id in K's effort.json.
+#   spec letter, and with --phase K, every phase id in K's effort.json and
+#   every K<n> named anywhere in spec K's own text (its Phases section keeps
+#   ids that a merge took out of the record: `**Merged from:** K5`).
 #
-# Only first lines are read, never file names: a README.md would otherwise
-# read as spec "README", and a legacy dated spec carries its letter only in
-# its first line.
+# Ids are counted from first lines, never file names: a README.md would
+# otherwise read as spec "README", and a legacy dated spec carries its
+# letter only in its first line. But a candidate whose file already exists
+# (`B.md` titled `# Retry design`) is skipped, so no doc is overwritten.
 #
 # Spec letters run A..Z, AA, AB, ... skipping I and O at every position.
 # The next letter follows the highest one used; gaps are never refilled,
@@ -90,19 +95,65 @@ else
   done
 fi
 
-# Print the first line of every doc in both dirs, working tree and base.
+# The revisions whose history counts: base, and HEAD when it differs.
+revs=()
+[[ -n $base ]] && revs+=("$base")
+if git -C "$root" rev-parse -q --verify HEAD >/dev/null; then
+  [[ -n $base && $(git -C "$root" rev-parse HEAD) == $(git -C "$root" rev-parse "$base^{commit}") ]] || revs+=(HEAD)
+fi
+
+# Print the first line of every doc in both dirs: the working tree, base's
+# tree, and every doc deleted in the history of base and HEAD.
 first_lines() {
-  local d f path
+  local d f path line commit
   for d in "$specs" "$plans"; do
     for f in "$root/$d"/*.md; do
       [[ -f $f ]] && head -n 1 "$f"
     done
-    [[ -n $base ]] || continue
-    while IFS= read -r path; do
-      [[ $path == *.md ]] || continue
-      git -C "$root" cat-file -p "$base:$path" 2>/dev/null | sed -n 1p
-    done < <(git -C "$root" ls-tree --name-only "$base" -- "$d/" 2>/dev/null)
+    if [[ -n $base ]]; then
+      while IFS= read -r path; do
+        [[ $path == *.md ]] || continue
+        git -C "$root" cat-file -p "$base:$path" 2>/dev/null | sed -n 1p
+      done < <(git -C "$root" ls-tree --name-only "$base" -- "$d/" 2>/dev/null)
+    fi
+    ((${#revs[@]})) || continue
+    commit=""
+    while IFS= read -r line; do
+      if [[ $line == commit\ * ]]; then
+        commit=${line#commit }
+      elif [[ $line == "$d"/*.md && $(dirname "$line") == "$d" && -n $commit ]]; then
+        git -C "$root" cat-file -p "$commit^:$line" 2>/dev/null | sed -n 1p
+      fi
+    done < <(git -C "$root" log "${revs[@]}" --diff-filter=D --name-only --format='commit %H' -- "$d/" 2>/dev/null)
   done
+}
+
+# True when <name>.md exists in either dir, in the working tree or on base.
+taken() {
+  local d
+  for d in "$specs" "$plans"; do
+    [[ -e $root/$d/$1.md ]] && return 0
+    [[ -n $base ]] && git -C "$root" cat-file -e "$base:$d/$1.md" 2>/dev/null && return 0
+  done
+  return 1
+}
+
+# With --phase K: every K<n> named in spec K's own text (working tree and
+# base), whatever its first line's file is called.
+spec_text_ids() {
+  local f path text
+  {
+    for f in "$root/$specs"/*.md; do
+      [[ -f $f ]] && [[ $(head -n 1 "$f") == "# $phase:"* ]] && cat "$f"
+    done
+    if [[ -n $base ]]; then
+      while IFS= read -r path; do
+        [[ $path == *.md ]] || continue
+        text=$(git -C "$root" cat-file -p "$base:$path" 2>/dev/null) || continue
+        [[ $(sed -n 1p <<<"$text") == "# $phase:"* ]] && printf '%s\n' "$text"
+      done < <(git -C "$root" ls-tree --name-only "$base" -- "$specs/" 2>/dev/null)
+    fi
+  } | grep -oE "(^|[^A-Za-z0-9])${phase}[1-9][0-9]*" | sed -E 's/^[^A-Z]//' || true
 }
 
 # Ids in use, one per line: doc ids, then record ids.
@@ -125,6 +176,7 @@ used_ids() {
     }
     jq -r '.phases[]?.id // empty' "$chain/$phase/effort.json"
   fi
+  [[ -z $phase ]] || spec_text_ids
 }
 
 # Bijective base-24 rank of a letter run: A=1, Z=24, AA=25, ...
@@ -157,7 +209,9 @@ if [[ -n $phase ]]; then
       ((BASH_REMATCH[2] > max)) && max=${BASH_REMATCH[2]}
     fi
   done <<<"$ids"
-  echo "$phase$((max + 1))"
+  next=$((max + 1))
+  while taken "$phase$next"; do next=$((next + 1)); done
+  echo "$phase$next"
   exit 0
 fi
 
@@ -167,4 +221,6 @@ while IFS= read -r id; do
   r=$(rank "${BASH_REMATCH[1]}")
   ((r > top)) && top=$r
 done <<<"$ids"
-letters $((top + 1))
+next=$((top + 1))
+while taken "$(letters "$next")"; do next=$((next + 1)); done
+letters "$next"

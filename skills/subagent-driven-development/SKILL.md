@@ -150,7 +150,11 @@ its id in full, never a short form. Commit subjects carry the narrowest
 id: a task's commits its task id (`feat(K3.4): …` in a repo that uses
 conventional commits, else `K3.4: …`); the final review's fix wave and
 the deferred-findings round the plan id (`fix(K3): …`). When setup
-creates a branch, it is named after the plan's id (`K3`). A task split
+creates a branch, it is named after the plan's id (`K3`). A task heading
+with part headings nested under it (`### Task K3.4` holding
+`#### Task K3.4a`, `#### Task K3.4b`) is a task split in the plan: run
+its parts, each with its own todo, dispatch, review and completion line,
+never the parent on its own. A task split
 during the build follows BLOCKED item 3 in
 [references/handling-reports.md](references/handling-reports.md).
 

@@ -137,7 +137,9 @@ and the new one resumes from the same ledger.
   DONE — do not redo them; resume at the first task without one. A task
   the ledger split during the build (`Task <id>: Ruling: split into …`)
   is DONE when every part the ruling names has its own completion line;
-  resume at the first part without one. Their
+  resume at the first part without one. So is a task whose plan heading
+  has nested part headings (`#### Task <id>a`, …): its parts are the
+  tasks, and it has no line of its own. Their
   commits exist in git even when your context no longer remembers making
   them: after compaction, trust the ledger and `git log` over your own
   recollection. A ledger whose first line names a different plan file is
@@ -168,7 +170,11 @@ its id in full, never a short form. Commit subjects carry the narrowest
 id: a task's commits its task id (`feat(K3.4): …` in a repo that uses
 conventional commits, else `K3.4: …`); the final review's fix pass and the
 deferred-findings round the plan id (`fix(K3): …`). When setup creates a
-branch, it is named after the plan's id (`K3`).
+branch, it is named after the plan's id (`K3`). A task heading with part
+headings nested under it (`### Task K3.4` holding `#### Task K3.4a`,
+`#### Task K3.4b`) is a task split in the plan: take its parts, each
+with its own todo, `task-start`, `task-done` and completion line,
+never the parent on its own.
 
 **REQUIRED SUB-SKILL:** load superpowers:test-driven-development now,
 before Task 1. It governs every step of every task below; a plan whose
