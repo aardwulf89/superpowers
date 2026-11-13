@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+# Print the next unused spec letter, or with --phase, the next phase id of
+# one spec, for superpowers' reference-style ids (K, K3, K3.4).
+#
+# Usage: next-spec-id [--base <branch>] [--phase <letter>] [<specs dir> [<plans dir>]]
+#
+# Run it from anywhere inside a git working tree; it acts on that tree, like
+# git. The dirs are relative to the repo root and default to
+# docs/superpowers/specs and docs/superpowers/plans. --base defaults to the
+# branch origin/HEAD names, else main, else master; with none of them, only
+# the working tree is read.
+#
+# What counts as used:
+# - the id on the first line (`# K: …`, `# K3: …`, `# K3.4: …`) of every
+#   *.md directly in either dir, in the working tree and in the base
+#   branch's tree, so a branch that is behind base can't hand out a letter
+#   base already holds;
+# - every directory under <main checkout>/.superpowers/chain/ named by a
+#   spec letter, and with --phase K, every phase id in K's effort.json.
+#
+# Only first lines are read, never file names: a README.md would otherwise
+# read as spec "README", and a legacy dated spec carries its letter only in
+# its first line.
+#
+# Spec letters run A..Z, AA, AB, ... skipping I and O at every position.
+# The next letter follows the highest one used; gaps are never refilled,
+# because an issued id is never reused.
+set -euo pipefail
+
+ALPHA=ABCDEFGHJKLMNPQRSTUVWXYZ
+# A spec letter, then an optional phase (number, then alternating parts),
+# then an optional task (dot, number, alternating parts), then a colon.
+LOWER='[a-hjkmnp-z]'
+NUM='[1-9][0-9]*'
+PARTS="(${LOWER}+|${NUM})*"
+ID_LINE="^# ([A-HJ-NP-Z]+)((${NUM})${PARTS}(\\.${NUM}${PARTS})?)?:"
+
+usage() {
+  echo "usage: next-spec-id [--base <branch>] [--phase <letter>] [<specs dir> [<plans dir>]]" >&2
+  exit 2
+}
+
+base="" phase="" dirs=()
+while (($#)); do
+  case $1 in
+  --base)
+    [[ $# -ge 2 && -n $2 ]] || usage
+    base=$2
+    shift 2
+    ;;
+  --phase)
+    [[ $# -ge 2 && -n $2 ]] || usage
+    phase=$2
+    shift 2
+    ;;
+  -*) usage ;;
+  *)
+    dirs+=("$1")
+    shift
+    ;;
+  esac
+done
+((${#dirs[@]} <= 2)) || usage
+if [[ -n $phase && ! $phase =~ ^[A-HJ-NP-Z]+$ ]]; then
+  echo "next-spec-id: '$phase' is not a spec letter" >&2
+  exit 2
+fi
+
+root=$(git rev-parse --show-toplevel 2>/dev/null) || {
+  echo "next-spec-id: not inside a git working tree" >&2
+  exit 2
+}
+common=$(git rev-parse --path-format=absolute --git-common-dir)
+chain="$(dirname "$common")/.superpowers/chain"
+specs=${dirs[0]:-docs/superpowers/specs}
+plans=${dirs[1]:-docs/superpowers/plans}
+
+if [[ -n $base ]]; then
+  git -C "$root" rev-parse -q --verify "$base^{commit}" >/dev/null || {
+    echo "next-spec-id: base '$base' is not a branch or commit" >&2
+    exit 2
+  }
+else
+  head=$(git -C "$root" symbolic-ref -q --short refs/remotes/origin/HEAD 2>/dev/null || true)
+  for b in "${head#origin/}" main master; do
+    if [[ -n $b ]] && git -C "$root" rev-parse -q --verify "refs/heads/$b" >/dev/null; then
+      base=$b
+      break
+    fi
+  done
+fi
+
+# Print the first line of every doc in both dirs, working tree and base.
+first_lines() {
+  local d f path
+  for d in "$specs" "$plans"; do
+    for f in "$root/$d"/*.md; do
+      [[ -f $f ]] && head -n 1 "$f"
+    done
+    [[ -n $base ]] || continue
+    while IFS= read -r path; do
+      [[ $path == *.md ]] || continue
+      git -C "$root" cat-file -p "$base:$path" 2>/dev/null | sed -n 1p
+    done < <(git -C "$root" ls-tree --name-only "$base" -- "$d/" 2>/dev/null)
+  done
+}
+
+# Ids in use, one per line: doc ids, then record ids.
+used_ids() {
+  local line d
+  while IFS= read -r line; do
+    if [[ $line =~ $ID_LINE ]]; then
+      echo "${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
+    fi
+  done < <(first_lines)
+  [[ -d $chain ]] || return 0
+  for d in "$chain"/*/; do
+    d=$(basename "$d")
+    [[ $d =~ ^[A-HJ-NP-Z]+$ ]] && echo "$d"
+  done
+  if [[ -n $phase && -f $chain/$phase/effort.json ]]; then
+    command -v jq >/dev/null || {
+      echo "next-spec-id: jq is needed to read $chain/$phase/effort.json" >&2
+      exit 2
+    }
+    jq -r '.phases[]?.id // empty' "$chain/$phase/effort.json"
+  fi
+}
+
+# Bijective base-24 rank of a letter run: A=1, Z=24, AA=25, ...
+rank() {
+  local s=$1 r=0 i c pre
+  for ((i = 0; i < ${#s}; i++)); do
+    c=${s:i:1}
+    pre=${ALPHA%%"$c"*}
+    r=$((r * 24 + ${#pre} + 1))
+  done
+  echo "$r"
+}
+
+letters() {
+  local n=$1 out=""
+  while ((n > 0)); do
+    n=$((n - 1))
+    out="${ALPHA:n%24:1}$out"
+    n=$((n / 24))
+  done
+  echo "$out"
+}
+
+ids=$(used_ids)
+
+if [[ -n $phase ]]; then
+  max=0
+  while IFS= read -r id; do
+    if [[ $id =~ ^([A-Z]+)([1-9][0-9]*) && ${BASH_REMATCH[1]} == "$phase" ]]; then
+      ((BASH_REMATCH[2] > max)) && max=${BASH_REMATCH[2]}
+    fi
+  done <<<"$ids"
+  echo "$phase$((max + 1))"
+  exit 0
+fi
+
+top=0
+while IFS= read -r id; do
+  [[ $id =~ ^([A-HJ-NP-Z]+) ]] || continue
+  r=$(rank "${BASH_REMATCH[1]}")
+  ((r > top)) && top=$r
+done <<<"$ids"
+letters $((top + 1))
