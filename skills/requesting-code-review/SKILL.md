@@ -48,16 +48,16 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 ## Example
 
 ```
-[Just completed Task 2: Add verification function]
+[Just completed Task B1.2: Add verification function]
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | cut -d' ' -f1)
+BASE_SHA=$(git log --oneline | grep -F "(B1.1)" | head -1 | cut -d' ' -f1)
 HEAD_SHA=$(git rev-parse HEAD)
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
+  PLAN_OR_REQUIREMENTS: Task B1.2 from docs/superpowers/plans/B1.md
   BASE_SHA: a7981ec
   HEAD_SHA: 3df7661
 
@@ -69,7 +69,7 @@ HEAD_SHA=$(git rev-parse HEAD)
   Assessment: Ready to proceed
 
 You: [Fix progress indicators]
-[Continue to Task 3]
+[Continue to Task B1.3]
 ```
 
 ## Common Rationalizations
