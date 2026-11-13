@@ -20,7 +20,8 @@ ledger and the tool results carry the record.
 ambiguities, plan defects, a cap you would have asked to exceed — decide
 them. The spec is the binding authority, the plan is its argument, and your
 judgment settles what neither answers. Record every decision in the ledger as
-`Ruling: <what you decided> — <why> — <what it costs if wrong>`, and keep
+`<plan id>: Ruling: <what you decided> — <why> — <what it costs if wrong>`
+(`Task <id>: Ruling: …` when it concerns one task), and keep
 going. A wrong ruling costs rework your human partner can see and undo; a
 session parked on a question costs their whole day and buys nothing.
 
@@ -131,16 +132,29 @@ a ledger file, not only in todos.
 
 Read the plan once, note its context and Global Constraints, and call
 `TaskCreate` once per plan task (load it with `ToolSearch` first if it's
-deferred), each titled with its task number and name ("Task 3: Add retry
-wrapper"). Never one task for a range ("Tasks 1-14"). After the last plan
-task, create two more: "Final whole-branch review" and
-"Deferred-findings round and finish".
+deferred), each titled with its task id and name
+("Task K3.4: Add retry wrapper"). Never one task for a range ("Tasks 1-14"). After the last plan
+task, create two more: "<plan id>: Final whole-branch review" and
+"<plan id>: Deferred-findings round and finish".
 If the plan names a Spec, read that too: the spec is the
 authority the plan argues from, and conflicts inside the plan resolve
 against it. A plan with no reachable spec gets a ledger note saying so —
 rulings made without one are provisional.
 
-Before dispatching Task 1, read [references/preflight.md](references/preflight.md)
+**Ids.** In every form below, `<id>` is the task's id
+as its plan heading writes it: `K3.4` in a plan with ids, `3` in one without. `<plan id>` is
+the plan's id from its first line (`# K3: …`); a plan without one has
+none, and a line that would start with `<plan id>:` starts bare. Every
+todo, dispatch, ledger line, commit subject and final-message line names
+its id in full, never a short form. Commit subjects carry the narrowest
+id: a task's commits its task id (`feat(K3.4): …` in a repo that uses
+conventional commits, else `K3.4: …`); the final review's fix wave and
+the deferred-findings round the plan id (`fix(K3): …`). When setup
+creates a branch, it is named after the plan's id (`K3`). A task split
+during the build follows BLOCKED item 3 in
+[references/handling-reports.md](references/handling-reports.md).
+
+Before dispatching the first task, read [references/preflight.md](references/preflight.md)
 and run the conflict scan it describes. Its table and rulings go in the
 ledger.
 
@@ -208,7 +222,7 @@ Record BASE (`git rev-parse HEAD`) before dispatching — the review package
 and fix-round diffs need it.
 
 - **Task brief:** before dispatching an implementer, run this skill's
-  `bash scripts/task-brief PLAN_FILE N` by its absolute path, from the
+  `bash scripts/task-brief PLAN_FILE <id>` by its absolute path, from the
   working tree you're executing in — it extracts the task's full text to a
   uniquely named file and prints the path. Compose the dispatch so the
   brief stays the single source of
@@ -221,7 +235,8 @@ and fix-round diffs need it.
   magic strings, signatures, test cases) appear only in the brief. Never
   make a subagent read the whole plan file.
 - **Report file:** name the implementer's report file after the brief
-  (brief `…/task-N-brief.md` → report `…/task-N-report.md`) and put it in
+  (brief `…/task-<id>-brief.md` → report `…/task-<id>-report.md`; a part of
+  a split task names its own, `task-K3.4a-report.md`) and put it in
   the dispatch prompt. The implementer writes the full report there and
   returns only status, commits, a one-line test summary, and concerns.
 - A dispatch prompt describes one task, not the session's history. Do not
@@ -317,8 +332,8 @@ When the review comes back clean — or every open finding is parked with a
 ruling at the cap — append the completion line to the ledger in the same
 message as your other bookkeeping:
 
-- `Task <N>: complete (commits <base7>..<head7>, review clean)`
-- `Task <N>: complete (commits <base7>..<head7>, <K> parked)` after a
+- `Task <id>: complete (commits <base7>..<head7>, review clean)`
+- `Task <id>: complete (commits <base7>..<head7>, <K> parked)` after a
   tripped breaker
 
 Then mark the todo complete (`TaskUpdate`) and move on. Never move to the next task while

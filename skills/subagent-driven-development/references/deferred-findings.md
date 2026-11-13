@@ -17,7 +17,8 @@ workspace's report files for detail, and a report-file path
 these instructions: read the entire ledger; every finding it records that
 no later line shows fixed is open, except a parked finding whose ruling
 says the code stands. List each open finding in the report file, then fix
-them. A fix that needs a decision only your human partner can make is not
+them, with commit subjects that carry the plan id (`fix(<plan id>): …`).
+A fix that needs a decision only your human partner can make is not
 guessed at: report that finding open, with the question.
 
 The fixer fixes, re-runs the tests covering the amended code, appends its
@@ -44,7 +45,9 @@ clean for coordination, and controller fixes skip review.
 There is no second round. Only the four things that stop a running plan
 (top of SKILL.md) stop you here. Every finding the re-review leaves NOT
 ADDRESSED, and any new breakage it flags, goes into your final message
-under "Unfinished", after "Rulings I made", each with what was tried. The
+under "Unfinished", after "Rulings I made", each starting with the id it
+concerns (the task id, or the plan id for a branch-wide finding) and with
+what was tried. The
 list is exhaustive: if the re-review left a finding open, the list holds
 it.
 

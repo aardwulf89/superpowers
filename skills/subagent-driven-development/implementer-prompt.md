@@ -4,11 +4,11 @@ Use this template when dispatching an implementer subagent.
 
 ```
 Subagent (general-purpose):
-  description: "Implement Task N: [task name]"
+  description: "Implement Task [TASK_ID]: [task name]"
   model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
          model silently inherits the session's most expensive one]
   prompt: |
-    You are implementing Task N: [task name]
+    You are implementing Task [TASK_ID]: [task name]
 
     ## Task Description
 
@@ -35,7 +35,9 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Commit your work. Every commit subject carries the task id,
+       [TASK_ID] — as the scope in a repo that uses conventional commits
+       (`feat([TASK_ID]): …`), else as a `[TASK_ID]: ` prefix.
     5. Self-review (see below)
     6. Report back
 

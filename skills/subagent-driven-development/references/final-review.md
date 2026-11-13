@@ -16,7 +16,8 @@ the ledger's deferred-minor and parked lines so it can triage which must be
 fixed before merge.
 
 If the final whole-branch review returns findings, dispatch ONE fix subagent
-with the complete findings list — not one fixer per finding.
+with the complete findings list — not one fixer per finding. Its commit
+subjects carry the plan id (`fix(<plan id>): …`).
 Per-finding fixers each rebuild context and re-run suites; a real
 session's final-review fix wave cost more than all its tasks combined.
 Then run exactly one scoped re-review of the fix wave
@@ -35,7 +36,8 @@ references/deferred-findings.md and run it before you finish.
 Before you delete anything, collect every ledger line containing `Ruling:` —
 preflight rulings, parked findings, breaker adjudications, all of them — into
 your final message under "Rulings I made", in the order you made them, each
-with what it costs if wrong. The list is exhaustive: if the ledger holds a
+with what it costs if wrong and starting with the id the ledger line names
+(`Task K3.4: …`, `K3: …`). The list is exhaustive: if the ledger holds a
 ruling, the list holds it. That list is the only place the decisions you
 took on your human partner's behalf reach them — they read it and rework
 whatever you got wrong. A ruling that dies with the workspace was a decision

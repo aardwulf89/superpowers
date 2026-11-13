@@ -9,7 +9,7 @@ that the fix itself broke nothing.
 
 ```
 Subagent (general-purpose):
-  description: "Re-review Task N fix round R"
+  description: "Re-review Task [TASK_ID] fix round R"
   model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
          model silently inherits the session's most expensive one]
   prompt: |
