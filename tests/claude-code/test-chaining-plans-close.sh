@@ -1,24 +1,24 @@
 #!/usr/bin/env bash
 # Integration Test: chaining-plans Close (a missed close, with an intent conflict)
 #
-# Phase p1 is merged into main and its branch deleted, but it was never
+# Phase A1 is merged into main and its branch deleted, but it was never
 # closed. Its merged commit found that PDF export needs a third-party library,
-# and the umbrella's non-goals rule out new runtime dependencies. Phase p2,
+# and the umbrella's non-goals rule out new runtime dependencies. Phase A2,
 # "Export to PDF", waits on that answer.
 #
 # A fresh session is asked to continue the effort. Resume's settle step must
-# close p1: write `learned` from the merged commits, write `replan`, and, since
-# the answer conflicts with the intent, ask instead of ruling: p2 gets a
+# close A1: write `learned` from the merged commits, write `replan`, and, since
+# the answer conflicts with the intent, ask instead of ruling: A2 gets a
 # question in `partner_questions` and the status `needs-partner`. Then Resume
-# picks p2, whose intent round asks the question. No plan, no new branch.
+# picks A2, whose intent round asks the question. No plan, no new branch.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/test-helpers.sh"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd -P)"
 PLUGIN_DIR="$REPO_ROOT"
-EFFORT=2026-01-01-notes-design
-UMBRELLA=docs/superpowers/specs/$EFFORT.md
+EFFORT=A
+UMBRELLA=docs/superpowers/specs/A.md
 REC=.superpowers/chain/$EFFORT/effort.json
 PROMPT="Use the superpowers:chaining-plans skill to continue the effort."
 
@@ -66,7 +66,7 @@ EOF
 
 mkdir -p docs/superpowers/specs docs/superpowers/plans
 cat > "$UMBRELLA" <<'EOF'
-# Notes CLI: design
+# A: Notes CLI design
 
 Status: approved by the human partner, 2026-01-01.
 
@@ -92,29 +92,29 @@ and session.
 
 **Across phases:** none
 
-### p1: Storage
+### A1: Storage
 
 - **Purpose:** Keep notes in memory, with `add(text)`. Find out whether a
-  PDF file can be written with Node's standard library, for p2.
-- **Limits:** No export; p2 builds it.
+  PDF file can be written with Node's standard library, for A2.
+- **Limits:** No export; A2 builds it.
 - **Answers:** none asked
 - **Depends on:** none
 - **Waits on:** none
 
-### p2: Export to PDF
+### A2: Export to PDF
 
 - **Purpose:** `notes export` writes every note to one PDF file.
 - **Limits:** Export only; no import.
 - **Answers:** none asked
-- **Depends on:** p1
-- **Waits on:** p1: Can PDF export be done with the standard library?
+- **Depends on:** A1
+- **Waits on:** A1: Can PDF export be done with the standard library?
 EOF
 
 git add .
 git commit -q -m "Initial commit: notes design"
 
-# p1's build, merged into main and its branch deleted.
-git checkout -q -b p1
+# A1's build, merged into main and its branch deleted.
+git checkout -q -b A1
 cat > FINDINGS.md <<'EOF'
 # Findings
 
@@ -124,10 +124,10 @@ cat >> notes.test.js <<'EOF'
 test('add counts every note', () => { assert.strictEqual(add('b'), 2); });
 EOF
 git add .
-git commit -q -m "feat: storage, and findings on PDF export"
+git commit -q -m "feat(A1): storage, and findings on PDF export"
 git checkout -q main
-git merge -q --no-ff p1 -m "Merge branch 'p1'"
-git branch -q -d p1
+git merge -q --no-ff A1 -m "Merge branch 'A1'"
+git branch -q -d A1
 
 mkdir -p "$(dirname "$REC")"
 jq -n --arg spec "$UMBRELLA" '{
@@ -135,15 +135,15 @@ jq -n --arg spec "$UMBRELLA" '{
   base: "main",
   phases: [
     {
-      id: "p1", title: "Storage", status: "known",
+      id: "A1", title: "Storage", status: "known",
       depends_on: [], waits_on: [], partner_questions: [],
-      spec: $spec, plan: null, branch: "p1",
+      spec: $spec, plan: null, branch: "A1",
       closing: {rulings: [], unfinished: [], learned: null, replan: null}
     },
     {
-      id: "p2", title: "Export to PDF", status: "waiting",
-      depends_on: ["p1"],
-      waits_on: [{from: "p1", question: "Can PDF export be done with the standard library?"}],
+      id: "A2", title: "Export to PDF", status: "waiting",
+      depends_on: ["A1"],
+      waits_on: [{from: "A1", question: "Can PDF export be done with the standard library?"}],
       partner_questions: [],
       spec: null, plan: null, branch: null, closing: null
     }
@@ -193,20 +193,20 @@ echo "  Record after the run:"
 jq '.phases[] | {id, status, partner_questions, closing}' "$TEST_PROJECT/$REC" 2>&1 | sed 's/^/    /' ||
     echo "    (the record is not readable JSON)"
 
-jq_check "p1's closing.learned is written" '.phases[0].closing.learned | length > 0'
-jq_check "p1's closing.replan is set (p1 is closed)" '.phases[0].closing.replan != null'
+jq_check "A1's closing.learned is written" '.phases[0].closing.learned | length > 0'
+jq_check "A1's closing.replan is set (A1 is closed)" '.phases[0].closing.replan != null'
 p2_status=$(jq -r '.phases[1].status' "$TEST_PROJECT/$REC" 2>/dev/null || true)
 if [ "$p2_status" = "needs-partner" ]; then
-    pass "p2 is needs-partner"
+    pass "A2 is needs-partner"
 else
-    fail "p2's status is '$p2_status', not needs-partner"
+    fail "A2's status is '$p2_status', not needs-partner"
 fi
-jq_check "p2 has a question for the human partner" '.phases[1].partner_questions | length > 0'
-jq_check "p2's questions are worded as questions" '.phases[1].partner_questions | all(type == "string" and test("\\?\\s*$"))'
-jq_check "p2's question names the dependency conflict" \
+jq_check "A2 has a question for the human partner" '.phases[1].partner_questions | length > 0'
+jq_check "A2's questions are worded as questions" '.phases[1].partner_questions | all(type == "string" and test("\\?\\s*$"))'
+jq_check "A2's question names the dependency conflict" \
     '.phases[1].partner_questions | any(test("depend|librar|third.party"; "i"))'
-jq_check "p1's replan records the question as an intent entry for p2" \
-    '.phases[0].closing.replan | any(.intent == true and (.affects | index("p2")))'
+jq_check "A1's replan records the question as an intent entry for A2" \
+    '.phases[0].closing.replan | any(.intent == true and (.affects | index("A2")))'
 check assert_contains "$output" "?" "Asks the human partner"
 check assert_contains "$output" "depend\|librar\|third.party" "The question shown names the dependency conflict"
 

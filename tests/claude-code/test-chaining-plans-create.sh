@@ -33,8 +33,8 @@ cat > .gitignore <<'EOF'
 EOF
 
 mkdir -p docs/superpowers/specs
-cat > docs/superpowers/specs/2026-01-01-notes-design.md <<'EOF'
-# Notes CLI: design
+cat > docs/superpowers/specs/A.md <<'EOF'
+# A: Notes CLI design
 
 Status: approved by the human partner, 2026-01-01.
 
@@ -78,7 +78,7 @@ git add .
 git commit -q -m "Initial commit: notes design"
 commits_before=$(git rev-list --count main)
 
-PROMPT="Use the superpowers:chaining-plans skill to create an effort from docs/superpowers/specs/2026-01-01-notes-design.md."
+PROMPT="Use the superpowers:chaining-plans skill to create an effort from docs/superpowers/specs/A.md."
 
 OUTPUT_FILE=$(mktemp)
 echo "Running Claude (plugin-dir: $PLUGIN_DIR, cwd: $TEST_PROJECT)..."
@@ -117,7 +117,7 @@ fi
 check assert_contains "$output" "storage" "Names the storage phase"
 check assert_contains "$output" "search" "Names the search phase"
 check assert_contains "$output" "export" "Names the export phase"
-check assert_contains "$output" "p[0-9]-export" "Gives the export phase a p<n>-<slug> id"
+check assert_contains "$output" "A[0-9]" "Gives the phases A<n> ids"
 check assert_order "$output" "storage" "export" "Storage comes before export"
 check assert_contains "$output" "wait\|depends\|after" "Says what export waits on"
 check assert_contains "$output" "?" "Asks the human partner"

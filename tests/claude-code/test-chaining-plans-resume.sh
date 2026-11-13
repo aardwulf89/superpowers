@@ -26,9 +26,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/test-helpers.sh"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd -P)"
 PLUGIN_DIR="$REPO_ROOT"
-EFFORT=2026-01-01-notes-design
-UMBRELLA=docs/superpowers/specs/$EFFORT.md
-PLAN=docs/superpowers/plans/2026-01-01-notes-p1-storage.md
+EFFORT=A
+UMBRELLA=docs/superpowers/specs/A.md
+PLAN=docs/superpowers/plans/A1.md
 PROMPT="Use the superpowers:chaining-plans skill to continue the effort."
 
 echo "========================================"
@@ -48,7 +48,7 @@ trap cleanup EXIT
 trap 'exit 130' INT TERM
 
 # A project with a passing `node --test` suite (finishing runs it) and an
-# umbrella spec with a Phases section, on main. With "plan", p1's plan too.
+# umbrella spec with a Phases section, on main. With "plan", A1's plan too.
 make_project() {
     local dir=$1 with_plan=${2:-}
     mkdir -p "$dir"
@@ -86,7 +86,7 @@ EOF
 
     mkdir -p docs/superpowers/specs docs/superpowers/plans
     cat > "$UMBRELLA" <<'EOF'
-# Notes CLI: design
+# A: Notes CLI design
 
 Status: approved by the human partner, 2026-01-01.
 
@@ -101,7 +101,7 @@ and session.
 
 **Across phases:** none
 
-### p1-storage: Storage
+### A1: Storage
 
 - **Purpose:** Keep notes in memory, with `add(text)` and `find(text)`.
 - **Limits:** No storage on disk, no export.
@@ -111,13 +111,13 @@ and session.
 EOF
 
     [ "$with_plan" = plan ] && cat > "$PLAN" <<EOF
-# Notes Storage Implementation Plan
+# A1: Notes Storage Implementation Plan
 
 **Goal:** Add \`find(text)\` next to \`add(text)\`.
 
 **Spec:** \`$UMBRELLA\`
 
-### Task 1: find
+### Task A1.1: find
 
 - [ ] Add \`find\` and its test.
 EOF
@@ -126,20 +126,20 @@ EOF
     git commit -q -m "Initial commit: notes design"
 }
 
-# p1's build: one commit on branch p1, in .worktrees/p1, workspace deleted.
+# A1's build: one commit on branch A1, in .worktrees/A1, workspace deleted.
 make_p1_branch() {
-    git worktree add -q .worktrees/p1 -b p1
-    cat >> .worktrees/p1/notes.js <<'EOF'
+    git worktree add -q .worktrees/A1 -b A1
+    cat >> .worktrees/A1/notes.js <<'EOF'
 module.exports.find = (text) => notes.filter((n) => n.includes(text));
 EOF
-    cat >> .worktrees/p1/notes.test.js <<'EOF'
+    cat >> .worktrees/A1/notes.test.js <<'EOF'
 test('find returns matches', () => {
   const { find } = require('./notes');
   add('hello');
   assert.deepStrictEqual(find('hell'), ['hello']);
 });
 EOF
-    git -C .worktrees/p1 commit -q -am "feat: find"
+    git -C .worktrees/A1 commit -q -am "feat(A1.1): find"
 }
 
 # Writes the record with the given phase as its only phase.
@@ -152,9 +152,9 @@ write_record() {
 }
 
 CLOSED_P1=$(jq -n --arg spec "$UMBRELLA" --arg plan "$PLAN" '{
-  id: "p1-storage", title: "Storage", status: "known",
+  id: "A1", title: "Storage", status: "known",
   depends_on: [], waits_on: [], partner_questions: [],
-  spec: $spec, plan: $plan, branch: "p1",
+  spec: $spec, plan: $plan, branch: "A1",
   closing: {
     rulings: ["Kept notes in an array: the plan named no store"],
     unfinished: ["none: the plan had one task and it is done"],
@@ -177,7 +177,7 @@ git -C "$TEST_ROOT/a-other" push -q origin main
 A_REMOTE=$(git -C "$TEST_ROOT/a-other" rev-parse HEAD)
 make_p1_branch
 write_record "$CLOSED_P1"
-A_TIP=$(git rev-parse p1)
+A_TIP=$(git rev-parse A1)
 
 # --- Fixture B: as A, with an unreachable origin ---
 B="$TEST_ROOT/b"
@@ -191,28 +191,28 @@ B_MAIN=$(git rev-parse main)
 C="$TEST_ROOT/c"
 make_project "$C"
 write_record "$(jq -n '{
-  id: "p1-storage", title: "Storage", status: "waiting",
+  id: "A1", title: "Storage", status: "waiting",
   depends_on: [], waits_on: [], partner_questions: [],
   spec: null, plan: null, branch: null, closing: null
 }')"
 C_DOCS_BEFORE=$(cd "$C" && find docs/superpowers/specs docs/superpowers/plans -type f | sort)
 
-# --- Fixture D: as A, with an open PR for p1 ---
+# --- Fixture D: as A, with an open PR for A1 ---
 D="$TEST_ROOT/d"
 make_project "$D" plan
 git init -q --bare -b main "$TEST_ROOT/d-origin.git"
 git remote add origin "$TEST_ROOT/d-origin.git"
 git push -q -u origin main
 make_p1_branch
-git push -q origin p1
+git push -q origin A1
 write_record "$CLOSED_P1"
-D_TIP=$(git rev-parse p1)
+D_TIP=$(git rev-parse A1)
 D_BIN="$TEST_ROOT/d-bin"
 D_GH_LOG="$TEST_ROOT/d-gh.log"
 mkdir -p "$D_BIN"
 echo OPEN > "$TEST_ROOT/d-pr-state"
 : > "$D_GH_LOG"
-# A stand-in for gh: PR #1, from p1 into main. `gh pr merge` merges it on
+# A stand-in for gh: PR #1, from A1 into main. `gh pr merge` merges it on
 # origin with a merge commit, as GitHub would; then the PR reads MERGED.
 cat > "$D_BIN/gh" <<EOF
 #!/usr/bin/env bash
@@ -226,7 +226,7 @@ for ((i = 0; i < \${#args[@]}; i++)); do
     case "\${args[i]}" in -q|--jq) q="\${args[i+1]}" ;; esac
 done
 out() { if [ -n "\$q" ]; then jq -r "\$q" <<<"\$1"; else echo "\$1"; fi; }
-pr='{"number":1,"state":"'"\$st"'","headRefName":"p1","baseRefName":"main","title":"p1","url":"https://example.invalid/pull/1","mergeable":"MERGEABLE"}'
+pr='{"number":1,"state":"'"\$st"'","headRefName":"A1","baseRefName":"main","title":"A1","url":"https://example.invalid/pull/1","mergeable":"MERGEABLE"}'
 case "\$1 \$2" in
     "pr view") out "\$pr" ;;
     "pr list"|"pr status") if [ "\$st" = OPEN ]; then out "[\$pr]"; else out "[]"; fi ;;
@@ -237,12 +237,12 @@ case "\$1 \$2" in
         tmp=\$(mktemp -d)
         git clone -q "\$origin" "\$tmp/c" &&
             git -C "\$tmp/c" -c user.email=gh@example.invalid -c user.name=GitHub \
-                merge -q --no-ff origin/p1 -m "Merge pull request #1 from owner/p1" &&
+                merge -q --no-ff origin/A1 -m "Merge pull request #1 from owner/A1" &&
             git -C "\$tmp/c" push -q origin main || exit 1
-        case " \$* " in *" -d "*|*" --delete-branch "*) git -C "\$tmp/c" push -q origin --delete p1 ;; esac
+        case " \$* " in *" -d "*|*" --delete-branch "*) git -C "\$tmp/c" push -q origin --delete A1 ;; esac
         rm -rf "\$tmp"
         echo MERGED > "\$state_file"
-        echo "Merged pull request #1 (p1)" ;;
+        echo "Merged pull request #1 (A1)" ;;
     *) echo "gh stub: unsupported: \$*" >&2; exit 1 ;;
 esac
 EOF
@@ -308,19 +308,19 @@ show_and_check_run() {
 show_and_check_run A "$A" "$status_a"
 out_a=$(cat "$A.out")
 if git -C "$A" merge-base --is-ancestor "$A_TIP" main 2>/dev/null; then
-    pass "A: p1's tip is merged into main"
+    pass "A: A1's tip is merged into main"
 else
-    fail "A: p1's tip is not an ancestor of main"
+    fail "A: A1's tip is not an ancestor of main"
 fi
-if git -C "$A" rev-parse -q --verify refs/heads/p1 >/dev/null; then
-    fail "A: branch p1 still exists"
+if git -C "$A" rev-parse -q --verify refs/heads/A1 >/dev/null; then
+    fail "A: branch A1 still exists"
 else
-    pass "A: branch p1 deleted"
+    pass "A: branch A1 deleted"
 fi
-if [ -e "$A/.worktrees/p1" ]; then
-    fail "A: .worktrees/p1 still exists"
+if [ -e "$A/.worktrees/A1" ]; then
+    fail "A: .worktrees/A1 still exists"
 else
-    pass "A: .worktrees/p1 removed"
+    pass "A: .worktrees/A1 removed"
 fi
 if git -C "$A" merge-base --is-ancestor "$A_REMOTE" main 2>/dev/null; then
     pass "A: origin's newer commit is on main (base pulled before the merge)"
@@ -334,22 +334,22 @@ else
     fail "A: main and origin/main differ (or the fetch failed)"
 fi
 check assert_contains "$(echo "$out_a" | grep -v '^[[:space:]]*$' | head -3)" "merg" "A: reports the merge at the top"
-check assert_contains "$out_a" "\bp1\b" "A: names the merged branch"
+check assert_contains "$out_a" "\bA1\b" "A: names the merged branch"
 check assert_contains "$out_a" "push" "A: reports whether main was pushed"
-check assert_contains "$out_a" "effort.*\(done\|complete\|finished\)\|\(done\|complete\).*effort\|all phases\|every phase" "A: reports that the effort is done"
+check assert_contains "$out_a" "effort.*\(done\|complete\|finished\)\|\(done\|complete\|finish\).*effort\|all phases\|every phase" "A: reports that the effort is done"
 
 # --- B ---
 show_and_check_run B "$B" "$status_b"
 out_b=$(cat "$B.out")
-if git -C "$B" rev-parse -q --verify refs/heads/p1 >/dev/null; then
-    pass "B: branch p1 kept"
+if git -C "$B" rev-parse -q --verify refs/heads/A1 >/dev/null; then
+    pass "B: branch A1 kept"
 else
-    fail "B: branch p1 was deleted"
+    fail "B: branch A1 was deleted"
 fi
-if [ -d "$B/.worktrees/p1" ]; then
-    pass "B: .worktrees/p1 kept"
+if [ -d "$B/.worktrees/A1" ]; then
+    pass "B: .worktrees/A1 kept"
 else
-    fail "B: .worktrees/p1 was removed"
+    fail "B: .worktrees/A1 was removed"
 fi
 if [ "$(git -C "$B" rev-parse main)" = "$B_MAIN" ]; then
     pass "B: main unchanged (the push check stops before the merge)"
@@ -396,30 +396,30 @@ if grep -qE '^gh pr merge .*(--merge|--squash|--rebase|-m|-s|-r)( |$)' "$D_GH_LO
 else
     fail "D: no gh pr merge with --merge, --squash or --rebase"
 fi
-if git -C "$D" log --merges --format=%s main | grep -qF "Merge branch 'p1'"; then
-    fail "D: p1 was merged locally instead of through its PR"
+if git -C "$D" log --merges --format=%s main | grep -qF "Merge branch 'A1'"; then
+    fail "D: A1 was merged locally instead of through its PR"
 else
-    pass "D: no local merge of p1"
+    pass "D: no local merge of A1"
 fi
 if git -C "$D" merge-base --is-ancestor "$D_TIP" main 2>/dev/null; then
     pass "D: main pulled the PR's merge"
 else
-    fail "D: p1's tip is not on main (base not pulled after the PR merge)"
+    fail "D: A1's tip is not on main (base not pulled after the PR merge)"
 fi
-if git -C "$D" rev-parse -q --verify refs/heads/p1 >/dev/null; then
-    fail "D: local branch p1 still exists"
+if git -C "$D" rev-parse -q --verify refs/heads/A1 >/dev/null; then
+    fail "D: local branch A1 still exists"
 else
-    pass "D: local branch p1 deleted"
+    pass "D: local branch A1 deleted"
 fi
-if [ -e "$D/.worktrees/p1" ]; then
-    fail "D: .worktrees/p1 still exists"
+if [ -e "$D/.worktrees/A1" ]; then
+    fail "D: .worktrees/A1 still exists"
 else
-    pass "D: .worktrees/p1 removed"
+    pass "D: .worktrees/A1 removed"
 fi
-if [ -z "$(git -C "$D" ls-remote --heads origin p1 2>/dev/null)" ]; then
-    pass "D: origin's p1 deleted"
+if [ -z "$(git -C "$D" ls-remote --heads origin A1 2>/dev/null)" ]; then
+    pass "D: origin's A1 deleted"
 else
-    fail "D: origin still has p1"
+    fail "D: origin still has A1"
 fi
 check assert_contains "$out_d" "PR\|pull request" "D: reports the PR merge"
 
