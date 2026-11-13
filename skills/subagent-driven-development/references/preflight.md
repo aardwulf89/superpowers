@@ -1,9 +1,9 @@
 # The Pre-flight Scan
 
 Part of superpowers:subagent-driven-development. Run it once, before
-dispatching Task 1.
+dispatching the first task.
 
-Before dispatching Task 1, scan the plan once for conflicts, writing down
+Before dispatching the first task, scan the plan once for conflicts, writing down
 what you checked as you check it:
 
 - tasks that contradict each other or the plan's Global Constraints
@@ -21,6 +21,7 @@ Write the table to the ledger. Rule on everything you find before execution
 begins — each finding against the plan text that mandates it — and record
 each ruling in the ledger. If the scan is clean, proceed without comment.
 Rule on each conflict it surfaces — the spec is the binding authority, the
-plan is its argument — record the ruling beside its row, and dispatch
-Task 1. The review loop remains the net for conflicts that only emerge from
+plan is its argument — record the ruling beside its row as
+`<plan id>: Ruling: …` (a row spans tasks, so it takes the plan's id), and
+dispatch the first task. The review loop remains the net for conflicts that only emerge from
 implementation.

@@ -139,6 +139,17 @@ has $C/references/record.md '**Merged from:**'
 has $C/references/close.md '"affects": ["K3"]'
 has $C/references/close.md '**Merged from:**'
 
+# --- deferred-findings round ---
+has $S/references/handling-reports.md 'K3.4a1'
+has $E/SKILL.md 'K3.4a1, K3.4a2'
+has skills/brainstorming/SKILL.md 'else `K: …`'
+has skills/chaining-plans/SKILL.md 'else `K3: …`'
+lacks $S/references/preflight.md 'Task 1'
+lacks $E/SKILL.md 'Task 1'
+has $S/references/preflight.md '<plan id>: Ruling:'
+has $S/SKILL.md 'A plan without an id keeps'
+has $E/SKILL.md 'A plan without an id keeps'
+
 if ((failures)); then
   echo "FAIL: $failures of $checks id-form checks" >&2
   exit 1

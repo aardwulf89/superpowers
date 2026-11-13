@@ -100,7 +100,8 @@ is the effort id. A phase id is that letter plus a number (`K3`), issued
 by Create in work order; a split appends a lowercase letter (`K3a`), and
 the bare id still names the whole. The phase id is also the plan id that
 `writing-plans` uses (its tasks are `K3.1`, `K3.2`, …), the branch name,
-and the scope of the phase's docs commits (`docs(K3): …`). Ids are fixed
+and the id in the phase's docs commit subjects (`docs(K3): …` in a repo
+that uses conventional commits, else `K3: …`). Ids are fixed
 once committed: never renumbered, reused, or given to other work. Copy
 them verbatim into everything you write to the record or report.
 

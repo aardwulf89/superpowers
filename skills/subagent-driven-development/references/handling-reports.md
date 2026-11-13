@@ -12,7 +12,8 @@ Part of superpowers:subagent-driven-development.
 3. If the task is too large, split it into parts. Ledger
    `Task <id>: Ruling: split into <id>a (<what>) and <id>b (<what>) — <why>`,
    one lowercase letter per part, skipping i, l and o; a part that splits
-   again alternates to a number (`<id>a1`). Do not edit the plan. Each part
+   again alternates to a number (K3.4 → K3.4a, K3.4b; K3.4a → K3.4a1,
+   K3.4a2, never K3.4aa). Do not edit the plan. Each part
    is briefed from the parent's brief (`task-brief` with the parent id),
    with the ruling's description of the part added to the dispatch, and
    gets its own report file (`task-<part id>-report.md`), todo, review gate

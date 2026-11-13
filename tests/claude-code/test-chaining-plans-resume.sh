@@ -336,7 +336,7 @@ fi
 check assert_contains "$(echo "$out_a" | grep -v '^[[:space:]]*$' | head -3)" "merg" "A: reports the merge at the top"
 check assert_contains "$out_a" "\bA1\b" "A: names the merged branch"
 check assert_contains "$out_a" "push" "A: reports whether main was pushed"
-check assert_contains "$out_a" "effort.*\(done\|complete\|finished\)\|\(done\|complete\|finish\).*effort\|all phases\|every phase" "A: reports that the effort is done"
+check assert_contains "$out_a" "effort.*\(done\|complete\|finished\)\|\(done\|complete\).*effort\|finish\(es\|ed\)\? effort\|all phases\|every phase" "A: reports that the effort is done"
 
 # --- B ---
 show_and_check_run B "$B" "$status_b"

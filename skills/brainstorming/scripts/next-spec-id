@@ -79,6 +79,20 @@ common=$(git rev-parse --path-format=absolute --git-common-dir)
 chain="$(dirname "$common")/.superpowers/chain"
 specs=${dirs[0]:-docs/superpowers/specs}
 plans=${dirs[1]:-docs/superpowers/plans}
+# An absolute dir inside the repo is taken relative to its root, since base's
+# tree is read by repo-relative paths; one outside the repo can't be read.
+for v in specs plans; do
+  d=${!v}
+  d=${d%/}
+  if [[ $d == /* ]]; then
+    [[ $d == "$root"/* ]] || {
+      echo "next-spec-id: $d is outside the repo at $root" >&2
+      exit 2
+    }
+    d=${d#"$root"/}
+  fi
+  printf -v "$v" '%s' "$d"
+done
 
 if [[ -n $base ]]; then
   git -C "$root" rev-parse -q --verify "$base^{commit}" >/dev/null || {
@@ -87,12 +101,16 @@ if [[ -n $base ]]; then
   }
 else
   head=$(git -C "$root" symbolic-ref -q --short refs/remotes/origin/HEAD 2>/dev/null || true)
-  for b in "${head#origin/}" main master; do
+  default=$(git -C "$root" config init.defaultBranch 2>/dev/null || true)
+  for b in "${head#origin/}" "$default" main master; do
     if [[ -n $b ]] && git -C "$root" rev-parse -q --verify "refs/heads/$b" >/dev/null; then
       base=$b
       break
     fi
   done
+  if [[ -z $base ]] && git -C "$root" rev-parse -q --verify HEAD >/dev/null; then
+    echo "next-spec-id: no base branch found (origin/HEAD, init.defaultBranch, main, master); reading the working tree and HEAD only. Pass --base <branch> to read another." >&2
+  fi
 fi
 
 # The revisions whose history counts: base, and HEAD when it differs.
@@ -102,18 +120,18 @@ if git -C "$root" rev-parse -q --verify HEAD >/dev/null; then
   [[ -n $base && $(git -C "$root" rev-parse HEAD) == $(git -C "$root" rev-parse "$base^{commit}") ]] || revs+=(HEAD)
 fi
 
-# Print the first line of every doc in both dirs: the working tree, base's
-# tree, and every doc deleted in the history of base and HEAD.
+# Print "<path><TAB><first line>" for every doc in both dirs: the working
+# tree, base's tree, and every doc deleted in the history of base and HEAD.
 first_lines() {
   local d f path line commit
   for d in "$specs" "$plans"; do
     for f in "$root/$d"/*.md; do
-      [[ -f $f ]] && head -n 1 "$f"
+      [[ -f $f ]] && printf '%s\t%s\n' "$d/${f##*/}" "$(head -n 1 "$f")"
     done
     if [[ -n $base ]]; then
       while IFS= read -r path; do
         [[ $path == *.md ]] || continue
-        git -C "$root" cat-file -p "$base:$path" 2>/dev/null | sed -n 1p
+        printf '%s\t%s\n' "$path" "$(git -C "$root" cat-file -p "$base:$path" 2>/dev/null | sed -n 1p)"
       done < <(git -C "$root" ls-tree --name-only "$base" -- "$d/" 2>/dev/null)
     fi
     ((${#revs[@]})) || continue
@@ -122,7 +140,7 @@ first_lines() {
       if [[ $line == commit\ * ]]; then
         commit=${line#commit }
       elif [[ $line == "$d"/*.md && $(dirname "$line") == "$d" && -n $commit ]]; then
-        git -C "$root" cat-file -p "$commit^:$line" 2>/dev/null | sed -n 1p
+        printf '%s\t%s\n' "$line" "$(git -C "$root" cat-file -p "$commit^:$line" 2>/dev/null | sed -n 1p)"
       fi
     done < <(git -C "$root" log "${revs[@]}" --diff-filter=D --name-only --format='commit %H' -- "$d/" 2>/dev/null)
   done
@@ -156,27 +174,27 @@ spec_text_ids() {
   } | grep -oE "(^|[^A-Za-z0-9])${phase}[1-9][0-9]*" | sed -E 's/^[^A-Z]//' || true
 }
 
-# Ids in use, one per line: doc ids, then record ids.
+# Ids in use, one per line as "<id><TAB><where>": doc ids, then record ids.
 used_ids() {
-  local line d
-  while IFS= read -r line; do
+  local path line d
+  while IFS=$'\t' read -r path line; do
     if [[ $line =~ $ID_LINE ]]; then
-      echo "${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
+      printf '%s\t%s\n' "${BASH_REMATCH[1]}${BASH_REMATCH[2]}" "$path"
     fi
   done < <(first_lines)
   [[ -d $chain ]] || return 0
   for d in "$chain"/*/; do
     d=$(basename "$d")
-    [[ $d =~ ^[A-HJ-NP-Z]+$ ]] && echo "$d"
+    [[ $d =~ ^[A-HJ-NP-Z]+$ ]] && printf '%s\t%s\n' "$d" record
   done
   if [[ -n $phase && -f $chain/$phase/effort.json ]]; then
     command -v jq >/dev/null || {
       echo "next-spec-id: jq is needed to read $chain/$phase/effort.json" >&2
       exit 2
     }
-    jq -r '.phases[]?.id // empty' "$chain/$phase/effort.json"
+    jq -r '.phases[]?.id // empty | . + "\trecord"' "$chain/$phase/effort.json"
   fi
-  [[ -z $phase ]] || spec_text_ids
+  [[ -z $phase ]] || spec_text_ids | sed 's/$/\tspec text/'
 }
 
 # Bijective base-24 rank of a letter run: A=1, Z=24, AA=25, ...
@@ -204,7 +222,7 @@ ids=$(used_ids)
 
 if [[ -n $phase ]]; then
   max=0
-  while IFS= read -r id; do
+  while IFS=$'\t' read -r id _; do
     if [[ $id =~ ^([A-Z]+)([1-9][0-9]*) && ${BASH_REMATCH[1]} == "$phase" ]]; then
       ((BASH_REMATCH[2] > max)) && max=${BASH_REMATCH[2]}
     fi
@@ -215,12 +233,20 @@ if [[ -n $phase ]]; then
   exit 0
 fi
 
-top=0
-while IFS= read -r id; do
+top=0 top_letter="" top_from=""
+while IFS=$'\t' read -r id from; do
   [[ $id =~ ^([A-HJ-NP-Z]+) ]] || continue
   r=$(rank "${BASH_REMATCH[1]}")
-  ((r > top)) && top=$r
+  if ((r > top)); then
+    top=$r top_letter=${BASH_REMATCH[1]} top_from=$from
+  fi
 done <<<"$ids"
+# A high-water letter read from a file not named by its id may be a legacy
+# title (`# MCP: server design`) rather than an issued letter: say where it
+# came from, so a surprising letter can be traced.
+if [[ -n $top_from && $top_from != record && ${top_from##*/} != "$top_letter"*.md ]]; then
+  echo "next-spec-id: the highest letter in use, $top_letter, comes from the first line of $top_from" >&2
+fi
 next=$((top + 1))
 while taken "$(letters "$next")"; do next=$((next + 1)); done
 letters "$next"

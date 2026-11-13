@@ -170,25 +170,27 @@ its id in full, never a short form. Commit subjects carry the narrowest
 id: a task's commits its task id (`feat(K3.4): …` in a repo that uses
 conventional commits, else `K3.4: …`); the final review's fix pass and the
 deferred-findings round the plan id (`fix(K3): …`). When setup creates a
-branch, it is named after the plan's id (`K3`). A task heading with part
+branch, it is named after the plan's id (`K3`). A plan without an id keeps
+the branch name its worktree setup gives. A task heading with part
 headings nested under it (`### Task K3.4` holding `#### Task K3.4a`,
 `#### Task K3.4b`) is a task split in the plan: take its parts, each
 with its own todo, `task-start`, `task-done` and completion line,
 never the parent on its own.
 
 **REQUIRED SUB-SKILL:** load superpowers:test-driven-development now,
-before Task 1. It governs every step of every task below; a plan whose
+before the first task. It governs every step of every task below; a plan whose
 steps already say "write the failing test first" does not exempt you
 from reading it.
 
-Before Task 1, scan the plan for conflicts between tasks. The plan's
+Before the first task, scan the plan for conflicts between tasks. The plan's
 Interfaces blocks tell you where to look: for every task that consumes
 what an earlier task produces, one ledger row — the two tasks, what one
 produces against what the other consumes, and what you found. Tasks that
 share nothing get no row; a plan whose tasks share nothing gets the single
 line `Pre-flight: no shared interfaces`. Rule on each conflict a row
 surfaces with the spec as the binding authority, record the ruling beside
-its row, and start Task 1. Each task's own text is checked when you read
+its row (`<plan id>: Ruling: …`, since a row spans tasks), and start the
+first task. Each task's own text is checked when you read
 its brief, not here.
 
 ## The Task Loop
@@ -234,7 +236,8 @@ read its output, and compare. Three outcomes:
 - **The task must be done in parts.** Do not edit the plan. Ledger
   `Task <id>: Ruling: split into <id>a (<what>) and <id>b (<what>) — <why>`,
   one lowercase letter per part, skipping i, l and o; a part that splits
-  again alternates to a number (`<id>a1`). Start each part with
+  again alternates to a number (K3.4 → K3.4a, K3.4b; K3.4a → K3.4a1, K3.4a2,
+  never K3.4aa). Start each part with
   `task-start` on the parent id, work it against the parent's brief as the
   ruling describes the part, and close it with its own `task-done` on the
   part id. Use the part ids from then on, in todos, commits and the final

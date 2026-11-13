@@ -250,7 +250,8 @@ O, and never reused. Get it when you first save the doc by running
 you're writing in; it prints the next unused letter. Keep that letter
 through revisions; don't run it again for the same doc, since your own
 draft already counts as used. The commit subject
-carries the letter (`docs(K): …`). Otherwise, pick a sensible place and
+carries the letter: `docs(K): …` in a repo that uses conventional
+commits, else `K: …`. Otherwise, pick a sensible place and
 say where. Your human partner's preferences override both.
 
 **Builder check** (for a project): dispatch a fresh subagent with

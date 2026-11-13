@@ -117,7 +117,7 @@ fi
 check assert_contains "$output" "storage" "Names the storage phase"
 check assert_contains "$output" "search" "Names the search phase"
 check assert_contains "$output" "export" "Names the export phase"
-check assert_contains "$output" "A[0-9]" "Gives the phases A<n> ids"
+check assert_contains "$output" "\bA[1-9]\b" "Gives the phases A<n> ids"
 check assert_order "$output" "storage" "export" "Storage comes before export"
 check assert_contains "$output" "wait\|depends\|after" "Says what export waits on"
 check assert_contains "$output" "?" "Asks the human partner"

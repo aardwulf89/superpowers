@@ -150,6 +150,35 @@ doc "$r" "$S/A.md" "# A: x"
 doc "$r" "$P/A1.md" "# Some plan"
 check "phase whose file exists is skipped" A2 "$(run "$r" --phase A)"
 
+r=$(new_repo)
+doc "$r" "$S/2026-01-01-mcp-design.md" "# MCP: server design"
+err=$( (cd "$r" && bash "$NEXT") 2>&1 >/dev/null)
+check "acronym title: letter still unique" MCQ "$(run "$r" 2>/dev/null)"
+check "acronym title: stderr names its file" yes "$([[ $err == *MCP*2026-01-01-mcp-design.md* ]] && echo yes || echo "no: $err")"
+
+r=$(new_repo)
+doc "$r" "$S/K.md" "# K: x"
+err=$( (cd "$r" && bash "$NEXT") 2>&1 >/dev/null)
+check "letter from its own file: stderr quiet" "" "$err"
+
+r=$(new_repo)
+doc "$r" "notes/specs/F.md" "# F: x"
+mkdir -p "$r/notes/plans"
+check "absolute dirs" G "$(run "$r" "$r/notes/specs" "$r/notes/plans")"
+
+r=$(mktemp -d "$ROOT/r.XXXXXX")
+mkdir -p "$r/$S" "$r/$P"
+git -C "$r" init -q -b trunk
+git -C "$r" config user.email t@example.invalid
+git -C "$r" config user.name t
+git -C "$r" config init.defaultBranch trunk
+doc "$r" "$S/2026-01-01-x-design.md" "# X design"
+commit_all "$r" first
+doc "$r" "$S/K.md" "# K: x"
+commit_all "$r" second
+git -C "$r" checkout -q -b old HEAD~1
+check "base from init.defaultBranch" L "$(run "$r")"
+
 plain="$ROOT/plain"
 mkdir -p "$plain"
 rc=0
