@@ -5,8 +5,8 @@ at `<main checkout>/.superpowers/chain/<id>/effort.json`. `<id>` is the
 umbrella's spec letter (`K`, from its first line `# K: …`). `.superpowers/` is git-ignored, so the
 record is never committed. It is kept after the effort is done.
 
-Update it in place with `jq`, never by hand-editing and never by
-rewriting the whole file from memory. It keeps no history.
+Update it in place with the commands below, never by hand-editing and
+never by rewriting the whole file from memory. It keeps no history.
 
 ## Shape
 
@@ -92,234 +92,128 @@ of it on `base` and stops (`close.md` step 1).
 
 ## Commands
 
-Each block is named by the comment above it. Run it as written. Every
-Bash call starts a fresh shell, so assign the block's inputs (`rec`, `id`,
-`field`, `value_json`, `phases_json`, `record_json`, `chain_dir`) on lines
-in the same Bash call, before the block. Run every block from inside the
-repo. The blocks that classify phases (`phase-state`, `pick`,
-`open-efforts`) carry the same `phase_state` function. A block that
-cannot do its job says why on stderr, exits non-zero, and changes nothing.
+Every command is a subcommand of one script, `scripts/record.py`, in this
+skill's base directory (the installed plugin, not the project). Run it by
+its absolute path, one plain command per Bash call:
+
+```
+python3 <this skill's base directory>/scripts/record.py <subcommand> <arguments>
+```
+
+Below, `record.py <subcommand>` is short for that whole line.
+
+- **Write every value literally** on the command line: no variable
+  assignments, no `&&` or `;`, no `$(…)`, no heredoc. Claude Code refuses
+  compound commands from inside a worktree it isolates; one plain command
+  runs anywhere.
+- **`REC` is the absolute path of the effort's `effort.json`, and `ID` a
+  phase id.** Both are copied, never shortened.
+- **A JSON value** goes in `--value '<json>'` when it is short and holds
+  no single quote (`--value '"worktree-K2"'`, `--value '[]'`). Otherwise,
+  write it with the Write tool to a file under `.superpowers/tmp/` of the
+  working tree you are in, and pass `--value-file <that path>`. Inside a
+  worktree the Write tool cannot write into the main checkout, where the
+  record lives, so a value file never goes beside the record.
+- **Read the record through the script,** with `get` and `questions`, or
+  with the Read tool. Every write reads the record fresh, so nothing is
+  composed from memory.
+- **A command that cannot do its job** says why on stderr
+  (`record <subcommand>: <reason>`), exits 1, and changes nothing. A usage
+  mistake exits 2. Every write goes through `<REC>.tmp` and an atomic
+  rename. The script runs git read-only and writes only the record.
 
 ### chain-dir
 
-Reads nothing. Sets and prints `chain_dir`, the absolute
-`<main checkout>/.superpowers/chain`, the same from any worktree.
-Outside a git repo it prints nothing and fails.
+`record.py chain-dir`
 
-<!-- cmd: chain-dir -->
-```bash
-common=$(git rev-parse --path-format=absolute --git-common-dir) &&
-  chain_dir="$(dirname "$common")/.superpowers/chain" &&
-  echo "$chain_dir"
-```
+Prints the absolute `<main checkout>/.superpowers/chain`, the same from
+any worktree. Outside a git repo it prints nothing and fails.
 
 ### open-efforts
 
-Reads `chain_dir`; when it is unset, finds it as `chain-dir` does.
-Prints one `effort.json` path per line, for each effort with at least
-one phase that is not `done` or `dropped`. Outside a git repo it prints
-nothing and fails.
+`record.py open-efforts [--chain-dir DIR]`
 
-<!-- cmd: open-efforts -->
-```bash
-[ -n "${chain_dir:-}" ] || { common=$(git rev-parse --path-format=absolute --git-common-dir) &&
-  chain_dir="$(dirname "$common")/.superpowers/chain"; }
-phase_state() (
-  pid=$1
-  base=$(jq -r '.base' "$rec")
-  ph=$(jq -c --arg id "$pid" '.phases[] | select(.id == $id)' "$rec")
-  [ "$(printf '%s' "$ph" | jq -r '.status')" = dropped ] && { echo dropped; return; }
-  b=$(printf '%s' "$ph" | jq -r '.branch // empty')
-  [ -z "$b" ] && { echo not-started; return; }
-  plan=$(printf '%s' "$ph" | jq -r '.plan // empty')
-  main=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
-  w=$(git worktree list --porcelain | awk -v ref="branch refs/heads/$b" \
-    '/^worktree /{p=substr($0,10)} $0==ref{print p; exit}')
-  [ -z "$w" ] && w=$main
-  if [ -n "$plan" ]; then
-    for f in "$w"/.superpowers/sdd/*/plan-path; do
-      [ -f "$f" ] && grep -Fxq -- "$plan" "$f" && { echo cut-off; return; }
-    done
-  fi
-  merged=no
-  if ! git rev-parse -q --verify "refs/heads/$b" >/dev/null; then merged=yes
-  elif git merge-base --is-ancestor "$b" "$base"; then merged=yes
-  elif [ "$(gh pr view "$b" --json state -q .state 2>/dev/null)" = MERGED ]; then merged=yes
-  fi
-  closed=$(printf '%s' "$ph" | jq -r 'if .closing.replan == null then "no" else "yes" end')
-  case "$merged,$closed" in
-    yes,no) echo close-missed ;;
-    yes,yes) echo done ;;
-    no,no) echo finished-unclosed ;;
-    no,yes) echo closed-unmerged ;;
-  esac
-)
-[ -n "${chain_dir:-}" ] && for rec in "$chain_dir"/*/effort.json; do
-  [ -f "$rec" ] || continue
-  for id in $(jq -r '.phases[].id' "$rec"); do
-    case "$(phase_state "$id")" in
-      done|dropped) ;;
-      *) echo "$rec"; break ;;
-    esac
-  done
-done
-```
+Prints one `effort.json` path per line, for each effort with at least one
+phase that is not `done` or `dropped`. Without `--chain-dir` it finds the
+directory as `chain-dir` does; outside a git repo it then prints nothing
+and fails. A record it cannot read is skipped, with a note on stderr.
 
 ### phase-state
 
-Reads `rec` (path to `effort.json`) and `id`. Prints one state from the
-table above.
+`record.py phase-state REC ID`
 
-<!-- cmd: phase-state -->
-```bash
-phase_state() (
-  pid=$1
-  base=$(jq -r '.base' "$rec")
-  ph=$(jq -c --arg id "$pid" '.phases[] | select(.id == $id)' "$rec")
-  [ "$(printf '%s' "$ph" | jq -r '.status')" = dropped ] && { echo dropped; return; }
-  b=$(printf '%s' "$ph" | jq -r '.branch // empty')
-  [ -z "$b" ] && { echo not-started; return; }
-  plan=$(printf '%s' "$ph" | jq -r '.plan // empty')
-  main=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
-  w=$(git worktree list --porcelain | awk -v ref="branch refs/heads/$b" \
-    '/^worktree /{p=substr($0,10)} $0==ref{print p; exit}')
-  [ -z "$w" ] && w=$main
-  if [ -n "$plan" ]; then
-    for f in "$w"/.superpowers/sdd/*/plan-path; do
-      [ -f "$f" ] && grep -Fxq -- "$plan" "$f" && { echo cut-off; return; }
-    done
-  fi
-  merged=no
-  if ! git rev-parse -q --verify "refs/heads/$b" >/dev/null; then merged=yes
-  elif git merge-base --is-ancestor "$b" "$base"; then merged=yes
-  elif [ "$(gh pr view "$b" --json state -q .state 2>/dev/null)" = MERGED ]; then merged=yes
-  fi
-  closed=$(printf '%s' "$ph" | jq -r 'if .closing.replan == null then "no" else "yes" end')
-  case "$merged,$closed" in
-    yes,no) echo close-missed ;;
-    yes,yes) echo done ;;
-    no,no) echo finished-unclosed ;;
-    no,yes) echo closed-unmerged ;;
-  esac
-)
-phase_state "$id"
-```
+Prints one state from the table above. It refuses an id the record does
+not have.
 
 ### pick
 
-Reads `rec`. Prints `id:<phase id>` for the first phase, in array order,
-that is `not-started` and whose `depends_on` are all `done`. Otherwise
-prints `blocked:<phase id>` for the first phase that is not `done` or
-`dropped` (it waits on a dependency that is not done, or is dropped, or
-is itself under way), or `none` when every phase is `done` or `dropped`.
+`record.py pick REC`
 
-<!-- cmd: pick -->
-```bash
-phase_state() (
-  pid=$1
-  base=$(jq -r '.base' "$rec")
-  ph=$(jq -c --arg id "$pid" '.phases[] | select(.id == $id)' "$rec")
-  [ "$(printf '%s' "$ph" | jq -r '.status')" = dropped ] && { echo dropped; return; }
-  b=$(printf '%s' "$ph" | jq -r '.branch // empty')
-  [ -z "$b" ] && { echo not-started; return; }
-  plan=$(printf '%s' "$ph" | jq -r '.plan // empty')
-  main=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
-  w=$(git worktree list --porcelain | awk -v ref="branch refs/heads/$b" \
-    '/^worktree /{p=substr($0,10)} $0==ref{print p; exit}')
-  [ -z "$w" ] && w=$main
-  if [ -n "$plan" ]; then
-    for f in "$w"/.superpowers/sdd/*/plan-path; do
-      [ -f "$f" ] && grep -Fxq -- "$plan" "$f" && { echo cut-off; return; }
-    done
-  fi
-  merged=no
-  if ! git rev-parse -q --verify "refs/heads/$b" >/dev/null; then merged=yes
-  elif git merge-base --is-ancestor "$b" "$base"; then merged=yes
-  elif [ "$(gh pr view "$b" --json state -q .state 2>/dev/null)" = MERGED ]; then merged=yes
-  fi
-  closed=$(printf '%s' "$ph" | jq -r 'if .closing.replan == null then "no" else "yes" end')
-  case "$merged,$closed" in
-    yes,no) echo close-missed ;;
-    yes,yes) echo done ;;
-    no,no) echo finished-unclosed ;;
-    no,yes) echo closed-unmerged ;;
-  esac
-)
-ids=$(jq -r '.phases[].id' "$rec")
-states=""
-for p in $ids; do states="$states$p $(phase_state "$p")
-"; done
-first_open=""
-picked=""
-for p in $ids; do
-  s=$(printf '%s' "$states" | awk -v p="$p" '$1 == p {print $2}')
-  case "$s" in done|dropped) continue ;; esac
-  [ -z "$first_open" ] && first_open=$p
-  [ "$s" = not-started ] || continue
-  ready=yes
-  for d in $(jq -r --arg id "$p" '.phases[] | select(.id == $id) | .depends_on[]?' "$rec"); do
-    printf '%s' "$states" | grep -Fxq "$d done" || { ready=no; break; }
-  done
-  [ "$ready" = yes ] && { picked=$p; break; }
-done
-if [ -n "$picked" ]; then echo "id:$picked"
-elif [ -n "$first_open" ]; then echo "blocked:$first_open"
-else echo none
-fi
-```
+Prints `id:<phase id>` for the first phase, in array order, that is
+`not-started` and whose `depends_on` are all `done`. Otherwise prints
+`blocked:<phase id>` for the first phase that is not `done` or `dropped`
+(it waits on a dependency that is not done, or is dropped, or is itself
+under way), or `none` when every phase is `done` or `dropped`.
+
+### get
+
+`record.py get REC ID [FIELD]`
+
+Prints the phase, or one of its fields, as compact JSON:
+`record.py get REC K3 closing`. It refuses an unknown id or field.
+
+### questions
+
+`record.py questions REC ID`
+
+Prints, as compact JSON, the `waits_on` questions that phase `ID` must
+answer, gathered from every phase of the record, each with the phase that
+asks it: `[{"phase":"K3","q":["…"]}]`, or `[]`.
 
 ### new-record
 
-Reads `rec` and `record_json`, the whole record in the shape above.
-Create's one write: it creates `rec` and its directory. It fails, and
-writes nothing, when `rec` already exists, or `record_json` lacks
-`umbrella` or `base`, or a phase lacks one of the ten keys, has one more,
-or repeats an id. Assign `record_json` in the same Bash call, from a
-quoted heredoc or `jq -n`.
+`record.py new-record REC --value-file <path>`
 
-<!-- cmd: new-record -->
-```bash
-if [ -e "$rec" ]; then
-  echo "new-record: $rec already exists" >&2; false
-elif printf '%s' "$record_json" | jq -e '(.umbrella | type) == "string"
-    and (.base | type) == "string" and (.phases | type) == "array"
-    and all(.phases[]; type == "object" and (keys | sort) == ["branch","closing","depends_on",
-      "id","partner_questions","plan","spec","status","title","waits_on"])
-    and (.phases | map(.id) | unique | length) == (.phases | length)' >/dev/null; then
-  mkdir -p "$(dirname "$rec")" && printf '%s\n' "$record_json" | jq . > "$rec.tmp" &&
-    mv "$rec.tmp" "$rec" || { rm -f "$rec.tmp"; echo "new-record: nothing written" >&2; false; }
-else
-  echo "new-record: record_json is not a whole record of the shape above" >&2; false
-fi
-```
+Create's one write: it creates `REC` and its directory from the whole
+record in the value file, in the shape above. It fails, and writes
+nothing, when `REC` already exists, or the record lacks `umbrella` or
+`base`, or a phase lacks one of the ten keys, has one more, or repeats an
+id.
 
 ### set
 
-Reads `rec`, `id`, `field` and `value_json`. Sets that field of the phase
-to the JSON value, in place. Example: `field=branch value_json='"K2"'`.
-It fails, and writes nothing, when the record has no phase `id` with
-that field, or `value_json` is not JSON.
+`record.py set REC ID FIELD (--value <json> | --value-file <path>)`
 
-<!-- cmd: set -->
-```bash
-if jq -e --arg id "$id" --arg field "$field" \
-    'any(.phases[]; .id == $id and has($field))' "$rec" >/dev/null; then
-  jq --arg id "$id" --arg field "$field" --argjson v "$value_json" \
-    '(.phases[] | select(.id == $id) | .[$field]) = $v' "$rec" > "$rec.tmp" &&
-    mv "$rec.tmp" "$rec" || { rm -f "$rec.tmp"; echo "set: nothing written" >&2; false; }
-else
-  echo "set: no phase '$id' with a field '$field' in $rec" >&2; false
-fi
-```
+Sets that field of the phase to the JSON value, in place:
+`record.py set REC K2 branch --value '"worktree-K2"'`. It fails, and
+writes nothing, when the record has no phase `ID` with that field, or the
+value is not JSON. A change to `closing` goes through `set-closing-key`.
+
+### set-closing-key
+
+`record.py set-closing-key REC ID KEY MODE (--value <json> | --value-file <path>)`
+
+Sets one key of the phase's `closing`, and keeps every other key as read.
+`KEY` is `rulings`, `unfinished`, `learned` or `replan`, and the value is
+a JSON list. `MODE` is `append`, which adds the list's items after the
+key's own (a null key counts as empty), or `replace`, which sets the key
+to the list. A null `closing` starts as
+`{"rulings": [], "unfinished": [], "learned": null, "replan": null}`.
+`replan` is written whole, with `replace`, and never back to null:
+setting it marks the phase closed. It fails, and writes nothing, for an
+unknown id or key, a value that is not a list, or `append` to `replan`.
 
 ### set-phases
 
-Reads `rec` and `phases_json`, a JSON array of whole phases. Replaces
-`phases` with it, in place, and leaves `umbrella` and `base` alone. It
-fails, and writes nothing, unless every phase has exactly the ten keys of
-the shape above and no id repeats. For
-a split, merge, reorder or drop: build `phases_json` from the current
-`.phases` with jq in the same Bash call, never from memory.
+`record.py set-phases REC --value-file <path>`
+
+Replaces `phases` with the JSON array of whole phases in the value file,
+in place, and leaves `umbrella` and `base` alone. It fails, and writes
+nothing, unless every phase has exactly the ten keys of the shape above
+and no id repeats. For a split, merge, reorder or drop: read the record
+fresh with the Read tool, write the new array to a value file, and pass
+it to `record.py set-phases` with `--value-file`; never build it from
+memory.
 
 These rules hold for every split, merge, reorder or drop, from a close or
 from Resume's Plan stage:
@@ -350,8 +244,9 @@ from Resume's Plan stage:
   `rulings` and `unfinished`, with `learned` and `replan` null. Merges
   happen only in a close: name any design file the merged phases had in
   a line of the closing phase's `learned` that names the merged phase,
-  and write that line at once with `set` (read `closing`, then `learned`
-  plus the line), as `close.md` step 2 does for a design change.
+  and write that line at once with `record.py set-closing-key`, the
+  closing phase's id, key `learned`, mode `append`, as `close.md` step 2
+  does for a design change.
 - **The `status` of every part of a split, the first included, and of a
   merged phase:** `needs-partner` if it has `partner_questions`, else
   `waiting` if any of its `waits_on` has a `from` that is not closed
@@ -370,16 +265,3 @@ from Resume's Plan stage:
   New entries carry the old entries' words, divided or joined, with
   nothing added, and their "Depends on" and "Waits on" lines match the
   record.
-
-<!-- cmd: set-phases -->
-```bash
-if printf '%s' "$phases_json" | jq -e 'type == "array"
-    and all(.[]; type == "object" and (keys | sort) == ["branch","closing","depends_on",
-      "id","partner_questions","plan","spec","status","title","waits_on"])
-    and (map(.id) | unique | length) == length' >/dev/null; then
-  jq --argjson v "$phases_json" '.phases = $v' "$rec" > "$rec.tmp" &&
-    mv "$rec.tmp" "$rec" || { rm -f "$rec.tmp"; echo "set-phases: nothing written" >&2; false; }
-else
-  echo "set-phases: phases_json is not an array of whole phases with distinct ids" >&2; false
-fi
-```

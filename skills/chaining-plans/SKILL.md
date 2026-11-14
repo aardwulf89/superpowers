@@ -123,14 +123,16 @@ the build starts: the executor resolves it from inside the worktree.
 
 **The record holds the machine state:** one `effort.json` per effort, at
 `<main checkout>/.superpowers/chain/<id>/effort.json`, where `<id>` is the
-umbrella's spec letter. Run `chain-dir` from `references/record.md` to find
-the directory; it resolves the same from any worktree. `.superpowers/` is
-git-ignored, so the record is never committed.
+umbrella's spec letter. Run `record.py chain-dir` to find the directory;
+it resolves the same from any worktree. `.superpowers/` is git-ignored, so
+the record is never committed.
 - `references/record.md` holds its shape and every command you run against
-  it. Run its named blocks (`chain-dir`, `open-efforts`, `phase-state`,
-  `pick`, `new-record`, `set`, `set-phases`) as written. Create writes the
-  record once with `new-record`; every later change is `set` or
-  `set-phases`. Never edit the record by hand or rewrite it from memory.
+  it: the subcommands of `scripts/record.py` (`chain-dir`, `open-efforts`,
+  `phase-state`, `pick`, `get`, `questions`, `new-record`, `set`,
+  `set-closing-key`, `set-phases`), each run by the script's absolute path
+  as one plain command. Create writes the record once with `new-record`;
+  every later change is `set`, `set-closing-key` or `set-phases`. Never
+  edit the record by hand or rewrite it from memory.
 - Your human partner never reads the record. They review through your
   reports.
 
@@ -175,7 +177,7 @@ These thoughts mean STOP—you're leaving the rails:
 | "I'll just write the plan" | Invoke `writing-plans`. |
 | "The close is just updating the JSON" | Invoke `chaining-plans` with `close <effort id> <phase id>`. |
 | "I remember what the reference file says" | Read it. It is the entry point. |
-| "I'll fix the record by hand" | Run `set` from `references/record.md`. |
+| "I'll fix the record by hand" | Run `record.py set` or `record.py set-closing-key` (`references/record.md`). |
 | "This phase needs a brainstorm first" | The intent sitting replaced it. Design within the Phases entry. |
 | "I should wait for a review of the plan" | The standing approval covers that wait. Continue. |
 | "While they're here, I'll design every phase" | Up front is intent only. Technical design waits for its phase's session. |

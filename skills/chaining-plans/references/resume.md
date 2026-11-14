@@ -4,23 +4,23 @@ Every session of an effort after Create starts here. Resume settles what
 the last session left, picks the next phase, and runs that one phase
 straight through to its merge menu and its close. One phase per session.
 
-Every block named here is in `references/record.md`. Run it as written,
-with its inputs assigned in the same Bash call.
+Every command named here is a subcommand of the record script. Run it as
+`references/record.md` § Commands says: one plain command per Bash call.
 
 ## 1. Find the record
 
 - **An effort id was given** (as the argument, or in the request): the
-  record is `<chain_dir>/<id>/effort.json`. Run `chain-dir` to find
-  `chain_dir`. If the file is missing, say so and stop.
-- **No id:** run `open-efforts`.
+  record is `<chain dir>/<id>/effort.json`. Run `record.py chain-dir` to
+  find the chain dir. If the file is missing, say so and stop.
+- **No id:** run `record.py open-efforts`.
   - Nothing printed: say there is no open effort, and that an effort
     starts with Create. Stop.
   - One path: use it.
   - Several: list them by effort id, ask your human partner which one,
     and end your turn. Do not pick one for them.
 
-The effort id is the name of the record's directory. Every later block
-gets `rec=<path to effort.json>`.
+The effort id is the name of the record's directory. Every later command
+takes the path to `effort.json` as its `REC` argument.
 
 ## 2. Check git
 
@@ -41,7 +41,7 @@ gets `rec=<path to effort.json>`.
 Do this before the pick: `pick` reports a phase that is under way as
 `blocked:`.
 
-For each phase, in array order, run `phase-state` and act on what it
+For each phase, in array order, run `record.py phase-state` and act on what it
 prints:
 
 | State | What happened | Action |
@@ -55,7 +55,7 @@ prints:
 - **Close it** means: invoke `chaining-plans` through the Skill tool with
   `close <effort id> <phase id>`. When it has reported, come back here
   and go on with the row's action.
-- **After each row's whole action, run `phase-state` again** (for
+- **After each row's whole action, run `record.py phase-state` again** (for
   `finished-unclosed`, the whole action is the close and then the git
   ops; check after both, not between them). A settled phase reads
   `done`. If it does not, report what is left and stop.
@@ -126,7 +126,7 @@ whether `base` was pushed.
 
 ## 4. Pick
 
-Run `pick`. It prints one of:
+Run `record.py pick`. It prints one of:
 
 - **`none`:** every phase is done or dropped. Report that the effort is
   done, and stop.
@@ -156,13 +156,11 @@ the Skill tool. A stage is done only when its "Done when" holds.
 | Finish | Invoke `finishing-a-development-branch`. Your human partner answers its menu | The menu was shown as `finishing` words it, and answered |
 | Close | Invoke `chaining-plans` again, to close | `closing.replan` is written and the report given, or, after a discard, `branch` reset and that reported |
 
-**Log rulings as the Design, Plan and Build stages end.** Read the
-current `closing` with jq, as in `close.md` step 0, never from memory:
-`jq -c --arg id "$id" '.phases[] | select(.id == $id) | .closing' "$rec"`.
-Append the stage's rulings to its `rulings`, keep every other key as
-read, and `set` it: `field=closing`, the whole object as `value_json`. A
-null `closing` starts as
-`{"rulings": [...], "unfinished": [], "learned": null, "replan": null}`.
+**Log rulings as the Design, Plan and Build stages end,** with
+`record.py set-closing-key REC <phase id> rulings append`, the stage's
+rulings as a JSON list of strings in a value file. It reads `closing`
+fresh, starts a null one, and keeps every other key, so nothing is
+composed from memory.
 
 ### Design
 
@@ -219,13 +217,14 @@ null `closing` starts as
   stop. Never implement on `base`. A `cut-off` phase's branch is
   checked out already: re-invoke the executor there, with no
   `checkout -b`.
-- **Record `branch` as soon as it exists:** `set` `branch` once the
-  executor's setup has created its SDD workspace (its ledger), not
+- **Record `branch` as soon as it exists:** `record.py set` `branch` once
+  the executor's setup has created its SDD workspace (its ledger), not
   before. A branch with no workspace and no commits reads as
   `close-missed`.
 - **Between the executor's final message and finishing,** copy its
   "Rulings I made" into `closing.rulings` and its "Unfinished" into
-  `closing.unfinished`, with `set`, reading `closing` fresh as above.
+  `closing.unfinished`, with `record.py set-closing-key`, mode `append`,
+  one call per key.
   When an orchestrator subagent ran the plan, copy them from its final
   message.
 

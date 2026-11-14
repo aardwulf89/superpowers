@@ -24,8 +24,8 @@ section, no record, no commit, no plan.
   `bash ../brainstorming/scripts/next-spec-id` by its absolute path, from
   the main checkout. The letter is not issued until step 4 commits it, so
   until then it and the phase ids may change.
-- **Check for an existing effort.** The effort id is the spec's letter. Run `chain-dir` from `references/record.md`; if
-  `<chain_dir>/<id>/effort.json` already exists, this spec is already an
+- **Check for an existing effort.** The effort id is the spec's letter. Run `record.py chain-dir` (`references/record.md` § Commands); if
+  `<chain dir>/<id>/effort.json` already exists, this spec is already an
   effort. Say so, and point your human partner at Resume.
 - **Work from the spec and from the reasons for the split** that the session
   holds, such as `writing-plans`' Scope Check finding several subsystems.
@@ -101,10 +101,11 @@ All of this happens in the main checkout, on `base`.
 4. **Commit** the spec, any plan you linked, and `.gitignore` if it changed,
    on `base`, with the letter in the subject (`docs(K): phases`). This
    commit issues the ids: from here on they are never renumbered.
-5. **Write the record** with `new-record` from `references/record.md`:
-   run `chain-dir`, then, in one Bash call, assign
-   `rec=<chain_dir>/<id>/effort.json` and `record_json`, and run the
-   block. This one write creates the whole file, in the shape
+5. **Write the record** with `record.py new-record`
+   (`references/record.md` § Commands): run `record.py chain-dir`, write
+   the whole record as JSON to a value file, then run
+   `record.py new-record <chain dir>/<id>/effort.json --value-file <path>`.
+   This one write creates the whole file, in the shape
    `references/record.md` gives:
    - `umbrella`: the spec's repo-relative path; `base`: the branch;
    - `phases`: in the order of work, every phase with all ten keys, and
@@ -114,8 +115,9 @@ All of this happens in the main checkout, on `base`.
    - `spec` and `plan`: null, except for a linked plan; `branch` and
      `closing`: null.
 
-   If the block fails, it wrote nothing: correct `record_json` and run it
-   again. Every later change goes through `set` or `set-phases`.
+   If it fails, it wrote nothing: correct the value file and run it
+   again. Every later change goes through `record.py set`,
+   `record.py set-closing-key` or `record.py set-phases`.
 
 ### The Phases section
 

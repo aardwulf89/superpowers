@@ -8,15 +8,15 @@ from one of two places, and each has its own ending (step 4):
 - **Resume's settle step,** for a phase that is `finished-unclosed` or
   `close-missed`. That phase was built in an earlier session.
 
-Every block named here is in `references/record.md`. Run it as written,
-with its inputs assigned in the same Bash call.
+Every command named here is a subcommand of the record script. Run it as
+`references/record.md` § Commands says: one plain command per Bash call.
 
 ## 0. Find the phase, and check the answer to the menu
 
-- **Find the record:** run `chain-dir`; the record is
-  `<chain_dir>/<effort id>/effort.json`. If it is missing, or has no
-  phase with that id, say so and stop. Every later block gets
-  `rec=<that path>` and `id=<phase id>`.
+- **Find the record:** run `record.py chain-dir`; the record is
+  `<chain dir>/<effort id>/effort.json`. If it is missing, or has no
+  phase with that id, say so and stop. Every later command takes that
+  path as its `REC` argument, and the phase id as its `ID`.
 - **Work from the main checkout,** the parent of
   `git rev-parse --path-format=absolute --git-common-dir`. After option 2
   or 3 the session may still be in the worktree, so run every git command
@@ -27,12 +27,10 @@ with its inputs assigned in the same Bash call.
   `rulings`, `unfinished`, `learned` or `replan` keeps the full ids it
   names (`Task K3.4: …`, `K3: …`), and names a phase by its phase id.
   Commits on `base` carry the narrowest id (`docs(K3): …`).
-- **Read the current `closing`** with jq before you compose any
-  `value_json` for it, every time, never from memory:
-  `jq -c --arg id "$id" '.phases[] | select(.id == $id) | .closing' "$rec"`.
-  A null `closing` starts as
-  `{"rulings": [], "unfinished": [], "learned": null, "replan": null}`.
-  Change only the keys a step names, and keep the rest as read.
+- **Write `closing` one key at a time,** with `record.py set-closing-key`.
+  It reads `closing` fresh, starts a null one, and keeps every key a step
+  does not name. When a step needs what is there, read it with
+  `record.py get REC ID closing`, every time, never from memory.
 - **`replan` already set:** the phase is closed. Say so, and go to the
   ending (step 4). Never set `replan` back to null.
 
@@ -52,7 +50,7 @@ was no menu in this session: run steps 1 to 4. In the plan's own session:
 
 - **The answer to each `waits_on` question whose `from` is this phase,**
   in any phase of the record, each naming the phase that asked it:
-  `jq -c --arg id "$id" '[.phases[] | {phase: .id, q: [.waits_on[]? | select(.from == $id) | .question]} | select(.q | length > 0)]' "$rec"`.
+  `record.py questions REC ID`.
   Answer from what the plan found, not from what it set out to find. A
   question the plan did not answer gets that as its answer.
 - **The surprises:** what the build found that its plan did not expect,
@@ -97,8 +95,9 @@ record's `base` and `<branch>` the phase's `branch`, every command as
 Leave `rulings` and `unfinished` as they are: there is no final message
 to check them against.
 
-Write it with `set`: `field=closing`, `value_json` the closing you read,
-with `learned` filled in and any missing lines added.
+Write it with `record.py set-closing-key`: `learned` with mode `replace`,
+and any missing `rulings` or `unfinished` lines with mode `append`, each
+list from a value file.
 
 ## 2. Re-plan the phases that are not done
 
@@ -134,17 +133,21 @@ test**. Does the change alter any of these?
   umbrella) the phase has no file of its own: add the change to this
   phase's `learned` as a line naming that phase, since its Design stage
   reads `learned`; when its `spec` is the umbrella, `set` it to null so
-  that its Design stage runs. Write the line now with `set` (read
-  `closing`, then `learned` plus the line), so the `replan` write's
-  fresh read keeps it.
+  that its Design stage runs. Write the line now with
+  `record.py set-closing-key`, key `learned`, mode `append`, so the
+  `replan` write keeps it.
 - **Each unfinished finding:** move it to the phase it belongs to, the
   same way as a technical design change, naming the id it came from
   (`from K2: Task K2.3: …`), and note that phase in its line in
-  `unfinished`, with `set` the same way.
+  `unfinished`: read the list with `record.py get REC ID closing`, and
+  write it back whole with `record.py set-closing-key`, key `unfinished`,
+  mode `replace`.
 
 **Yes: do not rule.** Add the question to the affected phase's
-`partner_questions` (read the list with jq, then `set` it with the
-question added), and `set` its `status` to `needs-partner`. A waiting
+`partner_questions` (read the list with
+`record.py get REC <phase id> partner_questions`, then `record.py set` it
+with the question added, from a value file), and `record.py set` its
+`status` to `needs-partner`. A waiting
 phase whose answer raised the question goes to `needs-partner`, not
 `known`. Word it as a question, ending in a question mark, that stands
 on its own for a reader who did not see this session: what was learned,
@@ -166,8 +169,8 @@ per change, a question included:
 - `alternative`: the option you did not take, or for a question, the
   other answer your human partner could give.
 
-With no change at all, `replan` is `[]`. `set` it as the closing you
-read, with `replan` filled in.
+With no change at all, `replan` is `[]`. Write it with
+`record.py set-closing-key REC ID replan replace`.
 
 ## 3. Report
 
