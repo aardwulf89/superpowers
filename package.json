@@ -1,6 +1,6 @@
 {
   "name": "superpowers",
-  "version": "7.0.2+aardwulf.4",
+  "version": "7.0.2+aardwulf.5",
   "description": "Superpowers skills and runtime bootstrap for coding agents",
   "type": "module",
   "main": ".opencode/plugins/superpowers.js",

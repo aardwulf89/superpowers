@@ -1,7 +1,7 @@
 {
   "name": "superpowers",
   "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
-  "version": "7.0.2+aardwulf.4",
+  "version": "7.0.2+aardwulf.5",
   "author": {
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com"
