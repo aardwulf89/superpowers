@@ -131,10 +131,9 @@ a ledger file, not only in todos.
   that happens, recover from `git log`.
 
 Read the plan once, note its context and Global Constraints, and call
-`TaskCreate` once per plan task (load it with `ToolSearch` first if it's
-deferred), each titled with its task id and name
-("Task K3.4: Add retry wrapper"). Never one task for a range ("Tasks 1-14"). After the last plan
-task, create two more: "<plan id>: Final whole-branch review" and
+`TaskCreate` once per plan task, each titled with its task id and name
+("Task K3.4: Add retry wrapper"). Never one task for a range ("Tasks
+1-14"). After the last plan task, create two more: "<plan id>: Final whole-branch review" and
 "<plan id>: Deferred-findings round and finish".
 If the plan names a Spec, read that too: the spec is the
 authority the plan argues from, and conflicts inside the plan resolve
@@ -146,16 +145,10 @@ as its plan heading writes it: `K3.4` in a plan with ids, `3` in one without. `<
 the plan's id from its first line (`# K3: …`); a plan without one has
 none, and a line that would start with `<plan id>:` starts bare. Every
 todo, dispatch, ledger line, commit subject and final-message line names
-its id in full, never a short form. Commit subjects carry the narrowest
-id: a task's commits its task id (`feat(K3.4): …` in a repo that uses
-conventional commits, else `K3.4: …`); the final review's fix wave and
-the deferred-findings round the plan id (`fix(K3): …`). When setup
-creates a branch, it is named after the plan's id (`K3`). A plan without an id keeps
-the branch name its worktree setup gives. A task heading
-with part headings nested under it (`### Task K3.4` holding
-`#### Task K3.4a`, `#### Task K3.4b`) is a task split in the plan: run
-its parts, each with its own todo, dispatch, review and completion line,
-never the parent on its own. A task split
+its id in full, never a short form. A branch setup creates
+for a plan with an id is named after the plan's id (`K3`). A task whose heading
+holds nested part headings (`#### Task K3.4a`, …) was split in the
+plan: run each part as its own task, never the parent on its own. A task split
 during the build follows BLOCKED item 3 in
 [references/handling-reports.md](references/handling-reports.md).
 
@@ -240,8 +233,7 @@ and fix-round diffs need it.
   magic strings, signatures, test cases) appear only in the brief. Never
   make a subagent read the whole plan file.
 - **Report file:** name the implementer's report file after the brief
-  (brief `…/task-<id>-brief.md` → report `…/task-<id>-report.md`; a part of
-  a split task names its own, `task-K3.4a-report.md`) and put it in
+  (brief `…/task-<id>-brief.md` → report `…/task-<id>-report.md`) and put it in
   the dispatch prompt. The implementer writes the full report there and
   returns only status, commits, a one-line test summary, and concerns.
 - A dispatch prompt describes one task, not the session's history. Do not

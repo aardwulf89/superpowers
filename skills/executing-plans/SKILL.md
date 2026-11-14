@@ -135,11 +135,9 @@ and the new one resumes from the same ledger.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
   line names your plan file, tasks with a `Task <id>: complete` line are
   DONE — do not redo them; resume at the first task without one. A task
-  the ledger split during the build (`Task <id>: Ruling: split into …`)
-  is DONE when every part the ruling names has its own completion line;
-  resume at the first part without one. So is a task whose plan heading
-  has nested part headings (`#### Task <id>a`, …): its parts are the
-  tasks, and it has no line of its own. Their
+  split by a `Task <id>: Ruling: split into …` line is DONE when
+  every part the ruling names has its own completion line; resume at the
+  first part without one. Their
   commits exist in git even when your context no longer remembers making
   them: after compaction, trust the ledger and `git log` over your own
   recollection. A ledger whose first line names a different plan file is
@@ -150,8 +148,7 @@ and the new one resumes from the same ledger.
   if that happens, recover from `git log`.
 
 Read the plan once, note its context and Global Constraints, and call
-`TaskCreate` once per plan task (load it with `ToolSearch` first if it's
-deferred), each titled with its task id and name
+`TaskCreate` once per plan task, each titled with its task id and name
 ("Task K3.4: Add retry wrapper"). Never one task for a range ("Tasks 1-14").
 After the last plan task, create two more:
 "<plan id>: Final whole-branch review" and
@@ -169,13 +166,10 @@ bare. Every todo, ledger line, commit subject and final-message line names
 its id in full, never a short form. Commit subjects carry the narrowest
 id: a task's commits its task id (`feat(K3.4): …` in a repo that uses
 conventional commits, else `K3.4: …`); the final review's fix pass and the
-deferred-findings round the plan id (`fix(K3): …`). When setup creates a
-branch, it is named after the plan's id (`K3`). A plan without an id keeps
-the branch name its worktree setup gives. A task heading with part
-headings nested under it (`### Task K3.4` holding `#### Task K3.4a`,
-`#### Task K3.4b`) is a task split in the plan: take its parts, each
-with its own todo, `task-start`, `task-done` and completion line,
-never the parent on its own.
+deferred-findings round the plan id (`fix(K3): …`). A branch setup
+creates for a plan with an id is named after the plan's id (`K3`).
+A task whose heading holds nested part headings (`#### Task K3.4a`, …) was split
+in the plan: take each part as its own task, never the parent on its own.
 
 **REQUIRED SUB-SKILL:** load superpowers:test-driven-development now,
 before the first task. It governs every step of every task below; a plan whose
@@ -189,7 +183,7 @@ produces against what the other consumes, and what you found. Tasks that
 share nothing get no row; a plan whose tasks share nothing gets the single
 line `Pre-flight: no shared interfaces`. Rule on each conflict a row
 surfaces with the spec as the binding authority, record the ruling beside
-its row (`<plan id>: Ruling: …`, since a row spans tasks), and start the
+its row (`<plan id>: Ruling: …`), and start the
 first task. Each task's own text is checked when you read
 its brief, not here.
 

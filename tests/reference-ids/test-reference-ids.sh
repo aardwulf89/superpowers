@@ -147,8 +147,8 @@ has skills/chaining-plans/SKILL.md 'else `K3: …`'
 lacks $S/references/preflight.md 'Task 1'
 lacks $E/SKILL.md 'Task 1'
 has $S/references/preflight.md '<plan id>: Ruling:'
-has $S/SKILL.md 'A plan without an id keeps'
-has $E/SKILL.md 'A plan without an id keeps'
+has $S/SKILL.md 'for a plan with an id is named'
+has $E/SKILL.md 'for a plan with an id is named'
 
 if ((failures)); then
   echo "FAIL: $failures of $checks id-form checks" >&2
