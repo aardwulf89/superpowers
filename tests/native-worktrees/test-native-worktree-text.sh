@@ -41,6 +41,47 @@ for s in 'EnterWorktree' 'ExitWorktree' '.claude/worktrees/' 'git merge-base --i
 done
 has $C/references/close.md 'ExitWorktree'
 
+# --- finishing-a-development-branch ---
+F=skills/finishing-a-development-branch/SKILL.md
+
+# in_section FILE HEADING TEXT: the line number of TEXT's first line in the
+# section that starts at the line HEADING, up to the next heading. Lines in
+# code fences are never headings (a bash comment starts with # too).
+in_section() {
+  awk -v h="$2" -v t="$3" '
+    $0 == h { s = 1; next }
+    /^```/ { fence = !fence }
+    s && !fence && /^#/ { exit }
+    s && index($0, t) { print NR; exit }
+  ' "$REPO_ROOT/$1"
+}
+# before FILE HEADING FIRST SECOND: in that section, FIRST appears before SECOND.
+before() {
+  checks=$((checks + 1))
+  local a b
+  a=$(in_section "$1" "$2" "$3"); b=$(in_section "$1" "$2" "$4")
+  if [[ -z "$a" || -z "$b" || "$a" -ge "$b" ]]; then
+    echo "[FAIL] $1 '$2': '$3' (line ${a:-none}) is not before '$4' (line ${b:-none})" >&2
+    failures=$((failures + 1))
+  fi
+}
+# within FILE HEADING TEXT: the section has TEXT.
+within() {
+  checks=$((checks + 1))
+  if [[ -z "$(in_section "$1" "$2" "$3")" ]]; then
+    echo "[FAIL] $1 '$2' lacks: $3" >&2
+    failures=$((failures + 1))
+  fi
+}
+
+has $F 'ExitWorktree'
+before $F '### Option 1: Merge Locally' 'ExitWorktree' 'cd "$MAIN_ROOT"'
+before $F '### If your human partner asks to discard the work' 'Leave a confined worktree first' 'cd "$MAIN_ROOT"'
+within $F '## Step 6: Cleanup Workspace' '.claude/worktrees/'
+has $F 'or the `.claude/worktrees/` one this session entered and left'
+within $F '## Step 2: Detect Environment' 'git rev-parse --path-format=absolute --git-common-dir'
+lacks $F 'GIT_COMMON=$(cd'
+
 if ((failures > 0)); then
   echo "$failures of $checks checks failed" >&2
   exit 1

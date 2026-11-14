@@ -27,13 +27,19 @@ Tests failing (<N> failures). Must fix before completing:
 
 ## Step 2: Detect Environment
 
+Run each of these as its own plain Bash call, and note the path each one
+prints: `GIT_DIR`, `GIT_COMMON` and `WORKTREE_PATH`, in that order.
+
 ```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-# Capture now, while still inside the workspace — Step 5 changes directory
-# before cleanup (Step 6) needs this value
-WORKTREE_PATH=$(git rev-parse --show-toplevel)
+git rev-parse --path-format=absolute --git-dir
+git rev-parse --path-format=absolute --git-common-dir
+git rev-parse --show-toplevel
 ```
+
+Separate plain calls run inside a worktree the harness confines the
+session to (Claude Code, after `EnterWorktree`), which refuses a compound
+command that runs git. Capture `WORKTREE_PATH` now, while still inside the
+workspace: Step 5 changes directory before cleanup (Step 6) needs it.
 
 This determines which menu to show and how cleanup works:
 
@@ -84,6 +90,8 @@ is theirs.
 ## Step 5: Execute Choice
 
 ### Option 1: Merge Locally
+
+**If this session is confined to the worktree** (Claude Code, after `EnterWorktree`), leave it first with the harness's exit tool, keeping the worktree (`ExitWorktree`, action `keep`). From inside it the `cd` and the merge below are refused. The values captured in Step 2 still hold.
 
 ```bash
 # Get main repo root for CWD safety
@@ -145,6 +153,8 @@ Type 'discard' to confirm.
 
 Wait for that exact confirmation. When it arrives:
 
+Leave a confined worktree first, as in Option 1.
+
 ```bash
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
 cd "$MAIN_ROOT"
@@ -166,8 +176,11 @@ Step 2, from before that directory change.
 
 **If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
 
-**If `WORKTREE_PATH` is under `.worktrees/` or `worktrees/`:** Superpowers
-created this worktree — we own cleanup:
+**If `WORKTREE_PATH` is under `.worktrees/` or `worktrees/`, or it is under
+`.claude/worktrees/` and this session entered it with the harness's
+worktree tool and left it in Step 5:** Superpowers created this worktree,
+or this session did through the harness and the harness's exit tool can no
+longer remove it — we own cleanup:
 
 ```bash
 git worktree remove "$WORKTREE_PATH"
@@ -218,7 +231,7 @@ place. If your platform provides a workspace-exit tool, use it.
 | "They seem done with this feature — I'll offer to discard it" | The menu is complete as written. Discard happens only when your human partner asks for it in so many words. |
 | "'Yeah, get rid of it' counts as confirmation" | Only the typed word `discard` authorizes deletion. |
 | "The PR is up, so the worktree is clutter now" | PR feedback gets fixed in that worktree. It stays until the work lands. |
-| "This other worktree looks stale — I'll clean it too" | Clean up only worktrees under `.worktrees/` or `worktrees/`. Everything else belongs to the host. |
+| "This other worktree looks stale — I'll clean it too" | Clean up only worktrees under `.worktrees/` or `worktrees/`, or the `.claude/worktrees/` one this session entered and left. Everything else belongs to the host. |
 | "Removal refused — `--force` is just finishing the cleanup" | The refusal means files exist only in that worktree. `--force` destroys them permanently. Show your human partner and ask. |
 | "The merged-result failure is probably flaky" | A failing merged result stops everything. Branch and worktree stay put while you investigate. |
 | "The base branch is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
