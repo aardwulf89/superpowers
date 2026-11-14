@@ -298,6 +298,15 @@ the branch). This is the only lane.
 - **Docs live on `base`.** The umbrella spec, its Phases section, each
   phase's design, and each plan are committed on `base` in the main
   checkout, before the build's worktree is created.
+- **Claude Code's native worktree tool** (spec B). `EnterWorktree` names
+  the branch `worktree-<phase id>`, branches from local `base` only with
+  `worktree.baseRef: "head"`, and confines the session to the worktree:
+  compound Bash commands, and git aimed at the main checkout, are
+  refused there. So the record's commands are one script run by its
+  path (`scripts/record.py`), the record stores the tool's branch name,
+  the build checks that the worktree starts from `base`, and the session
+  leaves the worktree (`ExitWorktree`, `keep`) before any work in the
+  main checkout. Finishing then removes the worktree after the merge.
 
 **Why this lane (my call).** Every existing skill runs as written:
 - `using-git-worktrees` makes one worktree per build;

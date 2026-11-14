@@ -26,15 +26,18 @@ takes the path to `effort.json` as its `REC` argument.
 
 - **Work in the main checkout:** the parent of
   `git rev-parse --path-format=absolute --git-common-dir`. If the session
-  started in a worktree, `cd` there.
+  started in a worktree, `cd` there. A session the harness confines to a
+  worktree (Claude Code, after `EnterWorktree`) cannot `cd` out: leave it
+  with `ExitWorktree`, action `keep`, instead.
 - **A clean tree:** `git status --porcelain` prints nothing. If it prints
   anything, report the files and stop. They are your human partner's
   work in progress.
 - **On `base`:** the main checkout has the record's `base` checked out,
   unless it has a phase's own branch checked out: the `branch` of a
-  phase built in place, or a branch named after a phase whose `branch`
-  is still null (a session ended before recording it; the Build stage
-  reuses it). Anything else: report it and stop.
+  phase built in place, or a branch named `<phase id>` or
+  `worktree-<phase id>` (Claude Code's `EnterWorktree`) for a phase whose
+  `branch` is still null (a session ended before recording it; the Build
+  stage reuses it). Anything else: report it and stop.
 
 ## 3. Settle every phase under way
 
@@ -46,7 +49,7 @@ prints:
 
 | State | What happened | Action |
 |---|---|---|
-| `cut-off` | The build was cut off; its SDD workspace exists | This phase is this session's phase. Go to the Build stage (step 5): re-invoke the executor in the branch's worktree (`git worktree list`). It resumes from its own ledger. Run the stages after it, and do not pick |
+| `cut-off` | The build was cut off; its SDD workspace exists | This phase is this session's phase. Go to the Build stage (step 5): enter the branch's worktree (`git worktree list`; in Claude Code, `EnterWorktree` with its `path`) and re-invoke the executor there. It resumes from its own ledger. Run the stages after it, and do not pick |
 | `finished-unclosed` | Finished; not closed, not merged | Close it, then do its missed git ops |
 | `closed-unmerged` | Closed; its git ops were missed | Do its missed git ops |
 | `close-missed` | Merged; the close was missed | Close it. The close reconstructs `learned` from the plan and the branch's commits |
@@ -85,7 +88,8 @@ own definition when their instructions give one, else the one in
    server-side hooks or branch protection; those refuse only the real
    push, which still stops, but after the cleanup.
 4. **Invoke `finishing-a-development-branch`** fresh through the Skill
-   tool, from the branch's worktree. Give it the record's `base` at its
+   tool, from the branch's worktree, entered as in the `cut-off` row (in
+   Claude Code, `EnterWorktree` with its `path`). Give it the record's `base` at its
    Step 3. Its safeguards run as it words them: the full suite before
    the menu, the suite again on the merged result, and its worktree
    cleanup rules.
@@ -97,12 +101,14 @@ own definition when their instructions give one, else the one in
    - An open PR: `gh pr merge "$b" --merge`, or `--squash` or
      `--rebase` when the repo allows no merge commits (`gh repo view
      --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed`).
-     Then, in the main checkout on `base` (for a phase built in place,
-     check out `base` first), `git pull --ff-only origin "$base"`, so the
+     Then leave a confined worktree (`ExitWorktree`, action `keep`) and,
+     in the main checkout on `base` (for a phase built in place, check
+     out `base` first), run `git pull --ff-only origin "$base"`, so the
      next phase builds on the merged code. The work has landed, so do
      the cleanup option 1 would have done: remove the branch's worktree
-     if it is under `.worktrees/` or `worktrees/` (`git worktree remove
-     <path>`, never `--force`); once `gh pr view "$b" --json state -q
+     if it is under `.worktrees/` or `worktrees/`, or under
+     `.claude/worktrees/` and this session entered it (`git worktree
+     remove <path>`, never `--force`); once `gh pr view "$b" --json state -q
      .state` prints `MERGED`, delete the local branch with
      `git branch -D "$b"` (a squash's branch is never an ancestor of
      `base`, so `-d` refuses it); and delete the remote branch only if
@@ -217,10 +223,17 @@ composed from memory.
   stop. Never implement on `base`. A `cut-off` phase's branch is
   checked out already: re-invoke the executor there, with no
   `checkout -b`.
+- **Check that the worktree starts from `base`,** once the executor's
+  setup has created it: from inside it, `git merge-base --is-ancestor
+  <base> HEAD` exits 0. If it does not, the plan committed on `base` is
+  not in the worktree: stop and report that. In Claude Code, the
+  worktree starts from `base` only when the setting `worktree.baseRef` is
+  `head`.
 - **Record `branch` as soon as it exists:** `record.py set` `branch` once
   the executor's setup has created its SDD workspace (its ledger), not
-  before. A branch with no workspace and no commits reads as
-  `close-missed`.
+  before, with the name `git branch --show-current` prints in the
+  worktree (`worktree-<phase id>` from Claude Code's `EnterWorktree`). A
+  branch with no workspace and no commits reads as `close-missed`.
 - **Between the executor's final message and finishing,** copy its
   "Rulings I made" into `closing.rulings` and its "Unfinished" into
   `closing.unfinished`, with `record.py set-closing-key`, mode `append`,

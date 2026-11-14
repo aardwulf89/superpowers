@@ -19,8 +19,11 @@ Every command named here is a subcommand of the record script. Run it as
   path as its `REC` argument, and the phase id as its `ID`.
 - **Work from the main checkout,** the parent of
   `git rev-parse --path-format=absolute --git-common-dir`. After option 2
-  or 3 the session may still be in the worktree, so run every git command
-  as `git -C <main checkout>`. If the phase was built in place and its
+  or 3 the session may still be in the worktree. If the harness confines
+  it there (Claude Code, after `EnterWorktree`), leave it first with
+  `ExitWorktree`, action `keep`: from inside, git aimed at the main
+  checkout is refused. Otherwise run every git command as
+  `git -C <main checkout>`. If the phase was built in place and its
   branch is still checked out there, switch to `base` before a commit and
   back after.
 - **Ids are copied, never shortened.** Every line you write to

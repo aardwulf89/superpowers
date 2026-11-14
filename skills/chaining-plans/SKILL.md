@@ -99,8 +99,9 @@ rules all three share.
 is the effort id. A phase id is that letter plus a number (`K3`), issued
 by Create in work order; a split appends a lowercase letter (`K3a`), and
 the bare id still names the whole. The phase id is also the plan id that
-`writing-plans` uses (its tasks are `K3.1`, `K3.2`, …), the branch name,
-and the id in the phase's docs commit subjects (`docs(K3): …` in a repo
+`writing-plans` uses (its tasks are `K3.1`, `K3.2`, …), the name of the
+branch when the phase is built in place, and the id in the phase's docs
+commit subjects (`docs(K3): …` in a repo
 that uses conventional commits, else `K3: …`). Ids are fixed
 once committed: never renumbered, reused, or given to other work. Copy
 them verbatim into everything you write to the record or report.
@@ -136,13 +137,14 @@ the record is never committed.
 - Your human partner never reads the record. They review through your
   reports.
 
-**Branches: one lane.** Each phase gets its own branch, named by its phase
-id, and worktree, created
-from `base` by the executor's own worktree setup, and is merged into `base`
-before the next phase starts. A project whose instructions say to build in
-place builds on the phase's own branch in the main checkout instead,
-created from `base` before the executor starts; the lane is otherwise the
-same. Docs (the Phases section, phase designs, plans)
+**Branches: one lane.** Each phase gets its own branch and worktree,
+created from `base` by the executor's own worktree setup, and is merged
+into `base` before the next phase starts. The record's `branch` holds the
+name that setup gave the branch: Claude Code's `EnterWorktree` names it
+`worktree-<phase id>`, and the caller cannot choose the name. A project
+whose instructions say to build in place builds on a branch named by the
+phase id, in the main checkout instead, created from `base` before the
+executor starts; the lane is otherwise the same. Docs (the Phases section, phase designs, plans)
 are committed on `base` in the main checkout, never on a phase branch.
 
 **What carries forward is `closing`.** The executor deletes its workspace when
