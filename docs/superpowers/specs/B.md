@@ -39,8 +39,10 @@ worktree that the session can step in and out of. The native tool differs:
 ## Design
 
 1. **Leave the worktree before the merge.** `finishing-a-development-branch`
-   runs Steps 1 to 4 inside the worktree, as now: its Step 2 must detect
-   the worktree from inside it. In Step 5, option 1 and a confirmed
+   runs Steps 1 to 4 inside the worktree: its Step 2 must detect the
+   worktree from inside it, so its capture block becomes plain
+   `git rev-parse` commands, one per Bash call, whose printed paths the
+   agent compares. In Step 5, option 1 and a confirmed
    discard first leave a session-isolated worktree (`ExitWorktree` with
    `keep`), then change to the main checkout. Under isolation that `cd`
    and merge are refused, for any user of `finishing`, not only chains.
@@ -48,9 +50,10 @@ worktree that the session can step in and out of. The native tool differs:
    (`worktree-C1`). The rule "branch name = phase id" goes from
    `SKILL.md`, and Resume step 2's leftover-branch check matches the tool's
    name too.
-3. **Cleanup after a merge.** `finishing` Step 6, and Resume's PR cleanup,
-   remove a worktree under `.claude/worktrees/` that this session used,
-   once its branch is merged: `git worktree remove <path>`, never
+3. **Cleanup after a merge or a discard.** `finishing` Step 6, and Resume's
+   PR cleanup, remove a worktree under `.claude/worktrees/` that this
+   session used, once its branch is merged or, in `finishing`, its discard
+   is confirmed: `git worktree remove <path>`, never
    `--force`. A refused removal follows Step 6's existing refusal menu.
 4. **The record commands become one Python script,**
    `skills/chaining-plans/scripts/record`, run by its absolute path:
