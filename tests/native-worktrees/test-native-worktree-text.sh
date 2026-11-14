@@ -40,6 +40,10 @@ for s in 'EnterWorktree' 'ExitWorktree' '.claude/worktrees/' 'git merge-base --i
   has $C/references/resume.md "$s"
 done
 has $C/references/close.md 'ExitWorktree'
+# Inside a confined worktree a "$b" needs an assignment in the same call,
+# which the guard may refuse: the commands name the branch literally.
+lacks $C/references/resume.md '"$b"'
+lacks $C/references/resume.md '"$base"'
 
 # --- finishing-a-development-branch ---
 F=skills/finishing-a-development-branch/SKILL.md
@@ -81,6 +85,8 @@ within $F '## Step 6: Cleanup Workspace' '.claude/worktrees/'
 has $F 'or the `.claude/worktrees/` one this session entered and left'
 within $F '## Step 2: Detect Environment' 'git rev-parse --path-format=absolute --git-common-dir'
 lacks $F 'GIT_COMMON=$(cd'
+# Step 2 notes the paths; no Bash call sets $WORKTREE_PATH any more.
+lacks $F '"$WORKTREE_PATH"'
 
 if ((failures > 0)); then
   echo "$failures of $checks checks failed" >&2

@@ -55,17 +55,31 @@ def dumps(value: object) -> str:
     return json.dumps(value, separators=(",", ":"), ensure_ascii=False)
 
 
-def load_record(path: str) -> dict:
+def no_constant(name: str) -> None:
+    raise ValueError(f"{name} is not JSON")
+
+
+def parse_json(text: str, where: str) -> Any:
+    """Strict JSON: NaN and Infinity, which json.loads accepts, are refused."""
     try:
-        text = Path(path).read_text(encoding="utf-8")
-    except FileNotFoundError:
-        raise Refused(f"no record at {path}")
-    except OSError as e:
-        raise Refused(f"cannot read {path}: {e.strerror}")
-    try:
-        record = json.loads(text)
+        return json.loads(text, parse_constant=no_constant)
     except ValueError as e:
-        raise Refused(f"{path} is not valid JSON: {e}")
+        raise Refused(f"{where} is not valid JSON: {e}")
+
+
+def read_text(path: str, what: str) -> str:
+    try:
+        return Path(path).read_text(encoding="utf-8")
+    except FileNotFoundError:
+        raise Refused(f"no {what} at {path}")
+    except UnicodeDecodeError:
+        raise Refused(f"the {what} {path} is not UTF-8 text")
+    except OSError as e:
+        raise Refused(f"cannot read the {what} {path}: {e.strerror}")
+
+
+def load_record(path: str) -> dict:
+    record = parse_json(read_text(path, "record"), path)
     if not isinstance(record, dict) or not isinstance(record.get("phases"), list):
         raise Refused(f"{path} is not a record: it has no phases array")
     return record
@@ -227,24 +241,19 @@ CLOSING_KEYS = ("rulings", "unfinished", "learned", "replan")
 def read_value(args: argparse.Namespace) -> Any:
     """The JSON value of --value or --value-file (argparse requires exactly one)."""
     if args.value is not None:
-        text, where = args.value, "--value"
-    else:
-        try:
-            text = Path(args.value_file).read_text(encoding="utf-8")
-        except OSError as e:
-            raise Refused(f"cannot read the value file {args.value_file}: {e.strerror}")
-        where = args.value_file
-    try:
-        return json.loads(text)
-    except ValueError as e:
-        raise Refused(f"{where} is not valid JSON: {e}")
+        return parse_json(args.value, "--value")
+    return parse_json(read_text(args.value_file, "value file"), args.value_file)
 
 
 def write_record(path: str, record: dict) -> None:
     """Write the record through <path>.tmp and an atomic rename."""
+    try:
+        data = (json.dumps(record, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+    except UnicodeEncodeError:
+        raise Refused("the value holds text that cannot be written as UTF-8; nothing written")
     tmp = path + ".tmp"
     try:
-        Path(tmp).write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        Path(tmp).write_bytes(data)
         os.replace(tmp, path)
     except OSError as e:
         try:

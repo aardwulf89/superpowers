@@ -256,6 +256,44 @@ check "set --value-file round-trips text" '["it'\''s \"done\" — café"]' \
 # jq -c decodes \u escapes, so pin the raw UTF-8 bytes in the file itself
 if grep -qF '— café' "$S"; then pass "the record holds raw UTF-8"; else fail "the record holds raw UTF-8"; fi
 
+# Bad input is refused with "record <sub>: <reason>", never a traceback, and
+# leaves no .tmp.
+refused_cleanly() { # NAME FILE SUB ARGS...: refuses, and stderr is the one-line form
+  local name="$1" file="$2" sub="$3"; shift 3
+  refuses "$name" "$file" record "$sub" "$@"
+  local err; err=$(record "$sub" "$@" 2>&1 >/dev/null || true)
+  if [[ "$err" == "record $sub: "* && "$err" != *Traceback* ]]; then pass "$name: says why"
+  else fail "$name: stderr was '$err'"; fi
+}
+refused_cleanly "set refuses a value it cannot encode" "$S" set "$S" K1 branch --value '"\ud800"'
+printf '\377' > "$TMP/latin1.json"
+refused_cleanly "set refuses a value file that is not UTF-8" "$S" set "$S" K1 branch --value-file "$TMP/latin1.json"
+L1="$TMP/latin1-rec.json"
+printf '\377' > "$L1"
+refused_cleanly "set refuses a record that is not UTF-8" "$L1" set "$L1" K1 branch --value '"x"'
+for c in NaN Infinity -Infinity; do
+  refused_cleanly "set refuses $c" "$S" set "$S" K1 branch "--value=$c"
+done
+
+# Every write, not only set, refuses a missing, malformed or unwritable record.
+one_phase="[$(phase K1 known null '[]')]"
+refuses "set-phases refuses a missing record" "$TMP/none/effort.json" \
+  record set-phases "$TMP/none/effort.json" --value "$one_phase"
+refuses "set-phases refuses a malformed record" "$BAD" record set-phases "$BAD" --value "$one_phase"
+refuses "set-closing-key refuses a missing record" "$TMP/none/effort.json" \
+  record set-closing-key "$TMP/none/effort.json" K1 rulings append --value '["x"]'
+refuses "set-closing-key refuses a malformed record" "$BAD" \
+  record set-closing-key "$BAD" K1 rulings append --value '["x"]'
+if [[ "$(id -u)" -ne 0 ]]; then
+  chmod a-w "$RO"
+  refuses "set-phases refuses a write that cannot complete" "$RO/effort.json" \
+    record set-phases "$RO/effort.json" --value "$one_phase"
+  refuses "set-closing-key refuses a write that cannot complete" "$RO/effort.json" \
+    record set-closing-key "$RO/effort.json" K1 rulings append --value '["x"]'
+  chmod u+w "$RO"
+fi
+if [[ ! -e "$TMP/none" ]]; then pass "no write creates a missing record"; else fail "no write creates a missing record"; fi
+
 # set-phases
 P="$TMP/set-phases.json"
 write_rec "$P" "$(phase K1 known null '[]')" "$(phase K2 known null '["K1"]')"

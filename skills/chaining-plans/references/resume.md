@@ -68,18 +68,20 @@ prints:
 Your human partner's invocation of Resume is their approval for this
 merge. You answer the merge menu for them, with their `git ops`: their
 own definition when their instructions give one, else the one in
-`SKILL.md`. Set `b` to the phase's `branch` and `base` to the record's
-`base`.
+`SKILL.md`. Below, `<branch>` is the phase's `branch` and `<base>` the
+record's `base`: write both literally into each command, never through a
+shell variable, since a confined worktree may refuse an assignment and a
+command in one call.
 
 1. **Find the branch's worktree** in `git worktree list`. If no worktree
    has it, it was built in place: use the main checkout.
-2. **Look for an open PR:** `gh pr view "$b" --json state -q .state
+2. **Look for an open PR:** `gh pr view <branch> --json state -q .state
    2>/dev/null` prints `OPEN`. Then `git ops` is merging that PR.
 3. **No open PR, and `git ops` calls for the push: bring `base` up to
    date, then check the push,** in the main checkout with `base` checked
-   out, before anything merges: `git pull --ff-only origin "$base"`,
-   then `git push --dry-run origin "$base"`. For a phase built in place,
-   check out `base` for these two, and `"$b"` again after, whether they
+   out, before anything merges: `git pull --ff-only origin <base>`,
+   then `git push --dry-run origin <base>`. For a phase built in place,
+   check out `base` for these two, and `<branch>` again after, whether they
    pass or fail. If either fails, that is a refused push: stop now. If
    the pull had already moved `base`, say so in the report: it is a
    fast-forward to `origin`, with nothing to undo. Option 1 deletes the
@@ -95,25 +97,25 @@ own definition when their instructions give one, else the one in
    cleanup rules.
 5. **Answer its menu with `git ops`:**
    - No open PR: option 1. Then, as `git ops` calls for them, push `base`:
-     `git -C <main checkout> push origin "$base"`. Then delete the
-     remote branch, only if `git ls-remote --heads origin "$b"` lists
-     it: `git push origin --delete "$b"`.
-   - An open PR: `gh pr merge "$b" --merge`, or `--squash` or
+     `git -C <main checkout> push origin <base>`. Then delete the
+     remote branch, only if `git ls-remote --heads origin <branch>` lists
+     it: `git push origin --delete <branch>`.
+   - An open PR: `gh pr merge <branch> --merge`, or `--squash` or
      `--rebase` when the repo allows no merge commits (`gh repo view
      --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed`).
      Then leave a confined worktree (`ExitWorktree`, action `keep`) and,
      in the main checkout on `base` (for a phase built in place, check
-     out `base` first), run `git pull --ff-only origin "$base"`, so the
+     out `base` first), run `git pull --ff-only origin <base>`, so the
      next phase builds on the merged code. The work has landed, so do
      the cleanup option 1 would have done: remove the branch's worktree
      if it is under `.worktrees/` or `worktrees/`, or under
      `.claude/worktrees/` and this session entered it (`git worktree
-     remove <path>`, never `--force`); once `gh pr view "$b" --json state -q
+     remove <path>`, never `--force`); once `gh pr view <branch> --json state -q
      .state` prints `MERGED`, delete the local branch with
-     `git branch -D "$b"` (a squash's branch is never an ancestor of
+     `git branch -D <branch>` (a squash's branch is never an ancestor of
      `base`, so `-d` refuses it); and delete the remote branch only if
-     `git ls-remote --heads origin "$b"` lists it:
-     `git push origin --delete "$b"`.
+     `git ls-remote --heads origin <branch>` lists it:
+     `git push origin --delete <branch>`.
 
 **If any safeguard fails, stop.** That means a red suite, a merge
 conflict, a refused worktree removal, a refused push (the dry run or the

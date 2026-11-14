@@ -180,10 +180,11 @@ Step 2, from before that directory change.
 `.claude/worktrees/` and this session entered it with the harness's
 worktree tool and left it in Step 5:** Superpowers created this worktree,
 or this session did through the harness and the harness's exit tool can no
-longer remove it — we own cleanup:
+longer remove it — we own cleanup. `<WORKTREE_PATH>` is the path Step 2
+noted, written literally:
 
 ```bash
-git worktree remove "$WORKTREE_PATH"
+git worktree remove <WORKTREE_PATH>
 git worktree prune  # Self-healing: clean up any stale registrations
 ```
 
@@ -193,7 +194,7 @@ or scratch work. Never `--force` on your own initiative. Show your human
 partner what is at stake and ask:
 
 ```bash
-git -C "$WORKTREE_PATH" status --porcelain -uall
+git -C <WORKTREE_PATH> status --porcelain -uall
 ```
 
 ```
