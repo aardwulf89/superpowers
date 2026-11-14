@@ -86,6 +86,16 @@ worktree that the session can step in and out of. The native tool differs:
    script instead of extracting blocks, and keeps every current case. New
    cases cover `get` and `set-closing-key`. `tests/reference-ids`
    assertions on `record.md` still hold.
+7. **A leftover from a session that ended before recording `branch`.**
+   Checked live: `EnterWorktree` given an existing name resumes that
+   worktree as-is (its commits, uncommitted files and ledger), and when
+   only the branch `worktree-<name>` is left, it silently resets the
+   branch to the current HEAD (the commits survive only in the reflog).
+   So Resume's Build, for a worktree build of a phase whose `branch` is
+   null, looks for `worktree-<phase id>` first. It goes on only when the
+   branch has no commits beyond `base` and its worktree, if any, is
+   clean. Otherwise it reports and stops. The build-in-place rule already
+   does the same for a leftover `<phase id>` branch.
 
 ## Non-goals
 

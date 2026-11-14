@@ -42,6 +42,12 @@ done
 has $C/references/close.md 'ExitWorktree'
 # Inside a confined worktree a "$b" needs an assignment in the same call,
 # which the guard may refuse: the commands name the branch literally.
+# A worktree or branch left by a session that ended before recording `branch`:
+# EnterWorktree resumes the worktree as-is, and resets a branch that has none.
+has $C/references/resume.md 'git rev-list --count <base>..worktree-<phase id>'
+has $C/references/resume.md 'resumes it as-is'
+has $C/references/resume.md 'resets the branch'
+lacks $C/references/resume.md "(Claude Code's \`EnterWorktree\`) for a phase whose"
 lacks $C/references/resume.md '"$b"'
 lacks $C/references/resume.md '"$base"'
 

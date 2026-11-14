@@ -34,8 +34,7 @@ takes the path to `effort.json` as its `REC` argument.
   work in progress.
 - **On `base`:** the main checkout has the record's `base` checked out,
   unless it has a phase's own branch checked out: the `branch` of a
-  phase built in place, or a branch named `<phase id>` or
-  `worktree-<phase id>` (Claude Code's `EnterWorktree`) for a phase whose
+  phase built in place, or a branch named `<phase id>` for a phase whose
   `branch` is still null (a session ended before recording it; the Build
   stage reuses it). Anything else: report it and stop.
 
@@ -225,6 +224,18 @@ composed from memory.
   stop. Never implement on `base`. A `cut-off` phase's branch is
   checked out already: re-invoke the executor there, with no
   `checkout -b`.
+- **Building in a worktree,** for a phase whose `branch` is null: before
+  invoking the executor, from the main checkout, look for what an
+  earlier session left when it ended before recording `branch`: a branch
+  `worktree-<phase id>` (`git branch --list worktree-<phase id>`), and the
+  worktree that has it checked out (`git worktree list`). Claude Code's
+  `EnterWorktree`, given the same name, resumes it as-is when the worktree
+  exists, and resets the branch to `base` when only the branch is left,
+  so its commits would be lost. Go on only when
+  `git rev-list --count <base>..worktree-<phase id>` prints `0` and that
+  worktree, if any, has a clean `git -C <its path> status --porcelain`.
+  Otherwise report the branch, its commits and any uncommitted files,
+  and stop. Your human partner decides what happens to them.
 - **Check that the worktree starts from `base`,** once the executor's
   setup has created it: from inside it, `git merge-base --is-ancestor
   <base> HEAD` exits 0. If it does not, the plan committed on `base` is
