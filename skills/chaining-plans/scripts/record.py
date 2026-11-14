@@ -26,9 +26,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 
 class Refused(Exception):
@@ -217,8 +219,110 @@ def cmd_questions(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_not_implemented(args: argparse.Namespace) -> int:
-    raise Refused("not implemented")
+PHASE_KEYS = sorted(["branch", "closing", "depends_on", "id", "partner_questions",
+                     "plan", "spec", "status", "title", "waits_on"])
+CLOSING_KEYS = ("rulings", "unfinished", "learned", "replan")
+
+
+def read_value(args: argparse.Namespace) -> Any:
+    """The JSON value of --value or --value-file (argparse requires exactly one)."""
+    if args.value is not None:
+        text, where = args.value, "--value"
+    else:
+        try:
+            text = Path(args.value_file).read_text(encoding="utf-8")
+        except OSError as e:
+            raise Refused(f"cannot read the value file {args.value_file}: {e.strerror}")
+        where = args.value_file
+    try:
+        return json.loads(text)
+    except ValueError as e:
+        raise Refused(f"{where} is not valid JSON: {e}")
+
+
+def write_record(path: str, record: dict) -> None:
+    """Write the record through <path>.tmp and an atomic rename."""
+    tmp = path + ".tmp"
+    try:
+        Path(tmp).write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        os.replace(tmp, path)
+    except OSError as e:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        raise Refused(f"cannot write {path}: {e.strerror}; nothing written")
+
+
+def whole_phases(value: Any) -> bool:
+    """An array of whole phases: exactly the ten keys each, and no id repeated."""
+    if not isinstance(value, list):
+        return False
+    if not all(isinstance(ph, dict) and sorted(ph) == PHASE_KEYS for ph in value):
+        return False
+    ids = [dumps(ph["id"]) for ph in value]
+    return len(set(ids)) == len(ids)
+
+
+def cmd_new_record(args: argparse.Namespace) -> int:
+    if Path(args.rec).exists():
+        raise Refused(f"{args.rec} already exists")
+    value = read_value(args)
+    if not (isinstance(value, dict) and isinstance(value.get("umbrella"), str)
+            and isinstance(value.get("base"), str) and whole_phases(value.get("phases"))):
+        raise Refused("the value is not a whole record of the shape in record.md")
+    try:
+        Path(args.rec).parent.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        raise Refused(f"cannot create {Path(args.rec).parent}: {e.strerror}")
+    write_record(args.rec, value)
+    return 0
+
+
+def cmd_set(args: argparse.Namespace) -> int:
+    record = load_record(args.rec)
+    ph = phase_of(record, args.id)
+    if args.field not in ph:
+        raise Refused(f"phase '{args.id}' has no field '{args.field}'")
+    ph[args.field] = read_value(args)
+    write_record(args.rec, record)
+    return 0
+
+
+def cmd_set_phases(args: argparse.Namespace) -> int:
+    record = load_record(args.rec)
+    value = read_value(args)
+    if not whole_phases(value):
+        raise Refused("the value is not an array of whole phases with distinct ids")
+    record["phases"] = value
+    write_record(args.rec, record)
+    return 0
+
+
+def cmd_set_closing_key(args: argparse.Namespace) -> int:
+    if args.key not in CLOSING_KEYS:
+        raise Refused(f"'{args.key}' is not a closing key ({', '.join(CLOSING_KEYS)})")
+    if args.key == "replan" and args.mode == "append":
+        raise Refused("replan is written whole, with replace")
+    record = load_record(args.rec)
+    ph = phase_of(record, args.id)
+    value = read_value(args)
+    if not isinstance(value, list):
+        raise Refused(f"the value for {args.key} must be a JSON list")
+    closing = ph.get("closing")
+    if closing is None:
+        closing = {"rulings": [], "unfinished": [], "learned": None, "replan": None}
+    elif not isinstance(closing, dict):
+        raise Refused(f"phase '{args.id}' has a closing that is not an object")
+    if args.mode == "append":
+        current = closing.get(args.key) or []
+        if not isinstance(current, list):
+            raise Refused(f"phase '{args.id}' has a {args.key} that is not a list")
+        value = current + value
+    closing[args.key] = value
+    ph["closing"] = closing
+    write_record(args.rec, record)
+    return 0
 
 
 def add_value(p: argparse.ArgumentParser) -> None:
@@ -260,19 +364,19 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("new-record", help="create the record")
     p.add_argument("rec")
     add_value(p)
-    p.set_defaults(func=cmd_not_implemented)
+    p.set_defaults(func=cmd_new_record)
 
     p = sub.add_parser("set", help="set one field of a phase")
     p.add_argument("rec")
     p.add_argument("id")
     p.add_argument("field")
     add_value(p)
-    p.set_defaults(func=cmd_not_implemented)
+    p.set_defaults(func=cmd_set)
 
     p = sub.add_parser("set-phases", help="replace the phases array")
     p.add_argument("rec")
     add_value(p)
-    p.set_defaults(func=cmd_not_implemented)
+    p.set_defaults(func=cmd_set_phases)
 
     p = sub.add_parser("set-closing-key", help="set or extend one key of a phase's closing")
     p.add_argument("rec")
@@ -280,7 +384,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("key")
     p.add_argument("mode", choices=["replace", "append"])
     add_value(p)
-    p.set_defaults(func=cmd_not_implemented)
+    p.set_defaults(func=cmd_set_closing_key)
     return parser
 
 

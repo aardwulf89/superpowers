@@ -217,6 +217,45 @@ refuses "set refuses an unknown id" "$S" record set "$S" K9 branch --value '"x"'
 refuses "set refuses an unknown field" "$S" record set "$S" K1 brnch --value '"x"'
 refuses "set refuses a value that is not JSON" "$S" record set "$S" K1 branch --value 'not json'
 
+# set-closing-key, value files, and records that cannot be written
+printf '%s' '["it'\''s \"done\" — café"]' > "$TMP/v.json"
+record set-closing-key "$S" K1 rulings append --value-file "$TMP/v.json"
+check "set-closing-key starts a null closing" \
+  '{"rulings":["it'\''s \"done\" — café"],"unfinished":[],"learned":null,"replan":null}' \
+  "$(jq -c '.phases[0].closing' "$S")"
+record set-closing-key "$S" K1 rulings append --value '["b"]'
+check "append extends" '["it'\''s \"done\" — café","b"]' "$(jq -c '.phases[0].closing.rulings' "$S")"
+record set-closing-key "$S" K1 learned append --value '["x"]'
+check "append to a null key" '["x"]' "$(jq -c '.phases[0].closing.learned' "$S")"
+record set-closing-key "$S" K1 replan replace --value '[]'
+check "replace keeps the other keys" '2 []' "$(jq -c '(.phases[0].closing.rulings|length), .phases[0].closing.replan' "$S" | paste -sd' ')"
+refuses "set-closing-key refuses append to replan" "$S" record set-closing-key "$S" K1 replan append --value '[]'
+refuses "set-closing-key refuses a value that is not a list" "$S" record set-closing-key "$S" K1 learned replace --value 'null'
+refuses "set-closing-key refuses replan back to null" "$S" record set-closing-key "$S" K1 replan replace --value 'null'
+refuses "set-closing-key refuses an unknown key" "$S" record set-closing-key "$S" K1 notes replace --value '[]'
+refuses "set-closing-key refuses an unknown id" "$S" record set-closing-key "$S" K9 rulings append --value '[]'
+refuses "set refuses a missing record" "$TMP/none/effort.json" record set "$TMP/none/effort.json" K1 branch --value '"x"'
+if [[ ! -e "$TMP/none" ]]; then pass "set creates nothing for a missing record"; else fail "set creates nothing for a missing record"; fi
+BAD="$TMP/bad.json"
+printf '{' > "$BAD"
+refuses "set refuses a malformed record" "$BAD" record set "$BAD" K1 branch --value '"x"'
+if [[ "$(id -u)" -ne 0 ]]; then
+  RO="$TMP/ro"
+  write_rec "$RO/effort.json" "$(phase K1 known null '[]')"
+  chmod a-w "$RO"
+  refuses "set refuses a write that cannot complete" "$RO/effort.json" record set "$RO/effort.json" K1 branch --value '"x"'
+  chmod u+w "$RO"
+fi
+st=0; record set "$S" K1 branch --value '"x"' --value-file "$TMP/v.json" 2>/dev/null || st=$?
+check "set refuses both value forms (usage)" 2 "$st"
+st=0; record set "$S" K1 branch 2>/dev/null || st=$?
+check "set refuses no value (usage)" 2 "$st"
+refuses "set refuses an unreadable value file" "$S" record set "$S" K1 branch --value-file "$TMP/no-such.json"
+check "set --value-file round-trips text" '["it'\''s \"done\" — café"]' \
+  "$(record set "$S" K2 partner_questions --value-file "$TMP/v.json" && jq -c '.phases[1].partner_questions' "$S")"
+# jq -c decodes \u escapes, so pin the raw UTF-8 bytes in the file itself
+if grep -qF '— café' "$S"; then pass "the record holds raw UTF-8"; else fail "the record holds raw UTF-8"; fi
+
 # set-phases
 P="$TMP/set-phases.json"
 write_rec "$P" "$(phase K1 known null '[]')" "$(phase K2 known null '["K1"]')"
