@@ -6,7 +6,8 @@ phase. After it, each phase runs in its own session without them, up to its
 merge menu.
 
 Create writes nothing until your human partner has answered: no Phases
-section, no record, no commit, no plan.
+section, no record, no commit, no plan, and no change to another effort's
+record.
 
 ## 1. Draft the phases
 
@@ -59,13 +60,21 @@ them now freezes a guess.
 
 ## 3. Run one sitting
 
+**First, read the carried items:** run `record.py carried`. Each entry is a
+partner item that an earlier effort carried past its end. Its effort is the
+name of the directory of its `record`.
+
 Show your human partner, in one message:
 - the phases in order, as a numbered list: id, title, purpose, and what each
   depends on and waits on;
 - the intent questions, in one round, most important first, each naming the
   phase it shapes;
 - an invitation to correct the phase list (add, drop, merge, split, reorder)
-  in the same reply.
+  in the same reply;
+- each carried item, with its effort and phase, and the question, in the
+  same round: adopt it into a phase of this effort (which one), carry it
+  again, or drop it. When `carried` printed `[]`, say nothing about carried
+  items.
 
 If `base` is a question (step 1), ask it in the same round.
 
@@ -81,8 +90,9 @@ phase comes up.
 All of this happens in the main checkout, on `base`.
 
 1. **Add the Phases section** to the umbrella spec, in the format below, with
-   your human partner's answers and corrections folded in. For a spec that
-   predates ids, run `bash ../brainstorming/scripts/next-spec-id` by its
+   your human partner's answers and corrections folded in. An adopted
+   carried item goes into its phase's entry, in the "Answers:" or "Limits:"
+   line. For a spec that predates ids, run `bash ../brainstorming/scripts/next-spec-id` by its
    absolute path again: if it now prints a different letter, use that one
    and renumber the phase ids to match. Stamp the letter into the spec's
    first line as `# K: <its existing title>`; the file keeps its name.
@@ -108,6 +118,8 @@ All of this happens in the main checkout, on `base`.
    This one write creates the whole file, in the shape
    `references/record.md` gives:
    - `umbrella`: the spec's repo-relative path; `base`: the branch;
+     `"marked": true`, which tells `pick` that the record knows partner
+     items;
    - `phases`: in the order of work, every phase with all ten keys, and
      every `waits_on[].from` also listed in that phase's `depends_on`;
    - `status`: `needs-partner` if it has `partner_questions`, else `waiting`
@@ -118,6 +130,14 @@ All of this happens in the main checkout, on `base`.
    If it fails, it wrote nothing: correct the value file and run it
    again. Every later change goes through `record.py set`,
    `record.py set-closing-key` or `record.py set-phases`.
+6. **Mark the carried items** that your human partner adopted or dropped,
+   in the old record, at the `record` path that `carried` printed. The
+   `[carried]` at the end of the line becomes `[adopted by <phase id>]`
+   or `[dropped]`. Read `record.py get <record> <phase> closing`, change
+   the line at `index` of `unfinished` (if it is not the `item` text, find
+   that text), write the whole list to a value file, and run
+   `record.py set-closing-key <record> <phase> unfinished replace
+   --value-file <path>`. An item carried again stays as it is.
 
 ### The Phases section
 
@@ -152,6 +172,7 @@ answers: intent only, never a technical choice; or "none">
 Report, briefly:
 - the commit that added the Phases section;
 - the record's path;
+- each carried item, and whether it was adopted, carried again or dropped;
 - each plan you linked, and each plan you did not, for your human partner to
   keep or delete;
 - the first phase the next session will run.

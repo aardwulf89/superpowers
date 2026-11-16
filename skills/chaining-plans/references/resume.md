@@ -48,7 +48,7 @@ prints:
 
 | State | What happened | Action |
 |---|---|---|
-| `cut-off` | The build was cut off; its SDD workspace exists | This phase is this session's phase. Go to the Build stage (step 5): enter the branch's worktree (`git worktree list`; in Claude Code, `EnterWorktree` with its `path`) and re-invoke the executor there. It resumes from its own ledger. Run the stages after it, and do not pick |
+| `cut-off` | The build was cut off; its SDD workspace exists | This phase is this session's phase. Go to the Build stage (step 6): enter the branch's worktree (`git worktree list`; in Claude Code, `EnterWorktree` with its `path`) and re-invoke the executor there. It resumes from its own ledger. Run the stages after it, and do not pick |
 | `finished-unclosed` | Finished; not closed, not merged | Close it, then do its missed git ops |
 | `closed-unmerged` | Closed; its git ops were missed | Do its missed git ops |
 | `close-missed` | Merged; the close was missed | Close it. The close reconstructs `learned` from the plan and the branch's commits |
@@ -135,8 +135,10 @@ whether `base` was pushed.
 
 Run `record.py pick`. It prints one of:
 
-- **`none`:** every phase is done or dropped. Report that the effort is
-  done, and stop.
+- **`none`:** every phase is done or dropped, and every partner item has
+  a disposition. Give the last message of step 5, and stop.
+- **`items`** or **`unmarked`:** every phase is done or dropped, and the
+  effort is not closed out. Go to step 5.
 - **`blocked:<id>`:** report what blocks that phase (each of its
   `depends_on`, with its `phase-state`; a `dropped` dependency will
   never be done), and stop. Your human partner decides.
@@ -149,15 +151,105 @@ Run `record.py pick`. It prints one of:
   - `known`: start at the first stage whose link (`spec`, `plan`) is
     null, else at Build.
 
-## 5. Run the stages straight through to the merge menu
+## 5. The end of the effort
+
+Every phase is done or dropped. The effort is closed out only when every
+partner item has a disposition, and only your human partner gives one.
+
+**Read the items.** For every phase, a dropped one included, run
+`record.py get REC <phase id> closing`. A partner item is an
+`unfinished` line that starts with `Partner item: `. It is open when it
+ends in none of the four suffixes of `references/record.md`:
+`[settled: <phase id>]`, `[dropped]`, `[carried]`,
+`[adopted by <phase id>]`.
+
+### The end round (`items`)
+
+- **A disposition your human partner already gave,** in the request or
+  earlier in this session, is their answer to that item: apply it as
+  below, and do not ask it again.
+- **Ask for the rest in one round.** Show every open item, with its
+  phase, its options and its interim default. Ask for a disposition of
+  each: settle it (with the answer), drop it, or carry it past this
+  effort. Then end your turn. The message starts:
+
+  ```
+  Effort <id>'s phases are all done, but the effort is not closed out: <n> items need your disposition.
+  ```
+
+- **Only your human partner's words decide a disposition.** Haste is not
+  one: "wrap it up", "finish the effort" or "I'm in a hurry" settles,
+  drops and carries nothing, so ask the round anyway. Never pick a
+  disposition for them, not even the interim default.
+
+### The answers
+
+- **Settle:** fold the answer into the "Answers:" line of the raising
+  phase's entry in the umbrella's Phases section, and commit it on
+  `base`, in the main checkout (`docs(<phase id>): answer a partner
+  item`). The line's suffix is `[settled: <raising phase id>]`.
+- **Drop:** the suffix is `[dropped]`. **Carry:** the suffix is
+  `[carried]`.
+- **Write the suffixes** per phase: read `record.py get REC <phase id>
+  closing` fresh, add each suffix at the very end of its line, after one
+  space, and write the whole list to a value file. Then run
+  `record.py set-closing-key REC <phase id> unfinished replace
+  --value-file <path>`.
+- **An answer that calls for work** adds a phase, as a re-plan your human
+  partner directs: follow the rules under `set-phases` in
+  `references/record.md`, and commit the Phases section to match, on
+  `base`. Then pick again (step 4).
+- **Items still open** after the answers: ask for those in a new round,
+  as above.
+- **None open:** give the last message.
+
+### The last message
+
+Count the lines of every phase: the `[carried]` ones, the `[settled: …]`
+ones and the `[dropped]` ones. The message leads with one of two first
+lines, word for word, with `<id>` and `<n>` filled in.
+
+- **Some line is `[carried]`:**
+
+  ```
+  Effort <id> is finished, but NOT closed out: <n> items stay open, carried past this effort.
+  They live only in this machine's record (.superpowers/chain/<id>/effort.json), not in the repo.
+  The next effort's Create will show them to you. Work done outside chaining-plans will not.
+
+  Carried:
+  1. [<phase id>] <the item, with its interim default>
+  2. ...
+  Settled: <n> (answers in the umbrella, section Phases). Dropped: <n>.
+  ```
+
+  List every carried item.
+
+- **No line is `[carried]`:**
+
+  ```
+  Effort <id> is closed out: every phase is done or dropped, and no item is open.
+  ```
+
+Never call the effort closed out when an item is carried.
+
+### `unmarked`
+
+The record predates partner items, so an item may be open in a line that
+has no prefix. There is no end round. The last message leads with
+`Effort <id> is finished, but the skill cannot tell whether items are open: its record predates partner items.`
+in place of either first line. When some line is `[carried]`, it goes
+on with the carried form's lines after its first. It never says "closed
+out".
+
+## 6. Run the stages straight through to the merge menu
 
 Announce each stage. A stage that names a skill invokes it fresh through
 the Skill tool. A stage is done only when its "Done when" holds.
 
 | Stage | What it does | Done when |
 |---|---|---|
-| Intent round (only if `needs-partner`) | Ask your human partner the `partner_questions` in one round, and end your turn. Fold their answers into the phase's entry in the umbrella's Phases section, commit, then `set` `partner_questions` to `[]` and `status` to `known` | The answers are committed |
-| Design (only if no `spec`) | Write the phase's technical design inside its intent. A fresh reviewer reads it with the builder-check prompt. Its technical questions: settle them yourself and log them as rulings. Its intent questions: stop and ask your human partner | The design file is committed and linked |
+| Intent round (only if `needs-partner`) | Ask your human partner the `partner_questions` in one round, and end your turn. Fold their answers into the phase's entry in the umbrella's Phases section, commit, then `set` `partner_questions` to `[]` and `status` to `known`. Then settle the partner items the questions came from (below) | The answers are committed |
+| Design (only if no `spec`) | Write the phase's technical design inside its intent, on the interim default of each open partner item that bears on it. A fresh reviewer reads it with the builder-check prompt. Its technical questions: settle them yourself and log them as rulings. Its intent questions: stop and ask your human partner | The design file is committed and linked |
 | Plan (only if no `plan`) | Invoke `writing-plans`, with the standing approval line from `SKILL.md`. Pick the execution method by its recommendation rule, as a ruling | The plan file, with `writing-plans`' header, is committed and linked |
 | Build | Invoke the chosen executor. It runs unchanged, with its own four stop conditions | The executor's final message holds "Rulings I made" and "Unfinished", and both are copied into `closing` before finishing starts |
 | Finish | Invoke `finishing-a-development-branch`. Your human partner answers its menu | The menu was shown as `finishing` words it, and answered |
@@ -169,14 +261,50 @@ rulings as a JSON list of strings in a value file. It reads `closing`
 fresh, starts a null one, and keeps every other key, so nothing is
 composed from memory.
 
+### Intent round
+
+- **A question that came from a partner item** settles that item. Its
+  line is in the raising phase's `unfinished`, and holds
+  `→ partner_questions of <this phase's id>`. Once the answers are
+  committed, add `[settled: <this phase's id>]` at the very end of that
+  line, which names the phase whose "Answers:" line now holds the
+  answer: read `record.py get REC <raising phase id> closing`, and write
+  the whole list from a value file with
+  `record.py set-closing-key REC <raising phase id> unfinished replace`.
+  The answer is your human partner's, so this is not a disposition you
+  give.
+- **Answers given outside any round,** in the request or between stages,
+  are folded in the same way: into the "Answers:" line of the raising
+  phase's entry (for a question, of the phase that asks it), committed
+  on `base`. A partner item answered so gets
+  `[settled: <raising phase id>]`.
+- **Folding in any answer runs `close.md` step 2** over the phases that
+  are not done, other than this one: they may rest on the old default.
+  Log each change as a ruling of this phase (`set-closing-key … rulings
+  append`), and write no `replan`: that write is the close's.
+
 ### Design
 
 - **No brainstorm.** The umbrella's approval and the intent sitting
   replace it.
 - **Inputs:** the whole umbrella, `closing.learned` of every done phase
-  (above all the phases in this phase's `waits_on`), and the code on
-  `base`. The design copies the phase's Phases entry word for word, with
-  the section's "Across phases" line.
+  (above all the phases in this phase's `waits_on`), the open partner
+  items of every phase, a dropped one included, and the code on `base`.
+  An open partner item is an `unfinished` line of
+  `record.py get REC <phase id> closing` that starts with
+  `Partner item: ` and ends in no disposition suffix. The design copies
+  the phase's Phases entry word for word, with the section's "Across
+  phases" line.
+- **An open partner item that bears on the phase:** the design writes
+  its interim default, and cites the item's phase and text. Following
+  the default is not a ruling: do not log it.
+- **An item found to change the phase's intent** goes into this phase's
+  `partner_questions` (read the list with `record.py get REC <phase id>
+  partner_questions`, then `set` it with the item added, from a value
+  file), and `status` becomes `needs-partner`. Its original line gets a
+  pointer at its end: `→ partner_questions of <phase id>`, written as
+  in the Intent round above. Then run the Intent round: it asks the
+  item, and ends your turn.
 - **Where it goes:**
   `docs/superpowers/specs/<phase id>.md`, with first line
   `# <phase id>: <title>`. When the umbrella already

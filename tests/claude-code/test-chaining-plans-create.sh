@@ -5,6 +5,9 @@
 # effort. A headless run gets one turn, so the sitting stays unanswered. The
 # skill must show the phases in order with what each waits on, ask, and
 # write nothing yet: no record, no plan, no commit.
+#
+# An earlier effort, Z, carried one partner item past its end. The sitting
+# must show it, and leave Z's record as it is until the sitting is answered.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -78,6 +81,33 @@ git add .
 git commit -q -m "Initial commit: notes design"
 commits_before=$(git rev-list --count main)
 
+# Effort Z's record, with one carried partner item. `carried` reads the line
+# whatever the phase's state, so Z needs no git history.
+Z_REC=.superpowers/chain/Z/effort.json
+mkdir -p "$(dirname "$Z_REC")"
+jq -n '{
+  umbrella: "docs/superpowers/specs/Z.md",
+  base: "main",
+  marked: true,
+  phases: [
+    {
+      id: "Z1", title: "Note format", status: "dropped",
+      depends_on: [], waits_on: [], partner_questions: [],
+      spec: null, plan: null, branch: null,
+      closing: {
+        rulings: [],
+        unfinished: ["Partner item: whether a note keeps a trailing newline (raised by Z1). Default: kept, as today. [carried]"],
+        learned: null,
+        replan: null
+      }
+    }
+  ]
+}' > "$Z_REC"
+Z_COPY=$(mktemp)
+# shellcheck disable=SC2064 # the paths are fixed now, on purpose
+trap "cleanup_test_project $TEST_PROJECT; rm -f $Z_COPY" EXIT
+cp "$Z_REC" "$Z_COPY"
+
 PROMPT="Use the superpowers:chaining-plans skill to create an effort from docs/superpowers/specs/A.md."
 
 OUTPUT_FILE=$(mktemp)
@@ -122,12 +152,22 @@ check assert_order "$output" "storage" "export" "Storage comes before export"
 check assert_contains "$output" "wait\|depends\|after" "Says what export waits on"
 check assert_contains "$output" "?" "Asks the human partner"
 
-if [ -e "$TEST_PROJECT/.superpowers/chain" ]; then
+check assert_contains "$output" "trailing newline" "Shows the item carried from effort Z"
+
+if [ -e "$TEST_PROJECT/.superpowers/chain/A" ]; then
     echo "  [FAIL] A record was written before the sitting was answered:"
-    find "$TEST_PROJECT/.superpowers/chain" | sed 's/^/    /'
+    find "$TEST_PROJECT/.superpowers/chain/A" | sed 's/^/    /'
     FAILED=$((FAILED + 1))
 else
-    echo "  [PASS] No record yet (no .superpowers/chain)"
+    echo "  [PASS] No record yet (no .superpowers/chain/A)"
+fi
+
+if cmp -s "$Z_COPY" "$TEST_PROJECT/$Z_REC"; then
+    echo "  [PASS] Z's record unchanged"
+else
+    echo "  [FAIL] Z's record changed before the sitting was answered:"
+    diff "$Z_COPY" "$TEST_PROJECT/$Z_REC" | sed 's/^/    /' || true
+    FAILED=$((FAILED + 1))
 fi
 
 dirty=$(git -C "$TEST_PROJECT" status --porcelain)
