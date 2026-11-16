@@ -172,7 +172,7 @@ three ends:
 - `unmarked`: no item is open, and the record lacks `"marked": true`, so
   it was written before partner items and may hide one;
 - `none`: no item is open and the record is marked. The effort is closed
-  out.
+  out, unless an item is `[carried]` (`resume.md` § 5).
 
 ### get
 
@@ -285,6 +285,11 @@ from Resume's Plan stage:
 - **Every other phase:** a `depends_on` on a split id is replaced by
   every part; a `waits_on` that a part will answer gets that part as its
   `from`. A merged id is replaced by the merged phase's id, once.
+- **A pointer follows its question.** A partner-item line, in any
+  phase's `unfinished`, that ends in `→ partner_questions of <id>` for
+  an id that a split or a merge removes, gets in its place the id of the
+  phase that now holds the question. Write it in the array you pass to
+  `record.py set-phases`.
 - **A drop:** the phase stays in the array with `status` `dropped`, and
   its id is never issued again. Take
   its id out of every other phase's `depends_on` and `waits_on`.

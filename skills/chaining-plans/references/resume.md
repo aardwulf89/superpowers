@@ -195,10 +195,13 @@ ends in none of the four suffixes of `references/record.md`:
   space, and write the whole list to a value file. Then run
   `record.py set-closing-key REC <phase id> unfinished replace
   --value-file <path>`.
-- **An answer that calls for work** adds a phase, as a re-plan your human
-  partner directs: follow the rules under `set-phases` in
-  `references/record.md`, and commit the Phases section to match, on
-  `base`. Then pick again (step 4).
+- **An answer that calls for work** is a settle: fold it into the
+  raising phase's "Answers:" line, and give the line
+  `[settled: <raising phase id>]`, as above. Then add a phase for the
+  work, as a re-plan your human partner directs: follow the rules under
+  `set-phases` in `references/record.md`. The new phase's Phases entry
+  carries the work. Commit the Phases section to match, on `base`. Then
+  pick again (step 4).
 - **Items still open** after the answers: ask for those in a new round,
   as above.
 - **None open:** give the last message.

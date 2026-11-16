@@ -52,6 +52,17 @@ has $R/close.md 'Open for you:'
 has $R/close.md '## 5. The end of the effort'
 has skills/chaining-plans/SKILL.md 'Partner item'
 
+# An end-round answer that calls for work settles its item first.
+has $R/resume.md '**An answer that calls for work** is a settle'
+# A discard sorts the executor's lines before it keeps the partner items.
+has $R/close.md 'first sort every `unfinished` line by the sort at the'
+# A dropped phase's question from a partner-item line loses its pointer, and
+# a split or a merge moves a pointer to the phase that holds the question.
+has $R/close.md 'pointer off the line, with the space before it'
+has $R/record.md '**A pointer follows its question.**'
+# `none` is closed out only when no item is carried.
+has $R/record.md 'out, unless an item is `[carried]`'
+
 if ((failures > 0)); then
   echo "$failures of $checks checks failed" >&2
   exit 1

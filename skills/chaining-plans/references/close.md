@@ -45,8 +45,10 @@ was no menu in this session: run steps 1 to 4. In the plan's own session:
   anything new starts.
 - **A discard:** no close. `set` the phase's `branch` to null and its
   `status` to `known`. Then read `record.py get REC ID closing`. When it
-  is not null, keep only its partner items: write `unfinished` with only
-  its lines that start with `Partner item: ` (`record.py set-closing-key
+  is not null, keep only its partner items. The executor's lines have no
+  prefix yet, so first sort every `unfinished` line by the sort at the
+  end of step 1. Then write `unfinished` with only the lines that start
+  with `Partner item: ` (`record.py set-closing-key
   REC ID unfinished replace`, from a value file), and `rulings` as `[]`
   (`record.py set-closing-key REC ID rulings replace --value '[]'`).
   `learned` and `replan` stay null: no close ran. Report that, and stop.
@@ -226,7 +228,11 @@ it goes:
   the end of the effort.
 - **A dropped phase's blocking question,** in a drop this re-plan makes,
   becomes a partner-item line in this phase's `unfinished`, so the drop
-  does not lose it.
+  does not lose it. A question that came from a partner-item line gets
+  no new line: that line ends in `→ partner_questions of <the dropped id>`.
+  In the array you pass to `record.py set-phases` for the drop, take that
+  pointer off the line, with the space before it. The item is open
+  again, and it blocks nothing.
 
 For a blocking item, add the question to the blocked phase's
 `partner_questions` (read the list with
