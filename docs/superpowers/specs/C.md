@@ -103,7 +103,10 @@ Not a cause: no observed loss came from losing `effort.json` itself.
   answer changes an item.
 - **An item that turns out to block.** When a later Design stage finds
   that an item changes its phase's intent, it adds the item to that
-  phase's `partner_questions`, and the original line points to it.
+  phase's `partner_questions`, and the original line points to it
+  (`→ partner_questions of <phase id>`). The partner's answer in that
+  phase's intent round settles the item: its line gets
+  `[settled: <phase id>]`.
 - **A dropped phase's blocking question** becomes a non-blocking item, so
   the drop does not lose it.
 - **A discard** keeps the phase's partner items and drops the rest of its
@@ -131,7 +134,10 @@ An effort is closed out only when every partner item has a disposition.
 - **A record from before this change** has no marked lines, so the script
   cannot vouch that nothing is open. For such a record, `pick` prints
   `unmarked` in place of `none`, and the last message says that open
-  items may exist outside the marks. The script knows a record is
+  items may exist outside the marks. `unmarked` replaces only `none`: an
+  effort under way when this lands is unmarked, and its later closes
+  write partner items, so an open item makes `pick` print `items`, and
+  `open-efforts` list the effort, marked or not. The script knows a record is
   marked by an effort-level `"marked": true`, which Create writes. This
   is the one addition to the record's shape. (Repairing a live record is
   a separate task, see Non-goals.)
