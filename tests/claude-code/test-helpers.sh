@@ -91,7 +91,8 @@ assert_count() {
     fi
 }
 
-# Check if pattern A appears before pattern B
+# Check if pattern A appears before pattern B, by the byte offset of each
+# first match, so two matches on one line are ordered too
 # Usage: assert_order "output" "pattern_a" "pattern_b" "test name"
 assert_order() {
     local output="$1"
@@ -99,31 +100,31 @@ assert_order() {
     local pattern_b="$3"
     local test_name="${4:-test}"
 
-    # Get line numbers where patterns appear
-    local line_a=$(echo "$output" | grep -ni "$pattern_a" | head -1 | cut -d: -f1)
-    local line_b=$(echo "$output" | grep -ni "$pattern_b" | head -1 | cut -d: -f1)
+    # Get the byte offset of each pattern's first match
+    local offset_a=$(echo "$output" | grep -bio "$pattern_a" | head -1 | cut -d: -f1)
+    local offset_b=$(echo "$output" | grep -bio "$pattern_b" | head -1 | cut -d: -f1)
 
-    if [ -z "$line_a" ]; then
+    if [ -z "$offset_a" ]; then
         echo "  [FAIL] $test_name: pattern A not found: $pattern_a"
         echo "  In output:"
         echo "$output" | sed 's/^/    /'
         return 1
     fi
 
-    if [ -z "$line_b" ]; then
+    if [ -z "$offset_b" ]; then
         echo "  [FAIL] $test_name: pattern B not found: $pattern_b"
         echo "  In output:"
         echo "$output" | sed 's/^/    /'
         return 1
     fi
 
-    if [ "$line_a" -lt "$line_b" ]; then
-        echo "  [PASS] $test_name (A at line $line_a, B at line $line_b)"
+    if [ "$offset_a" -lt "$offset_b" ]; then
+        echo "  [PASS] $test_name (A at byte $offset_a, B at byte $offset_b)"
         return 0
     else
         echo "  [FAIL] $test_name"
         echo "  Expected '$pattern_a' before '$pattern_b'"
-        echo "  But found A at line $line_a, B at line $line_b"
+        echo "  But found A at byte $offset_a, B at byte $offset_b"
         return 1
     fi
 }

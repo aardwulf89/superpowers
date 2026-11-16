@@ -131,6 +131,22 @@ happens next. Do not pick.
 message to your human partner: the phase, its branch, `base`, and
 whether `base` was pushed.
 
+### Answers given outside a round
+
+Your human partner may answer at any time: in the request, or between
+stages. Fold each such answer in at once, before the pick or the next
+stage:
+
+- **Write it** into the "Answers:" line of the raising phase's entry in
+  the umbrella's Phases section (for a question, of the phase that asks
+  it), and commit it on `base`, in the main checkout.
+- **A partner item answered so** gets `[settled: <raising phase id>]` at
+  the very end of its line, written as the Intent round writes it (step
+  6).
+- **Then run `close.md` step 2,** as the Intent round's last bullet says.
+  Before the pick there is no phase of this session yet: log the changes
+  as rulings of the raising phase.
+
 ## 4. Pick
 
 Run `record.py pick`. It prints one of:
@@ -178,6 +194,8 @@ ends in none of the four suffixes of `references/record.md`:
   Effort <id>'s phases are all done, but the effort is not closed out: <n> items need your disposition.
   ```
 
+  For one item, write `1 item needs`.
+
 - **Only your human partner's words decide a disposition.** Haste is not
   one: "wrap it up", "finish the effort" or "I'm in a hurry" settles,
   drops and carries nothing, so ask the round anyway. Never pick a
@@ -211,14 +229,16 @@ ends in none of the four suffixes of `references/record.md`:
 
 Count the lines of every phase: the `[carried]` ones, the `[settled: …]`
 ones and the `[dropped]` ones. The message leads with one of two first
-lines, word for word, with `<id>` and `<n>` filled in.
+lines, word for word, with `<id>` and `<n>` filled in. For one carried
+item, write its lines in the singular: `1 item stays open`, `It lives`,
+`show it`.
 
 - **Some line is `[carried]`:**
 
   ```
   Effort <id> is finished, but NOT closed out: <n> items stay open, carried past this effort.
   They live only in this machine's record (.superpowers/chain/<id>/effort.json), not in the repo.
-  The next effort's Create will show them to you. Work done outside chaining-plans will not.
+  The next effort's Create in this repo will show them to you. Work done outside chaining-plans will not.
 
   Carried:
   1. [<phase id>] <the item, with its interim default>
@@ -239,7 +259,9 @@ Never call the effort closed out when an item is carried.
 ## 6. Run the stages straight through to the merge menu
 
 Announce each stage. A stage that names a skill invokes it fresh through
-the Skill tool. A stage is done only when its "Done when" holds.
+the Skill tool. A stage is done only when its "Done when" holds. An
+answer your human partner gives between stages is folded in as
+`### Answers given outside a round` (step 3) says.
 
 | Stage | What it does | Done when |
 |---|---|---|
@@ -268,11 +290,6 @@ composed from memory.
   `record.py set-closing-key REC <raising phase id> unfinished replace`.
   The answer is your human partner's, so this is not a disposition you
   give.
-- **Answers given outside any round,** in the request or between stages,
-  are folded in the same way: into the "Answers:" line of the raising
-  phase's entry (for a question, of the phase that asks it), committed
-  on `base`. A partner item answered so gets
-  `[settled: <raising phase id>]`.
 - **Folding in any answer runs `close.md` step 2** over the phases that
   are not done, other than this one: they may rest on the old default.
   Log each change as a ruling of this phase (`set-closing-key … rulings

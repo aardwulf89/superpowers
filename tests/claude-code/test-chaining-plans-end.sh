@@ -2,15 +2,20 @@
 # Integration Test: chaining-plans at the end of an effort
 #
 # Effort A has one phase, A1, merged into main, its branch deleted, and
-# closed. A1's `closing.unfinished` holds one open partner item. `pick`
-# prints `items`. Two fresh sessions, each asked to continue the effort:
-#   A. The human partner is in a hurry and asks to wrap the effort up. Haste
-#      is no disposition: the session lists the item, offers settle, drop
-#      and carry, says the effort is not closed out, and writes no suffix.
-#   B. The human partner carries the item in the request. The session writes
-#      ` [carried]` on the line, and the last message leads with the
-#      "finished, but NOT closed out" line and names the item.
-# The two run in parallel; each is its own `claude -p` session.
+# closed. A1's `closing.unfinished` holds one partner item. Three fresh
+# sessions, each asked to continue it:
+#   A. The item is open, so `pick` prints `items`. The human partner is in a
+#      hurry and asks to wrap the effort up. Haste is no disposition: the
+#      session lists the item, offers settle, drop and carry, says the
+#      effort is not closed out, and writes no suffix.
+#   B. The item is open. The human partner carries it in the request. The
+#      session writes ` [carried]` on the line, and the last message leads
+#      with the "finished, but NOT closed out" line and names the item.
+#   C. The item is already `[carried]`, and the request names effort A
+#      (`open-efforts` lists no effort whose items all have a disposition).
+#      `pick` prints `none`. The last message is still the "finished, but
+#      NOT closed out" one, with the item, and the record stays as it is.
+# The three run in parallel; each is its own `claude -p` session.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -23,6 +28,7 @@ REC=.superpowers/chain/$EFFORT/effort.json
 ITEM="Partner item: whether a note keeps a trailing newline (raised by A1). Options: keep it, or strip it. Default: kept, as today."
 PROMPT_A="Use the superpowers:chaining-plans skill to continue the effort. I'm in a hurry, so wrap the effort up."
 PROMPT_B="Use the superpowers:chaining-plans skill to continue the effort. My disposition for the trailing-newline item: carry it."
+PROMPT_C="Use the superpowers:chaining-plans skill to continue effort A."
 
 echo "========================================"
 echo " Integration Test: chaining-plans End"
@@ -40,10 +46,10 @@ cleanup() {
 trap cleanup EXIT
 trap 'exit 130' INT TERM
 
-# A project whose one phase, A1, is merged into main, its branch deleted,
-# and closed, with one open partner item.
+# make_project DIR LINE: a project whose one phase, A1, is merged into
+# main, its branch deleted, and closed, with LINE as its one unfinished line.
 make_project() {
-    local dir=$1
+    local dir=$1 line=$2
     mkdir -p "$dir"
     cd "$dir"
     git init -q -b main
@@ -116,7 +122,7 @@ EOF
     git branch -q -d A1
 
     mkdir -p "$(dirname "$REC")"
-    jq -n --arg spec "$UMBRELLA" --arg item "$ITEM" '{
+    jq -n --arg spec "$UMBRELLA" --arg item "$line" '{
       umbrella: $spec,
       base: "main",
       phases: [
@@ -136,9 +142,11 @@ EOF
 }
 
 A="$TEST_ROOT/a"
-make_project "$A"
+make_project "$A" "$ITEM"
 B="$TEST_ROOT/b"
-make_project "$B"
+make_project "$B" "$ITEM"
+C="$TEST_ROOT/c"
+make_project "$C" "$ITEM [carried]"
 cd "$TEST_ROOT"
 
 # Run in the background only: it replaces its subshell with timeout, so $!
@@ -150,12 +158,14 @@ run_fixture() {
         --permission-mode bypassPermissions < /dev/null > "$dir.out" 2>&1
 }
 
-echo "Running Claude on fixtures A and B in parallel (plugin-dir: $PLUGIN_DIR)..."
+echo "Running Claude on fixtures A, B and C in parallel (plugin-dir: $PLUGIN_DIR)..."
 run_fixture "$A" "$PROMPT_A" & pid_a=$!
 run_fixture "$B" "$PROMPT_B" & pid_b=$!
-pids="$pid_a $pid_b"
+run_fixture "$C" "$PROMPT_C" & pid_c=$!
+pids="$pid_a $pid_b $pid_c"
 status_a=0; wait "$pid_a" || status_a=$?
 status_b=0; wait "$pid_b" || status_b=$?
+status_c=0; wait "$pid_c" || status_c=$?
 pids=""
 
 FAILED=0
@@ -206,20 +216,31 @@ jq_check "A: A1's item is unchanged (only the human partner gives a disposition)
     '.phases[0].closing.unfinished == [$item]'
 check assert_contains "$out_a" "not closed out\|NOT closed out" "A: says the effort is not closed out"
 check assert_contains "$out_a" "trailing newline" "A: names the item"
-check assert_contains "$out_a" "settle" "A: offers to settle the item"
-check assert_contains "$out_a" "drop" "A: offers to drop the item"
-check assert_contains "$out_a" "carr" "A: offers to carry the item"
+# \b keeps "settled" and "dropped" from matching the offer.
+check assert_contains "$out_a" "settle\b" "A: offers to settle the item"
+check assert_contains "$out_a" "drop\b" "A: offers to drop the item"
+check assert_contains "$out_a" "carry\b" "A: offers to carry the item"
 check assert_not_contains "$out_a" "Effort A is closed out:" "A: never gives the closed-out first line"
 
 # --- B ---
 show_and_check_run B "$B" "$status_b"
 out_b=$(cat "$B.out")
-jq_check "B: A1's item ends with ' [carried]'" "$B" \
-    '.phases[0].closing.unfinished | length == 1 and (.[0] | endswith(" [carried]"))'
+jq_check "B: A1's one line is the item with ' [carried]' added" "$B" \
+    '.phases[0].closing.unfinished == [$item + " [carried]"]'
 check assert_contains "$out_b" "NOT closed out" "B: says the effort is NOT closed out"
 check assert_contains "$out_b" "carried past this effort" "B: says the item is carried past this effort"
 check assert_contains "$out_b" "trailing newline" "B: names the carried item"
 check assert_not_contains "$out_b" "Effort A is closed out:" "B: never gives the closed-out first line"
+
+# --- C ---
+show_and_check_run C "$C" "$status_c"
+out_c=$(cat "$C.out")
+jq_check "C: A1's carried item is unchanged" "$C" \
+    '.phases[0].closing.unfinished == [$item + " [carried]"]'
+check assert_contains "$out_c" "NOT closed out" "C: says the effort is NOT closed out"
+check assert_contains "$out_c" "carried past this effort" "C: says the item is carried past this effort"
+check assert_contains "$out_c" "trailing newline" "C: names the carried item"
+check assert_not_contains "$out_c" "Effort A is closed out:" "C: never gives the closed-out first line"
 
 echo ""
 if bash "$REPO_ROOT/tests/skill-size/test-skill-size.sh"; then

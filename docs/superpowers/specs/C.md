@@ -151,7 +151,7 @@ and no item is `[carried]`.
   ```
   Effort K is finished, but NOT closed out: 3 items stay open, carried past this effort.
   They live only in this machine's record (.superpowers/chain/K/effort.json), not in the repo.
-  The next effort's Create will show them to you. Work done outside chaining-plans will not.
+  The next effort's Create in this repo will show them to you. Work done outside chaining-plans will not.
 
   Carried:
   1. [K5] <the item, with its interim default>

@@ -67,8 +67,9 @@ was no menu in this session: run steps 1 to 4. In the plan's own session:
   and that a later phase's design should know.
 
 **Check each line before you write it,** against `base`, or against
-the branch tip while the phase is not merged (`git -C <main checkout>
-grep <name> <branch>`, `git -C <main checkout> show <branch>:<path>`).
+the branch tip while the phase is not merged: `git -C <main checkout>
+grep <name> <ref>` and `git -C <main checkout> show <ref>:<path>`, with
+`<ref>` the record's `base` once merged, else the phase's `branch`.
 Every name the line states exists there, and every claim it makes
 about what is there holds. The check reads the repo; it does not redo
 the build's research, so a finding about anything outside the repo
@@ -130,10 +131,10 @@ record: read them with `record.py get REC ID closing`.
   ("the owner's call", "for the partner to decide"). Rewrite it as one
   line that starts with `Partner item: ` and states, in this order: what
   is open; the phase that raised it (`raised by K3`); its options, when
-  settling it means a choice; its interim default (step 2); and its cost
-  of waiting, when each later phase makes the answer dearer. Word it as
-  an entry, not as a question to answer now, and keep the full ids it
-  names.
+  settling it means a choice; its interim default (as step 2 defines
+  it); and its cost of waiting, when each later phase makes the answer
+  dearer. Word it as an entry, not as a question to answer now, and keep
+  the full ids it names.
 - **A line that already starts with `Partner item: `** stays as it is,
   with its suffix.
 - **A line that repeats a partner item already in the list,** as a
@@ -277,11 +278,15 @@ In this order:
 1. **The borderline rulings,** each with its alternative.
 2. **The questions for your human partner,** and which phase waits on
    each. Then this line, with `<n>` the open partner items this close
-   wrote and `<m>` the open ones of every phase. It asks nothing:
+   wrote and `<m>` the open ones of every phase. Count only the lines
+   with no `→ partner_questions of` pointer: a line with one is a
+   question above, and a phase waits on it. It asks nothing:
 
    ```
    Open for you: <n> new items (<m> in all). They wait for the end of the effort; nothing waits on them.
    ```
+
+   For one new item, write `1 new item`.
 
 3. **The other rulings.**
 4. **What the next session will do:** the missed git ops of this phase

@@ -32,7 +32,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 
 class Refused(Exception):
@@ -185,7 +185,7 @@ def open_items(record: dict) -> list:
 
 
 def chain_dir_of(args: argparse.Namespace) -> Path:
-    if args.chain_dir:
+    if getattr(args, "chain_dir", None):
         return Path(args.chain_dir)
     main = main_checkout()
     if main is None:
@@ -194,20 +194,24 @@ def chain_dir_of(args: argparse.Namespace) -> Path:
 
 
 def cmd_chain_dir(args: argparse.Namespace) -> int:
-    main = main_checkout()
-    if main is None:
-        raise Refused("not in a git repository")
-    print(main / ".superpowers" / "chain")
+    print(chain_dir_of(args))
     return 0
 
 
-def cmd_open_efforts(args: argparse.Namespace) -> int:
-    chain_dir = chain_dir_of(args)
-    for rec in sorted(chain_dir.glob("*/effort.json")):
+def readable_records(args: argparse.Namespace, subcommand: str) -> Iterator[tuple[Path, dict]]:
+    """Each readable record under the chain directory, by path; a note on stderr for the rest."""
+    for rec in sorted(chain_dir_of(args).glob("*/effort.json")):
         if not rec.is_file():
             continue
         try:
-            record = load_record(str(rec))
+            yield rec, load_record(str(rec))
+        except Refused as e:
+            print(f"record {subcommand}: skipping {rec}: {e}", file=sys.stderr)
+
+
+def cmd_open_efforts(args: argparse.Namespace) -> int:
+    for rec, record in readable_records(args, "open-efforts"):
+        try:
             if (any(phase_state(record, p) not in ("done", "dropped") for p in phase_ids(record))
                     or open_items(record)):
                 print(rec)
@@ -247,14 +251,7 @@ def cmd_pick(args: argparse.Namespace) -> int:
 
 def cmd_carried(args: argparse.Namespace) -> int:
     out = []
-    for rec in sorted(chain_dir_of(args).glob("*/effort.json")):
-        if not rec.is_file():
-            continue
-        try:
-            record = load_record(str(rec))
-        except Refused as e:
-            print(f"record carried: skipping {rec}: {e}", file=sys.stderr)
-            continue
+    for rec, record in readable_records(args, "carried"):
         out.extend({"record": str(rec), "phase": ph.get("id"), "index": i, "item": x}
                    for ph in record["phases"]
                    for i, x in unfinished_lines(ph) if disposition(x) == "carried")

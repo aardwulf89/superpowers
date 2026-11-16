@@ -60,6 +60,16 @@ has $R/close.md 'pointer off the line, with the space before it'
 has $R/record.md '**A pointer follows its question.**'
 # `none` is closed out only when no item is carried.
 has $R/record.md 'The effort is closed out, unless an item is'
+# Answers given outside a round are folded in before the pick, not only in
+# the Intent round.
+has $R/resume.md '### Answers given outside a round'
+lacks $R/resume.md '**Answers given outside any round,**'
+# `carried` reads only this repo's chain directory.
+has $R/resume.md "The next effort's Create in this repo will show them to you."
+# The check before writing names both refs it reads.
+has $R/close.md '`<ref>` the record'"'"'s `base` once merged, else the phase'"'"'s `branch`.'
+# The report line counts no blocking item.
+has $R/close.md 'Count only the lines'
 
 if ((failures > 0)); then
   echo "$failures of $checks checks failed" >&2
