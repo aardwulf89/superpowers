@@ -217,10 +217,13 @@ it goes:
 - **Blocking means no such default exists:** a phase that is not done
   cannot be designed until the item is answered. Only a blocking item
   goes to `partner_questions`, as below.
-- **A non-blocking item stays a partner-item line** in `unfinished`,
-  with its default, from step 1. It goes to no `partner_questions`, and
-  no phase's `status` changes for it. Later stages follow its default,
-  and your human partner disposes of it at the end of the effort.
+- **A non-blocking item stays, or for a change this re-plan found
+  becomes, a partner-item line in this phase's `unfinished`,** with its
+  default, written as step 1 says (`record.py set-closing-key REC ID
+  unfinished append`, from a value file). It goes to no
+  `partner_questions`, and no phase's `status` changes for it. Later
+  stages follow its default, and your human partner disposes of it at
+  the end of the effort.
 - **A dropped phase's blocking question,** in a drop this re-plan makes,
   becomes a partner-item line in this phase's `unfinished`, so the drop
   does not lose it.
