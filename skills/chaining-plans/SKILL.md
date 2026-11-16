@@ -129,11 +129,11 @@ it resolves the same from any worktree. `.superpowers/` is git-ignored, so
 the record is never committed.
 - `references/record.md` holds its shape and every command you run against
   it: the subcommands of `scripts/record.py` (`chain-dir`, `open-efforts`,
-  `phase-state`, `pick`, `get`, `questions`, `new-record`, `set`,
-  `set-closing-key`, `set-phases`), each run by the script's absolute path
-  as one plain command. Create writes the record once with `new-record`;
-  every later change is `set`, `set-closing-key` or `set-phases`. Never
-  edit the record by hand or rewrite it from memory.
+  `phase-state`, `pick`, `get`, `questions`, `carried`, `new-record`,
+  `set`, `set-closing-key`, `set-phases`), each run by the script's
+  absolute path as one plain command. Create writes the record once with
+  `new-record`; every later change is `set`, `set-closing-key` or
+  `set-phases`. Never edit the record by hand or rewrite it from memory.
 - Your human partner never reads the record. They review through your
   reports.
 
@@ -150,7 +150,11 @@ are committed on `base` in the main checkout, never on a phase branch.
 **What carries forward is `closing`.** The executor deletes its workspace when
 it finishes, ledger included. Never read another plan's ledger; copy "Rulings
 I made" and "Unfinished" from the executor's final message into `closing`
-before finishing starts.
+before finishing starts. `learned` carries knowledge to later Design
+stages, and each close keeps it small and true. A `Partner item:` line in
+`unfinished`, or a question in `partner_questions`, holds what only your
+human partner may settle. No stage settles it, and an effort is closed
+out only when each item has your human partner's disposition.
 
 ## Invoke the Skills, Don't Recall Them
 

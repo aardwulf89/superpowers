@@ -44,8 +44,13 @@ was no menu in this session: run steps 1 to 4. In the plan's own session:
   is not merged yet; the next Resume does its missed git ops before
   anything new starts.
 - **A discard:** no close. `set` the phase's `branch` to null and its
-  `status` to `known`, report that, and stop. Your human partner is
-  present, and directs what happens next.
+  `status` to `known`. Then read `record.py get REC ID closing`. When it
+  is not null, keep only its partner items: write `unfinished` with only
+  its lines that start with `Partner item: ` (`record.py set-closing-key
+  REC ID unfinished replace`, from a value file), and `rulings` as `[]`
+  (`record.py set-closing-key REC ID rulings replace --value '[]'`).
+  `learned` and `replan` stay null: no close ran. Report that, and stop.
+  Your human partner is present, and directs what happens next.
 
 ## 1. Write `learned`
 
@@ -58,6 +63,17 @@ was no menu in this session: run steps 1 to 4. In the plan's own session:
   question the plan did not answer gets that as its answer.
 - **The surprises:** what the build found that its plan did not expect,
   and that a later phase's design should know.
+
+**Check each line before you write it,** against `base`, or against
+the branch tip while the phase is not merged (`git -C <main checkout>
+grep <name> <branch>`, `git -C <main checkout> show <branch>:<path>`).
+Every name the line states exists there, and every claim it makes
+about what is there holds. The check reads the repo; it does not redo
+the build's research, so a finding about anything outside the repo
+stays as the build found it. A line states a behavior and how to find
+the code (a grep, a citation of a source). It never states an
+identifier as current truth without that check. Correct a line that
+fails, or leave it out.
 
 **Check `rulings` and `unfinished` against the final message.** In the
 plan's own session the executor's final message is still in view. Every
@@ -95,12 +111,54 @@ record's `base` and `<branch>` the phase's `branch`, every command as
   write nothing, and report that to your human partner. Never read
   unrelated commits as the branch's work.
 
-Leave `rulings` and `unfinished` as they are: there is no final message
-to check them against.
+Add no `rulings` or `unfinished` line from a final message: there is
+none to check them against.
 
 Write it with `record.py set-closing-key`: `learned` with mode `replace`,
 and any missing `rulings` or `unfinished` lines with mode `append`, each
 list from a value file.
+
+**Then sort every `unfinished` line,** the lines copied from the executor
+included: the executor does not know the prefix. The sort runs on every
+close, from Resume's settle step too, over the lines already in the
+record: read them with `record.py get REC ID closing`.
+
+- **A partner item** is anything only your human partner may settle: an
+  intent question, a borderline call, a decision a stage left to them
+  ("the owner's call", "for the partner to decide"). Rewrite it as one
+  line that starts with `Partner item: ` and states, in this order: what
+  is open; the phase that raised it (`raised by K3`); its options, when
+  settling it means a choice; its interim default (step 2); and its cost
+  of waiting, when each later phase makes the answer dearer. Word it as
+  an entry, not as a question to answer now, and keep the full ids it
+  names.
+- **A line that already starts with `Partner item: `** stays as it is,
+  with its suffix.
+- **A line that repeats a partner item already in the list,** as a
+  rebuild after a discard writes one again, is dropped. It is not given
+  the prefix a second time.
+- **Any other line** stays as it is, for step 2.
+
+Write the list back whole with `record.py set-closing-key REC ID
+unfinished replace`, from a value file.
+
+### 1a. Revise `learned`
+
+Read the `learned` of every done phase (`record.py get REC <phase id>
+closing`). For each line:
+
+- **Drop it** when it is used up (the phase it was for is done and took
+  it), when it is stale against `base` (a name it states is gone, or a
+  claim no longer holds), or when it repeats another line or a committed
+  doc.
+- **Correct it** when the correction is known, as a rename that `base`
+  shows.
+- **Else keep it.**
+
+Write back each changed list whole with `record.py set-closing-key REC
+<phase id> learned replace`, from a value file. Partner items are not
+touched here: they live in `unfinished`, and only your human partner
+changes them.
 
 ## 2. Re-plan the phases that are not done
 
@@ -139,24 +197,49 @@ test**. Does the change alter any of these?
   that its Design stage runs. Write the line now with
   `record.py set-closing-key`, key `learned`, mode `append`, so the
   `replan` write keeps it.
-- **Each unfinished finding:** move it to the phase it belongs to, the
-  same way as a technical design change, naming the id it came from
-  (`from K2: Task K2.3: …`), and note that phase in its line in
-  `unfinished`: read the list with `record.py get REC ID closing`, and
-  write it back whole with `record.py set-closing-key`, key `unfinished`,
-  mode `replace`.
+- **Each unfinished finding** that is not a partner item: move it to the
+  phase it belongs to, the same way as a technical design change, naming
+  the id it came from (`from K2: Task K2.3: …`). The moved text lives
+  only at its destination. Its line in `unfinished` keeps only the
+  pointer: the id and the phase it went to (`Task K2.3: moved to K3`).
+  Read the list with `record.py get REC ID closing`, and write it back
+  whole with `record.py set-closing-key`, key `unfinished`, mode
+  `replace`.
 
-**Yes: do not rule.** Add the question to the affected phase's
+**Yes: do not rule.** It is a partner item, as is each open
+partner-item line that step 1 wrote. Its interim default decides where
+it goes:
+
+- **The interim default** is what later stages do until your human
+  partner answers: the option that commits to nothing new and can be
+  reversed, usually the status quo. You never choose among the options:
+  a default picked by preference settles the item.
+- **Blocking means no such default exists:** a phase that is not done
+  cannot be designed until the item is answered. Only a blocking item
+  goes to `partner_questions`, as below.
+- **A non-blocking item stays a partner-item line** in `unfinished`,
+  with its default, from step 1. It goes to no `partner_questions`, and
+  no phase's `status` changes for it. Later stages follow its default,
+  and your human partner disposes of it at the end of the effort.
+- **A dropped phase's blocking question,** in a drop this re-plan makes,
+  becomes a partner-item line in this phase's `unfinished`, so the drop
+  does not lose it.
+
+For a blocking item, add the question to the blocked phase's
 `partner_questions` (read the list with
 `record.py get REC <phase id> partner_questions`, then `record.py set` it
 with the question added, from a value file), and `record.py set` its
 `status` to `needs-partner`. A waiting
 phase whose answer raised the question goes to `needs-partner`, not
-`known`. Word it as a question, ending in a question mark, that stands
+`known`. When the question came from a partner-item line, add
+`→ partner_questions of <phase id>` at the end of that line. Word it as
+a question, ending in a question mark, that stands
 on its own for a reader who did not see this session: what was learned,
 which intent decision it conflicts with, and the ways your human partner
-could answer. Do not edit the umbrella for it: your human partner's
-answer does that, in the phase's intent round.
+could answer. The ways to answer come before the question itself, so
+that the question mark is the last character. Do not edit the umbrella
+for it: your human partner's answer does that, in the phase's intent
+round.
 
 **When in doubt, automate:** rule on it, and mark it `borderline`.
 
@@ -172,6 +255,9 @@ per change, a question included:
 - `alternative`: the option you did not take, or for a question, the
   other answer your human partner could give.
 
+A non-blocking partner item is not a change, and gets no entry: its one
+copy is its line in `unfinished`.
+
 With no change at all, `replan` is `[]`. Write it with
 `record.py set-closing-key REC ID replan replace`.
 
@@ -181,22 +267,34 @@ In this order:
 
 1. **The borderline rulings,** each with its alternative.
 2. **The questions for your human partner,** and which phase waits on
-   each.
+   each. Then this line, with `<n>` the open partner items this close
+   wrote and `<m>` the open ones of every phase. It asks nothing:
+
+   ```
+   Open for you: <n> new items (<m> in all). They wait for the end of the effort; nothing waits on them.
+   ```
+
 3. **The other rulings.**
 4. **What the next session will do:** the missed git ops of this phase
    if it is not merged, then the next phase and the stage it starts at
-   (an intent round for a `needs-partner` phase). Or that the effort is
-   done: run `pick`; it prints `none` when every phase is done or
-   dropped.
+   (an intent round for a `needs-partner` phase). Run `pick` to find it.
+   When it prints `items`, `unmarked` or `none`, every phase is done or
+   dropped: run `## 5. The end of the effort` of `references/resume.md`,
+   in this session.
 
 ## 4. The ending
 
 - **In the plan's own session:** ask your human partner to clear the
   session and invoke the skill in a fresh one (for example: "Use
   superpowers:chaining-plans to continue the effort."). Do not start
-  another phase in this session.
+  another phase in this session. When item 4 ran the end of the effort,
+  its end round or its last message replaces the request to clear, and
+  this session takes your human partner's answers as that section says.
+  An answer that adds a phase ends with the request to clear, not with a
+  pick.
 - **From Resume's settle step:** leave out item 4 of the report and do
   not ask for a clear. Go back to Resume's settle step and go on with
   the row's action: for a `finished-unclosed` phase, its missed git ops
   come next. Then Resume runs `phase-state`, settles the rest, and
-  picks, in this session.
+  picks, in this session. Resume's own pick reaches the end of the
+  effort.

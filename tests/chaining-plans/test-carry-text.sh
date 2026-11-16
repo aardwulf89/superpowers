@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Pins the wording that ends an effort only once every partner item has a
 # disposition, and that brings carried items to the next Create: Resume's
-# end round and last message, and Create's marked record and `carried` read.
+# end round and last message, Create's marked record and `carried` read, and
+# Close's sort of partner items, its check before writing and its revise step.
 #
 # Usage: tests/chaining-plans/test-carry-text.sh
 set -euo pipefail
@@ -41,6 +42,15 @@ lacks $R/resume.md '## 5. Run the stages'
 
 has $R/create.md '"marked": true'
 has $R/create.md 'record.py carried'
+
+has $R/close.md 'Partner item: '
+has $R/close.md 'interim default'
+has $R/close.md 'commits to nothing new'
+has $R/close.md '### 1a. Revise'
+has $R/close.md 'the branch tip'
+has $R/close.md 'Open for you:'
+has $R/close.md '## 5. The end of the effort'
+has skills/chaining-plans/SKILL.md 'Partner item'
 
 if ((failures > 0)); then
   echo "$failures of $checks checks failed" >&2
