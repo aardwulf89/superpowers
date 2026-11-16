@@ -12,6 +12,7 @@ Subcommands:
     pick REC
     get REC ID [FIELD]
     questions REC ID
+    carried [--chain-dir DIR]
     new-record REC (--value JSON | --value-file PATH)
     set REC ID FIELD (--value JSON | --value-file PATH)
     set-phases REC (--value JSON | --value-file PATH)
@@ -27,6 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -155,6 +157,42 @@ def phase_ids(record: dict) -> list:
     return [ph.get("id") for ph in record["phases"] if isinstance(ph, dict)]
 
 
+ITEM_PREFIX = "Partner item: "
+DISPOSITION = re.compile(r"\[(settled: \S+|dropped|carried|adopted by \S+)\]\s*$")
+
+
+def disposition(line: str) -> str | None:
+    """The word of the line's disposition suffix; None for an open item."""
+    m = DISPOSITION.search(line)
+    return m.group(1).split()[0] if m else None
+
+
+def unfinished_lines(ph: Any) -> list:
+    """The partner-item lines of a phase's closing.unfinished, with their indexes."""
+    closing = ph.get("closing") if isinstance(ph, dict) else None
+    unfinished = closing.get("unfinished") if isinstance(closing, dict) else None
+    if not isinstance(unfinished, list):
+        return []
+    return [(i, x) for i, x in enumerate(unfinished)
+            if isinstance(x, str) and x.startswith(ITEM_PREFIX)]
+
+
+def open_items(record: dict) -> list:
+    """Every partner item with no disposition, in every phase, in array order."""
+    return [{"phase": ph.get("id"), "item": x}
+            for ph in record["phases"]
+            for _, x in unfinished_lines(ph) if disposition(x) is None]
+
+
+def chain_dir_of(args: argparse.Namespace) -> Path:
+    if args.chain_dir:
+        return Path(args.chain_dir)
+    main = main_checkout()
+    if main is None:
+        raise Refused("not in a git repository")
+    return main / ".superpowers" / "chain"
+
+
 def cmd_chain_dir(args: argparse.Namespace) -> int:
     main = main_checkout()
     if main is None:
@@ -164,19 +202,14 @@ def cmd_chain_dir(args: argparse.Namespace) -> int:
 
 
 def cmd_open_efforts(args: argparse.Namespace) -> int:
-    if args.chain_dir:
-        chain_dir = Path(args.chain_dir)
-    else:
-        main = main_checkout()
-        if main is None:
-            raise Refused("not in a git repository")
-        chain_dir = main / ".superpowers" / "chain"
+    chain_dir = chain_dir_of(args)
     for rec in sorted(chain_dir.glob("*/effort.json")):
         if not rec.is_file():
             continue
         try:
             record = load_record(str(rec))
-            if any(phase_state(record, p) not in ("done", "dropped") for p in phase_ids(record)):
+            if (any(phase_state(record, p) not in ("done", "dropped") for p in phase_ids(record))
+                    or open_items(record)):
                 print(rec)
         except Refused as e:
             print(f"record open-efforts: skipping {rec}: {e}", file=sys.stderr)
@@ -205,7 +238,29 @@ def cmd_pick(args: argparse.Namespace) -> int:
         if all(states.get(d) == "done" for d in deps):
             print(f"id:{p}")
             return 0
-    print(f"blocked:{first_open}" if first_open is not None else "none")
+    if first_open is not None:
+        print(f"blocked:{first_open}")
+    elif open_items(record):
+        print("items")
+    else:
+        print("none" if record.get("marked") is True else "unmarked")
+    return 0
+
+
+def cmd_carried(args: argparse.Namespace) -> int:
+    out = []
+    for rec in sorted(chain_dir_of(args).glob("*/effort.json")):
+        if not rec.is_file():
+            continue
+        try:
+            record = load_record(str(rec))
+        except Refused as e:
+            print(f"record carried: skipping {rec}: {e}", file=sys.stderr)
+            continue
+        out.extend({"record": str(rec), "phase": ph.get("id"), "index": i, "item": x}
+                   for ph in record["phases"]
+                   for i, x in unfinished_lines(ph) if disposition(x) == "carried")
+    print(dumps(out))
     return 0
 
 
@@ -346,7 +401,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("chain-dir", help="print the main checkout's chain directory").set_defaults(func=cmd_chain_dir)
 
-    p = sub.add_parser("open-efforts", help="list records with a phase not done or dropped")
+    p = sub.add_parser("open-efforts", help="list records with a phase not done or dropped, or an open partner item")
     p.add_argument("--chain-dir")
     p.set_defaults(func=cmd_open_efforts)
 
@@ -355,7 +410,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("id")
     p.set_defaults(func=cmd_phase_state)
 
-    p = sub.add_parser("pick", help="print id:<id>, blocked:<id> or none")
+    p = sub.add_parser("pick", help="print id:<id>, blocked:<id>, items, unmarked or none")
     p.add_argument("rec")
     p.set_defaults(func=cmd_pick)
 
@@ -369,6 +424,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("rec")
     p.add_argument("id")
     p.set_defaults(func=cmd_questions)
+
+    p = sub.add_parser("carried", help="print the [carried] partner items of every record")
+    p.add_argument("--chain-dir")
+    p.set_defaults(func=cmd_carried)
 
     p = sub.add_parser("new-record", help="create the record")
     p.add_argument("rec")

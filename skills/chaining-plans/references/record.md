@@ -14,6 +14,7 @@ never by rewriting the whole file from memory. It keeps no history.
 {
   "umbrella": "docs/superpowers/specs/K.md",
   "base": "main",
+  "marked": true,
   "phases": [
     {
       "id": "K2",
@@ -32,6 +33,9 @@ never by rewriting the whole file from memory. It keeps no history.
   ]
 }
 ```
+
+Create writes `marked`. A record without it was written before partner
+items, so `pick` cannot vouch that nothing is open.
 
 There is no `head` key and no stored "done".
 
@@ -69,6 +73,12 @@ There is no `head` key and no stored "done".
   not depend on context surviving compaction. `learned` and `replan` stay
   null until the close; `replan` set (even to `[]`) means the phase is
   closed.
+
+  A partner-item line is an element of `unfinished` that starts with
+  `Partner item: `. Its disposition is a suffix at the very end of the
+  line: `[settled: <phase id>]`, `[dropped]`, `[carried]` or
+  `[adopted by <phase id>]`. A line with none of them is open. Only the
+  partner gives a disposition.
 
 ## Phase states
 
@@ -134,7 +144,9 @@ any worktree. Outside a git repo it prints nothing and fails.
 `record.py open-efforts [--chain-dir DIR]`
 
 Prints one `effort.json` path per line, for each effort with at least one
-phase that is not `done` or `dropped`. Without `--chain-dir` it finds the
+phase that is not `done` or `dropped`, and for each effort whose phases are
+all `done` or `dropped` but that has an open partner item, marked or not.
+Without `--chain-dir` it finds the
 directory as `chain-dir` does; outside a git repo it then prints nothing
 and fails. A record it cannot read is skipped, with a note on stderr.
 
@@ -153,7 +165,14 @@ Prints `id:<phase id>` for the first phase, in array order, that is
 `not-started` and whose `depends_on` are all `done`. Otherwise prints
 `blocked:<phase id>` for the first phase that is not `done` or `dropped`
 (it waits on a dependency that is not done, or is dropped, or is itself
-under way), or `none` when every phase is `done` or `dropped`.
+under way). When every phase is `done` or `dropped`, it prints one of
+three ends:
+
+- `items`: some partner item is open, in any phase, a dropped one included;
+- `unmarked`: no item is open, and the record lacks `"marked": true`, so
+  it was written before partner items and may hide one;
+- `none`: no item is open and the record is marked. The effort is closed
+  out.
 
 ### get
 
@@ -169,6 +188,17 @@ Prints the phase, or one of its fields, as compact JSON:
 Prints, as compact JSON, the `waits_on` questions that phase `ID` must
 answer, gathered from every phase of the record, each with the phase that
 asks it: `[{"phase":"K3","q":["…"]}]`, or `[]`.
+
+### carried
+
+`record.py carried [--chain-dir DIR]`
+
+Prints, as compact JSON, one object per `[carried]` partner item, from
+every record under the chain directory, sorted by path:
+`[{"record":"<path>","phase":"K2","index":1,"item":"Partner item: …"}]`,
+or `[]`. `index` is the position in the phase's `closing.unfinished`.
+Without `--chain-dir` it finds the directory as `chain-dir` does. A record
+it cannot read is skipped, with a note on stderr.
 
 ### new-record
 
