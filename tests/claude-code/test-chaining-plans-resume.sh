@@ -147,7 +147,7 @@ write_record() {
     local phase=$1
     mkdir -p ".superpowers/chain/$EFFORT"
     jq -n --arg umbrella "$UMBRELLA" --argjson phase "$phase" \
-        '{umbrella: $umbrella, base: "main", marked: true, phases: [$phase]}' \
+        '{umbrella: $umbrella, base: "main", phases: [$phase]}' \
         > ".superpowers/chain/$EFFORT/effort.json"
 }
 

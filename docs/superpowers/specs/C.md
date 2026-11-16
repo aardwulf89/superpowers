@@ -55,8 +55,7 @@ Not a cause: no observed loss came from losing `effort.json` itself.
 
 ## Approaches
 
-- **Seal the two existing channels (chosen).** Keep the record's shape,
-  but for one effort-level flag.
+- **Seal the two existing channels (chosen).** Keep the record's shape.
   Curate `learned` as a whole at each close. Give the partner's items one
   findable place and a disposition at the end of the effort. Let the next
   Create read the items that the partner carried. This fixes the leaks
@@ -122,25 +121,23 @@ Not a cause: no observed loss came from losing `effort.json` itself.
 
 ### 2. The end of the effort
 
-An effort is closed out only when every partner item has a disposition.
+An effort is closed out only when every partner item has a disposition,
+and no item is `[carried]`.
 
 - **The disposition** is a suffix on the item's line: `[settled]`,
   `[dropped]` or `[carried]`. A settled item names the phase whose
   "Answers:" line holds its answer. Only the partner gives a disposition.
 - **`record.py pick`** prints a new value, `items`, when every phase is
   done or dropped but some partner item, in any phase (a dropped one
-  included), has no disposition. `none` now means "closed out".
-  `open-efforts` lists an effort that is in that state.
-- **A record from before this change** has no marked lines, so the script
-  cannot vouch that nothing is open. For such a record, `pick` prints
-  `unmarked` in place of `none`, and the last message says that open
-  items may exist outside the marks. `unmarked` replaces only `none`: an
-  effort under way when this lands is unmarked, and its later closes
-  write partner items, so an open item makes `pick` print `items`, and
-  `open-efforts` list the effort, marked or not. The script knows a record is
-  marked by an effort-level `"marked": true`, which Create writes. This
-  is the one addition to the record's shape. (Repairing a live record is
-  a separate task, see Non-goals.)
+  included), has no disposition. `none` now means that no item is open:
+  the effort is closed out, unless an item is `[carried]` (see the last
+  message below). `open-efforts` lists an effort that has an open item.
+- **A record from before this change** has no prefixed lines, so the
+  script cannot tell its open items. The partner decided that the skill
+  does not handle such a record: only two exist, and the partner repairs
+  each once, by hand, outside the plugin. The skill and the script treat
+  every record alike, with no flag that tells an old record from a new
+  one.
 - **An answer at the end round that calls for work** may add a phase,
   through a re-plan that the partner directs. `pick` then prints `id:`
   again.
@@ -210,9 +207,8 @@ revision, that is a small set that stays true.
 
 ### What does not change
 
-- The record's shape, but for the effort-level `"marked"`. `record.py`
-  gains `carried`, and the `items` and `unmarked` values of `pick`, with
-  tests.
+- The record's shape. `record.py` gains `carried`, and the `items` value
+  of `pick`, with tests.
 - `rulings`. No stage reads them as guidance, and an open item's default
   replaces the precedent chain.
 - The umbrella holds intent only. A settled answer goes there, as today.
@@ -245,8 +241,8 @@ revision, that is a small set that stays true.
   them.
 - **Writing to the project's docs, or correcting a phase's committed
   design.** That is for the implementers, or the partner.
-- **Repair of an effort already under way.** Migrating a live record is a
-  separate task for the partner, after this lands.
+- **Repair of an effort already under way.** The partner repairs the two
+  live records by hand, outside the plugin, after this lands (§ 2).
 
 ## Risks
 
@@ -267,8 +263,6 @@ Made by the designer, open to the partner's correction:
 - The end round may add a phase.
 - The check before writing uses the branch tip while the phase is not
   merged.
-- `"marked"` and `pick`'s `unmarked` keep an old record from reading as
-  closed out.
 
 The partner approved the rule of the interim default and the meaning of
 blocking.

@@ -287,9 +287,9 @@ In this order:
 4. **What the next session will do:** the missed git ops of this phase
    if it is not merged, then the next phase and the stage it starts at
    (an intent round for a `needs-partner` phase). Run `pick` to find it.
-   When it prints `items`, `unmarked` or `none`, every phase is done or
-   dropped: run `## 5. The end of the effort` of `references/resume.md`,
-   in this session.
+   When it prints `items` or `none`, every phase is done or dropped: run
+   `## 5. The end of the effort` of `references/resume.md`, in this
+   session.
 
 ## 4. The ending
 

@@ -137,8 +137,8 @@ Run `record.py pick`. It prints one of:
 
 - **`none`:** every phase is done or dropped, and every partner item has
   a disposition. Give the last message of step 5, and stop.
-- **`items`** or **`unmarked`:** every phase is done or dropped, and the
-  effort is not closed out. Go to step 5.
+- **`items`:** every phase is done or dropped, and some partner item is
+  open. Go to step 5.
 - **`blocked:<id>`:** report what blocks that phase (each of its
   `depends_on`, with its `phase-state`; a `dropped` dependency will
   never be done), and stop. Your human partner decides.
@@ -154,7 +154,8 @@ Run `record.py pick`. It prints one of:
 ## 5. The end of the effort
 
 Every phase is done or dropped. The effort is closed out only when every
-partner item has a disposition, and only your human partner gives one.
+partner item has a disposition and none is `[carried]`. Only your human
+partner gives a disposition.
 
 **Read the items.** For every phase, a dropped one included, run
 `record.py get REC <phase id> closing`. A partner item is an
@@ -234,15 +235,6 @@ lines, word for word, with `<id>` and `<n>` filled in.
   ```
 
 Never call the effort closed out when an item is carried.
-
-### `unmarked`
-
-The record predates partner items, so an item may be open in a line that
-has no prefix. There is no end round. The last message leads with
-`Effort <id> is finished, but the skill cannot tell whether items are open: its record predates partner items.`
-in place of either first line. When some line is `[carried]`, it goes
-on with the carried form's lines after its first. It never says "closed
-out".
 
 ## 6. Run the stages straight through to the merge menu
 

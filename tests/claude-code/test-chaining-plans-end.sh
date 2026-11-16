@@ -2,9 +2,8 @@
 # Integration Test: chaining-plans at the end of an effort
 #
 # Effort A has one phase, A1, merged into main, its branch deleted, and
-# closed. Its record is marked, and A1's `closing.unfinished` holds one open
-# partner item. `pick` prints `items`. Two fresh sessions, each asked to
-# continue the effort:
+# closed. A1's `closing.unfinished` holds one open partner item. `pick`
+# prints `items`. Two fresh sessions, each asked to continue the effort:
 #   A. The human partner is in a hurry and asks to wrap the effort up. Haste
 #      is no disposition: the session lists the item, offers settle, drop
 #      and carry, says the effort is not closed out, and writes no suffix.
@@ -42,7 +41,7 @@ trap cleanup EXIT
 trap 'exit 130' INT TERM
 
 # A project whose one phase, A1, is merged into main, its branch deleted,
-# and closed, with one open partner item in a marked record.
+# and closed, with one open partner item.
 make_project() {
     local dir=$1
     mkdir -p "$dir"
@@ -120,7 +119,6 @@ EOF
     jq -n --arg spec "$UMBRELLA" --arg item "$ITEM" '{
       umbrella: $spec,
       base: "main",
-      marked: true,
       phases: [
         {
           id: "A1", title: "Storage", status: "known",

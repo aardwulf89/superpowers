@@ -14,7 +14,6 @@ never by rewriting the whole file from memory. It keeps no history.
 {
   "umbrella": "docs/superpowers/specs/K.md",
   "base": "main",
-  "marked": true,
   "phases": [
     {
       "id": "K2",
@@ -33,9 +32,6 @@ never by rewriting the whole file from memory. It keeps no history.
   ]
 }
 ```
-
-Create writes `marked`. A record without it was written before partner
-items, so `pick` cannot vouch that nothing is open.
 
 There is no `head` key and no stored "done".
 
@@ -145,10 +141,10 @@ any worktree. Outside a git repo it prints nothing and fails.
 
 Prints one `effort.json` path per line, for each effort with at least one
 phase that is not `done` or `dropped`, and for each effort whose phases are
-all `done` or `dropped` but that has an open partner item, marked or not.
-Without `--chain-dir` it finds the
-directory as `chain-dir` does; outside a git repo it then prints nothing
-and fails. A record it cannot read is skipped, with a note on stderr.
+all `done` or `dropped` but that has an open partner item. Without
+`--chain-dir` it finds the directory as `chain-dir` does; outside a git
+repo it then prints nothing and fails. A record it cannot read is skipped,
+with a note on stderr.
 
 ### phase-state
 
@@ -166,13 +162,11 @@ Prints `id:<phase id>` for the first phase, in array order, that is
 `blocked:<phase id>` for the first phase that is not `done` or `dropped`
 (it waits on a dependency that is not done, or is dropped, or is itself
 under way). When every phase is `done` or `dropped`, it prints one of
-three ends:
+two ends:
 
 - `items`: some partner item is open, in any phase, a dropped one included;
-- `unmarked`: no item is open, and the record lacks `"marked": true`, so
-  it was written before partner items and may hide one;
-- `none`: no item is open and the record is marked. The effort is closed
-  out, unless an item is `[carried]` (`resume.md` § 5).
+- `none`: no item is open. The effort is closed out, unless an item is
+  `[carried]` (`resume.md` § 5).
 
 ### get
 

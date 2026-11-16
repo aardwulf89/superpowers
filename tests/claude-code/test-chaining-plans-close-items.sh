@@ -161,7 +161,6 @@ mkdir -p "$(dirname "$REC")"
 jq -n --arg spec "$UMBRELLA" '{
   umbrella: $spec,
   base: "main",
-  marked: true,
   phases: [
     {
       id: "A1", title: "Storage", status: "known",

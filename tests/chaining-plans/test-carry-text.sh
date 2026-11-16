@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Pins the wording that ends an effort only once every partner item has a
 # disposition, and that brings carried items to the next Create: Resume's
-# end round and last message, Create's marked record and `carried` read, and
-# Close's sort of partner items, its check before writing and its revise step.
+# end round and last message, Create's `carried` read, and Close's sort of
+# partner items, its check before writing and its revise step.
 #
 # Usage: tests/chaining-plans/test-carry-text.sh
 set -euo pipefail
@@ -34,13 +34,11 @@ lacks() {
 R=skills/chaining-plans/references
 has $R/resume.md '## 5. The end of the effort'
 has $R/resume.md '`items`'
-has $R/resume.md '`unmarked`'
 has $R/resume.md 'Effort <id> is finished, but NOT closed out'
 has $R/resume.md 'Effort <id> is closed out: every phase is done or dropped, and no item is open.'
 has $R/resume.md 'interim default'
 lacks $R/resume.md '## 5. Run the stages'
 
-has $R/create.md '"marked": true'
 has $R/create.md 'record.py carried'
 
 has $R/close.md 'Partner item: '
@@ -61,7 +59,7 @@ has $R/close.md 'first sort every `unfinished` line by the sort at the'
 has $R/close.md 'pointer off the line, with the space before it'
 has $R/record.md '**A pointer follows its question.**'
 # `none` is closed out only when no item is carried.
-has $R/record.md 'out, unless an item is `[carried]`'
+has $R/record.md 'The effort is closed out, unless an item is'
 
 if ((failures > 0)); then
   echo "$failures of $checks checks failed" >&2

@@ -118,8 +118,6 @@ All of this happens in the main checkout, on `base`.
    This one write creates the whole file, in the shape
    `references/record.md` gives:
    - `umbrella`: the spec's repo-relative path; `base`: the branch;
-     `"marked": true`, which tells `pick` that the record knows partner
-     items;
    - `phases`: in the order of work, every phase with all ten keys, and
      every `waits_on[].from` also listed in that phase's `depends_on`;
    - `status`: `needs-partner` if it has `partner_questions`, else `waiting`

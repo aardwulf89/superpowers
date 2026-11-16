@@ -88,7 +88,6 @@ mkdir -p "$(dirname "$Z_REC")"
 jq -n '{
   umbrella: "docs/superpowers/specs/Z.md",
   base: "main",
-  marked: true,
   phases: [
     {
       id: "Z1", title: "Note format", status: "dropped",

@@ -152,11 +152,6 @@ write_rec() { # file phase_json...
   mkdir -p "$(dirname "$f")"
   printf '%s\n' "$@" | jq -s '{umbrella:"u.md", base:"main", phases:.}' > "$f"
 }
-write_marked() { # file phase_json...
-  local f="$1"; shift
-  mkdir -p "$(dirname "$f")"
-  printf '%s\n' "$@" | jq -s '{umbrella:"u.md", base:"main", marked:true, phases:.}' > "$f"
-}
 run_pick() { (cd "$R" && record pick "$1"); }
 
 # R still has b-fin merged and deleted, so branch "b-fin" is done.
@@ -165,30 +160,28 @@ write_rec "$TMP/pick1.json" "$(phase K1 known '"b-fin"' '[]')" "$(phase K2 known
 check "pick returns the first startable phase" "id:K2" "$(run_pick "$TMP/pick1.json")"
 write_rec "$TMP/pick2.json" "$(phase K1 dropped null '[]')" "$(phase K2 known null '["K1"]')"
 check "pick blocks on a dropped dependency" "blocked:K2" "$(run_pick "$TMP/pick2.json")"
-write_marked "$TMP/pick3.json" "$(phase K1 known '"b-fin"' '[]')"
+write_rec "$TMP/pick3.json" "$(phase K1 known '"b-fin"' '[]')"
 check "pick with everything done" none "$(run_pick "$TMP/pick3.json")"
 write_rec "$TMP/pick4.json" "$(phase K1 known null '[]')" "$(phase K2 known null '["K1"]')"
 check "pick takes a phase with no dependencies" "id:K1" "$(run_pick "$TMP/pick4.json")"
 write_rec "$TMP/pick5.json" "$(phase x dropped null '[]')" "$(phase picked known null '["x"]')"
 check "pick blocks on a phase whose id is 'picked'" "blocked:picked" "$(run_pick "$TMP/pick5.json")"
 
-# pick: unmarked, items and none
+# pick: items and none
 DONE='"b-fin"'
-write_rec "$TMP/pu.json" "$(phase K1 known "$DONE" '[]')"
-check "pick on a done record without marked" unmarked "$(run_pick "$TMP/pu.json")"
-write_marked "$TMP/pn.json" "$(phase K1 known "$DONE" '[]' '[]')"
-check "pick on a done marked record with no item" none "$(run_pick "$TMP/pn.json")"
-write_marked "$TMP/pi.json" "$(phase K1 known "$DONE" '[]' '["Partner item: x. Default: as is."]')"
-check "pick on a done marked record with an open item" items "$(run_pick "$TMP/pi.json")"
+write_rec "$TMP/pn.json" "$(phase K1 known "$DONE" '[]' '[]')"
+check "pick on a done record with no item" none "$(run_pick "$TMP/pn.json")"
+write_rec "$TMP/pi.json" "$(phase K1 known "$DONE" '[]' '["Partner item: x. Default: as is."]')"
+check "pick on a done record with an open item" items "$(run_pick "$TMP/pi.json")"
 for suffix in ' [settled: K1]' ' [dropped]' ' [carried]' ' [adopted by M2]'; do
-  write_marked "$TMP/ps.json" "$(phase K1 known "$DONE" '[]' "$(jq -nc --arg s "$suffix" '["Partner item: x. Default: as is." + $s]')")"
+  write_rec "$TMP/ps.json" "$(phase K1 known "$DONE" '[]' "$(jq -nc --arg s "$suffix" '["Partner item: x. Default: as is." + $s]')")"
   check "pick: the suffix '$suffix' closes an item" none "$(run_pick "$TMP/ps.json")"
 done
-write_marked "$TMP/pd.json" "$(phase K1 dropped null '[]' '["Partner item: x. Default: as is."]')"
+write_rec "$TMP/pd.json" "$(phase K1 dropped null '[]' '["Partner item: x. Default: as is."]')"
 check "pick: an open item in a dropped phase" items "$(run_pick "$TMP/pd.json")"
-write_marked "$TMP/pq.json" "$(phase K1 known "$DONE" '[]' '["Partner item: keep \"[carried]\" as the word? Default: as is."]')"
+write_rec "$TMP/pq.json" "$(phase K1 known "$DONE" '[]' '["Partner item: keep \"[carried]\" as the word? Default: as is."]')"
 check "pick: a suffix that is not at the end leaves the item open" items "$(run_pick "$TMP/pq.json")"
-write_marked "$TMP/pz.json" "$(phase K1 dropped null '[]')" \
+write_rec "$TMP/pz.json" "$(phase K1 dropped null '[]')" \
   "$(phase K2 known "$DONE" '[]')" \
   "$(phase K3 known "$DONE" '[]' null)"
 st=0; out=$(run_pick "$TMP/pz.json" 2>&1) || st=$?
@@ -199,28 +192,24 @@ st=0; out=$(cd "$R" && record open-efforts --chain-dir "$NI" 2>&1) || st=$?
 check "open-efforts lists nothing for it, and says nothing" "0:" "$st:$out"
 st=0; out=$(cd "$R" && record carried --chain-dir "$NI" 2>&1) || st=$?
 check "carried lists nothing for it, and says nothing" "0:[]" "$st:$out"
-write_marked "$TMP/po.json" "$(phase K1 known null '[]' '["Partner item: x. Default: as is."]')"
+write_rec "$TMP/po.json" "$(phase K1 known null '[]' '["Partner item: x. Default: as is."]')"
 check "pick: the open phase wins over an open item" "id:K1" "$(run_pick "$TMP/po.json")"
-write_rec "$TMP/pw.json" "$(phase K1 known "$DONE" '[]' '["Partner item: x. Default: as is."]')"
-check "pick: an open item beats unmarked" items "$(run_pick "$TMP/pw.json")"
 
 # open-efforts with partner items, and carried
 CI="$TMP/items"
-write_marked "$CI/e1/effort.json" "$(phase K1 known null '[]')"
-write_marked "$CI/e2/effort.json" "$(phase K1 known "$DONE" '[]' '["Partner item: x. Default: as is."]')"
-write_marked "$CI/e3/effort.json" "$(phase K1 known "$DONE" '[]' '[]')"
-write_rec "$CI/e4/effort.json" "$(phase K1 known "$DONE" '[]' '["Partner item: x. Default: as is."]')"
-mkdir -p "$CI/e5"; printf '{' > "$CI/e5/effort.json"
+write_rec "$CI/e1/effort.json" "$(phase K1 known null '[]')"
+write_rec "$CI/e2/effort.json" "$(phase K1 known "$DONE" '[]' '["Partner item: x. Default: as is."]')"
+write_rec "$CI/e3/effort.json" "$(phase K1 known "$DONE" '[]' '[]')"
+mkdir -p "$CI/e4"; printf '{' > "$CI/e4/effort.json"
 st=0; out=$(cd "$R" && record open-efforts --chain-dir "$CI" 2>"$TMP/oe.err") || st=$?
 check "open-efforts lists open phases and open items" "0:$CI/e1/effort.json
-$CI/e2/effort.json
-$CI/e4/effort.json" "$st:$out"
-if grep -q "$CI/e5/effort.json" "$TMP/oe.err"; then pass "open-efforts names the unreadable record"; else fail "open-efforts names the unreadable record"; fi
+$CI/e2/effort.json" "$st:$out"
+if grep -q "$CI/e4/effort.json" "$TMP/oe.err"; then pass "open-efforts names the unreadable record"; else fail "open-efforts names the unreadable record"; fi
 
 CC="$TMP/carried"
-write_marked "$CC/e1/effort.json" "$(phase K1 known "$DONE" '[]' '[]')" \
+write_rec "$CC/e1/effort.json" "$(phase K1 known "$DONE" '[]' '[]')" \
   "$(phase K2 known "$DONE" '[]' '["none", "Partner item: a [carried]", "Partner item: b [dropped]"]')"
-write_marked "$CC/e2/effort.json" "$(phase K1 known "$DONE" '[]' '["Partner item: c [carried]"]')"
+write_rec "$CC/e2/effort.json" "$(phase K1 known "$DONE" '[]' '["Partner item: c [carried]"]')"
 want='[{"record":"'$CC'/e1/effort.json","phase":"K2","index":1,"item":"Partner item: a [carried]"},{"record":"'$CC'/e2/effort.json","phase":"K1","index":0,"item":"Partner item: c [carried]"}]'
 check "carried lists each carried line" "$want" "$(cd "$R" && record carried --chain-dir "$CC")"
 mkdir -p "$CC/e3"; printf '{' > "$CC/e3/effort.json"

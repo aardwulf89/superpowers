@@ -240,10 +240,8 @@ def cmd_pick(args: argparse.Namespace) -> int:
             return 0
     if first_open is not None:
         print(f"blocked:{first_open}")
-    elif open_items(record):
-        print("items")
     else:
-        print("none" if record.get("marked") is True else "unmarked")
+        print("items" if open_items(record) else "none")
     return 0
 
 
@@ -410,7 +408,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("id")
     p.set_defaults(func=cmd_phase_state)
 
-    p = sub.add_parser("pick", help="print id:<id>, blocked:<id>, items, unmarked or none")
+    p = sub.add_parser("pick", help="print id:<id>, blocked:<id>, items or none")
     p.add_argument("rec")
     p.set_defaults(func=cmd_pick)
 
