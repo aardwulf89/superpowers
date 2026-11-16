@@ -184,9 +184,10 @@ def open_items(record: dict) -> list:
             for _, x in unfinished_lines(ph) if disposition(x) is None]
 
 
-def chain_dir_of(args: argparse.Namespace) -> Path:
-    if getattr(args, "chain_dir", None):
-        return Path(args.chain_dir)
+def chain_dir_of(override: str | None = None) -> Path:
+    """OVERRIDE (a --chain-dir value) when given, else the main checkout's chain directory."""
+    if override:
+        return Path(override)
     main = main_checkout()
     if main is None:
         raise Refused("not in a git repository")
@@ -194,13 +195,13 @@ def chain_dir_of(args: argparse.Namespace) -> Path:
 
 
 def cmd_chain_dir(args: argparse.Namespace) -> int:
-    print(chain_dir_of(args))
+    print(chain_dir_of())
     return 0
 
 
 def readable_records(args: argparse.Namespace, subcommand: str) -> Iterator[tuple[Path, dict]]:
     """Each readable record under the chain directory, by path; a note on stderr for the rest."""
-    for rec in sorted(chain_dir_of(args).glob("*/effort.json")):
+    for rec in sorted(chain_dir_of(args.chain_dir).glob("*/effort.json")):
         if not rec.is_file():
             continue
         try:

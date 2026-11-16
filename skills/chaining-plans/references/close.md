@@ -286,7 +286,8 @@ In this order:
    Open for you: <n> new items (<m> in all). They wait for the end of the effort; nothing waits on them.
    ```
 
-   For one new item, write `1 new item`.
+   For one new item, write `1 new item`. When the whole list holds one item,
+   write `1 in all). It waits for the end of the effort; nothing waits on it.`
 
 3. **The other rulings.**
 4. **What the next session will do:** the missed git ops of this phase

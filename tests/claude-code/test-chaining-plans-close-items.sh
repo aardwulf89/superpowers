@@ -241,7 +241,7 @@ jq_check "A2's closing.replan is set (A2 is closed)" '.phases[1].closing.replan 
 jq_check "A2's unfinished has one open 'Partner item: ' line on empty notes" \
     "$ITEM_LINE | length == 1 and all(test(\"$SUFFIX\") | not)"
 jq_check "No line of A2's unfinished keeps the item without the prefix" \
-    '.phases[1].closing.unfinished // [] | all(test("empty"; "i") and (startswith("Partner item: ") | not) | not)'
+    '.phases[1].closing.unfinished // [] | all(test("empty note should be refused"; "i") and (startswith("Partner item: ") | not) | not)'
 jq_check "The partner item states an interim default" \
     "$ITEM_LINE | any(test(\"[Dd]efault\"))"
 jq_check "A3 keeps only its own question (the item does not block)" \

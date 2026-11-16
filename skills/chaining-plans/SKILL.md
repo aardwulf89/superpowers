@@ -154,7 +154,8 @@ before finishing starts. `learned` carries knowledge to later Design
 stages, and each close keeps it small and true. A `Partner item:` line in
 `unfinished`, or a question in `partner_questions`, holds what only your
 human partner may settle. No stage settles it, and an effort is closed
-out only when each item has your human partner's disposition.
+out only when each item has your human partner's disposition and none is
+`[carried]`.
 
 ## Invoke the Skills, Don't Recall Them
 
