@@ -1,5 +1,5 @@
 name: superpowers
-version: 7.0.2+aardwulf.7
+version: 7.0.2+aardwulf.8
 description: Superpowers skills and workflow bootstrap for Hermes Agent
 author: obra
 provides_hooks:
