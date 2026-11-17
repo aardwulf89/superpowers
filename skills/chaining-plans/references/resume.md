@@ -263,6 +263,19 @@ the Skill tool. A stage is done only when its "Done when" holds. An
 answer your human partner gives between stages is folded in as
 `### Answers given outside a round` (step 3) says.
 
+Before you start the first stage, use `TaskCreate` to make one task for
+each stage that this session runs. Write the phase id and the stage name
+in the title ("A3 Design"). Do not make one task for two or more stages
+("A3 Design → Plan → Build → Finish → Close").
+
+Do not make a task for a stage that does not run:
+- The Intent round, if `status` is not `needs-partner`.
+- Design, if `spec` is not null.
+- Plan, if `plan` is not null.
+
+If Design starts an Intent round, make the task for that round when the
+round starts.
+
 | Stage | What it does | Done when |
 |---|---|---|
 | Intent round (only if `needs-partner`) | Ask your human partner the `partner_questions` in one round, and end your turn. Fold their answers into the phase's entry in the umbrella's Phases section, commit, then `set` `partner_questions` to `[]` and `status` to `known`. Then settle the partner items the questions came from (below) | The answers are committed |
