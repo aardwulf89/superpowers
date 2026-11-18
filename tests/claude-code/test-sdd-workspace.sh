@@ -263,6 +263,55 @@ PLAN
         fi
     done
 
+    # A split task keeps its parts at every level: K3.4a keeps K3.4a1 (a
+    # digit after a letter), but K3.4 never keeps K3.41 (a digit after a
+    # digit is another task), however deep its heading.
+    cat > "$repo/plan-split.md" <<'PLAN'
+### Task K3.4: Parent
+
+BODY-K3.4
+
+#### Task K3.4a: Part a
+
+BODY-K3.4A
+
+##### Task K3.4a1: Part a1
+
+BODY-K3.4A1
+
+##### Task K3.4a2: Part a2
+
+BODY-K3.4A2
+
+#### Task K3.4b: Part b
+
+BODY-K3.4B
+
+#### Task K3.41: Deeper, but another task
+
+BODY-K3.41
+
+### Task K3.5: Next
+
+BODY-K3.5
+PLAN
+    for id in K3.4 K3.4a K3.4a1 K3.4b K3.41 K3.5; do
+        case "$id" in
+            K3.4) want="BODY-K3.4 BODY-K3.4A BODY-K3.4A1 BODY-K3.4A2 BODY-K3.4B " ;;
+            K3.4a) want="BODY-K3.4A BODY-K3.4A1 BODY-K3.4A2 " ;;
+            *) want="BODY-$(printf '%s' "$id" | tr '[:lower:]' '[:upper:]') " ;;
+        esac
+        rc=0
+        (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-split.md "$id" "$id_out" >/dev/null 2>&1) || rc=$?
+        got="$(grep '^BODY-' "$id_out" 2>/dev/null | tr '\n' ' ')" || true
+        if [[ "$rc" -eq 0 && "$got" == "$want" ]]; then
+            pass "split plan: Task $id brief holds exactly its own section and parts"
+        else
+            fail "split plan: Task $id brief holds exactly its own section and parts"
+            echo "    exit: $rc, bodies: $got (want: $want)"
+        fi
+    done
+
     for id in 2 '2|6' '6(' Overview; do
         rc=0
         (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-ids.md "$id" "$id_out" >/dev/null 2>&1) || rc=$?

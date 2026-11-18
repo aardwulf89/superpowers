@@ -40,7 +40,8 @@ The spec is the binding authority, the plan is its argument, and your
 judgment settles what neither answers. When the plan author session is
 alive (see Consulting the Plan Author), ask it first and ledger its answer
 as the ruling. Record every decision in the ledger as
-`Ruling: <what you decided> — <why> — <what it costs if wrong>`, and keep
+`<plan id>: Ruling: <what you decided> — <why> — <what it costs if wrong>`
+(`Task <id>: Ruling: …` when it concerns one task), and keep
 going. Deviating from the plan without a ledgered ruling is a decision made
 in secret.
 
@@ -159,7 +160,7 @@ and the new one resumes from the same ledger.
   artifact for THIS plan: ledger, briefs, review packages. Another plan's
   directory is never yours to read or write.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
-  line names your plan file, tasks with a `Task <N>: complete` line are
+  line names your plan file, tasks with a `Task <id>: complete` line are
   DONE — do not redo them; resume at the first task without one. Their
   commits exist in git even when your context no longer remembers making
   them: after compaction, trust the ledger and `git log` over your own
@@ -177,13 +178,26 @@ names a Spec, read that too: the spec is the authority the plan argues from,
 and conflicts inside the plan resolve against it. A plan with no reachable
 spec gets a ledger note saying so — rulings made without one are provisional.
 
+**Ids.** In every form below, `<id>` is the task's id
+as its plan heading writes it: `K3.4` in a plan with ids, `3` in one without. `<plan id>` is
+the plan's id from its first line (`# K3: …`); a plan without one has
+none, and a line that would start with `<plan id>:` starts bare. Every
+task subject, ledger line, commit subject and final-message line names its
+id in full, never a short form. Commit subjects carry the narrowest id: a
+task's commits its task id (`feat(K3.4): …` in a repo that uses
+conventional commits, else `K3.4: …`); the final review's fix pass the
+plan id (`fix(K3): …`). A branch setup creates for a plan with an id is named after the plan's id (`K3`; Claude Code's `EnterWorktree` makes it `worktree-K3`). A task whose heading holds nested
+part headings (`#### Task K3.4a`, …) was split in the plan: take each part
+as its own task, never the parent on its own.
+
 ### Step 1b: Bootstrap Tasks from Plan (if needed)
 
 If TaskList returned no tasks and no `.tasks.json` exists, or tasks don't match plan:
 
-1. Parse the plan document for `## Task N:` or `### Task N:` headers
+1. Parse the plan document for its `### Task <id>:` headings (`## Task <id>:` in an
+   older plan), taking nested part headings as tasks in their parent's place
 2. For each task found, use TaskCreate with:
-   - subject: The task title from the plan
+   - subject: `<id>: <name>`, as the plan heading writes them ("K3.4: Add retry")
    - description: Full structured content (Goal, Files, Acceptance Criteria, Verify, Steps) with `json:metadata` code fence at the end containing files, verifyCommand, acceptanceCriteria
    - activeForm: Present tense action (e.g., "Implementing X")
 3. **CRITICAL - Dependencies:** For EACH task that has blockedBy in the plan or .tasks.json:
@@ -194,19 +208,19 @@ If TaskList returned no tasks and no `.tasks.json` exists, or tasks don't match 
 ### Load TDD and Pre-flight
 
 **REQUIRED SUB-SKILL:** load superpowers-extended-cc:test-driven-development now,
-before Task 1. It governs every step of every task below; a plan whose
+before the first task. It governs every step of every task below; a plan whose
 steps already say "write the failing test first" does not exempt you
 from reading it.
 
-Before Task 1, scan the plan for conflicts between tasks. The plan's
+Before the first task, scan the plan for conflicts between tasks. The plan's
 Interfaces blocks tell you where to look: for every task that consumes
 what an earlier task produces, one ledger row — the two tasks, what one
 produces against what the other consumes, and what you found. Tasks that
 share nothing get no row; a plan whose tasks share nothing gets the single
 line `Pre-flight: no shared interfaces`. Rule on each conflict a row
 surfaces with the spec as the binding authority (asking the plan author
-first when it is alive), record the ruling beside its row, and start
-Task 1. Each task's own text is checked when you read its brief, not here.
+first when it is alive), record the ruling beside its row (`<plan id>: Ruling: …`), and start
+the first task. Each task's own text is checked when you read its brief, not here.
 
 ## The Task Loop
 
@@ -216,7 +230,7 @@ in the workspace and read its tail; read a brief, not the whole plan.
 
 ### 1. Take the task
 
-- Run this skill's `scripts/task-start PLAN_FILE N` by its absolute path,
+- Run this skill's `scripts/task-start PLAN_FILE <id>` by its absolute path,
   from the working tree you're executing in. It prints the brief
   path and BASE (the commit the task's range is cut from) in one call.
   Read the brief for every task, including ones you remember from setup:
@@ -246,7 +260,7 @@ read its output, and compare. Three outcomes:
   earlier task doesn't match what this task consumes, a command that
   cannot work. Ask the plan author via SendMessage if it is alive;
   otherwise rule on the smallest change that satisfies the spec. Ledger it
-  as `Task <N>: Ruling: <finding> — <what you decided and why>`, and
+  as `Task <id>: Ruling: <finding> — <what you decided and why>`, and
   continue. The ruling is carried, not remembered: later tasks that touch
   the same interface read it from the ledger.
 
@@ -279,12 +293,12 @@ the claim. If any item is missing, the task is not complete: finish it.
 
 ### 4. Complete the task
 
-Run this skill's `scripts/task-done PLAN_FILE N BASE -- <test command>`
+Run this skill's `scripts/task-done PLAN_FILE <id> BASE -- <test command>`
 by its absolute path, from the working tree you're executing in, with the test command the brief names for the whole task. It runs the
 tests, keeps the full output in the workspace, prints the tail, and — only
 if they pass — appends the completion line to the ledger:
 
-`Task <N>: complete (commits <base7>..<head7>, tests: <command> → <result>)`
+`Task <id>: complete (commits <base7>..<head7>, tests: <command> → <result>)`
 
 A failing run records nothing; the task is not complete. When it records:
 
@@ -314,7 +328,7 @@ skip it, and do not replace it with your own read of the diff.
 Sort the findings before you act on any of them. The reviewer's severity
 labels are advice; the gate is yours. Its "Declined to judge" list is
 yours too: every line there is a ruling you make and ledger, exactly like
-a plan conflict — `Final: Ruling: <behavior the reviewer set aside> —
+a plan conflict — `<plan id>: Final: Ruling: <behavior the reviewer set aside> —
 <what a reasonable person using this software gets, and why that stands
 or why it is now a finding> — <cost if wrong>`. Re-grade first, by effect: the
 spec is a vision document, and a finding's grade is what a reasonable
@@ -323,7 +337,7 @@ the input that triggers it — a reviewer who set a finding at Minor
 because the spec was silent has graded the spec, not the effect. Then:
 
 - **Critical and Important** enter the fix pass.
-- **Minor** goes to the ledger as `Final: minor (deferred): <one-liner>`
+- **Minor** goes to the ledger as `<plan id>: Final: minor (deferred): <one-liner>`
   and to your final message under "Deferred minors". Minors never enter
   the fix pass, and never become rulings — a ruling is a decision about a
   conflict, not a note that you declined a polish suggestion.
@@ -332,13 +346,13 @@ Fix the Critical and Important findings yourself — you are the
 implementer here — in ONE pass. Each fix is verified by TDD, not by a
 second reviewer: write the test that reproduces the finding, watch it
 fail, make it pass, then run the whole suite. Record each in the ledger as
-`Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`. A fix
+`<plan id>: Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`. A fix
 without a test that failed first is not verified; a suite that is not
 green after the pass means the pass is not over. Do not dispatch a
 re-review: it would re-read a diff whose covering tests already answer
 "addressed" and whose suite run already answers "broke nothing".
 
-A finding you decide not to fix is a ruling — `Final: Ruling: <finding> —
+A finding you decide not to fix is a ruling — `<plan id>: Final: Ruling: <finding> —
 <why the code stands> — <cost if wrong>` — and reaches your human partner
 in the rulings list. There is no second fix pass.
 
@@ -363,7 +377,7 @@ Announce: "I'm using the finishing-a-development-branch skill to complete this w
 
 | Excuse | Reality |
 |--------|---------|
-| "I remember what Task N says" | You remember a summary. The brief has the exact values. Read it. |
+| "I remember what Task <id> says" | You remember a summary. The brief has the exact values. Read it. |
 | "The plan's code is right, skip watching the test fail" | A test you never saw fail proves nothing. It is one step. Run it. |
 | "I'll run the full suite at the end instead of per step" | Per-step runs are how you learn which step broke it. The end-of-task run is the contract, not a substitute. |
 | "The plan is wrong here, I'll just do the right thing" | Ask the plan author if it is alive, then do the right thing and ledger the ruling. Unledgered deviation is a decision made in secret. |

@@ -81,6 +81,54 @@ lacks hooks/session-start 'Task <N>: complete'
 has hooks/session-start 'Task <id>: complete (working tree, at-end strategy, review clean)'
 has hooks/session-start 'feat(<plan id>):'
 
+# --- subagent-driven-development ---
+S=skills/subagent-driven-development
+lacks $S/SKILL.md 'Task <N>'
+lacks $S/SKILL.md 'task-N-'
+lacks $S/SKILL.md 'Before dispatching Task 1'
+lacks $S/SKILL.md 'PLAN_FILE N`'
+has $S/SKILL.md 'task-<id>-report.md'
+has $S/SKILL.md 'as its plan heading writes it'
+has $S/SKILL.md 'Task <id>: complete'
+has $S/SKILL.md '<plan id>: Ruling:'
+has $S/SKILL.md 'scripts/task-brief PLAN_FILE <id>'
+has $S/SKILL.md "named after the plan's id"
+has $S/SKILL.md 'never the parent on its own'
+has $S/SKILL.md 'for a plan with an id is named'
+lacks $S/implementer-prompt.md 'Task N'
+has $S/implementer-prompt.md 'Task [TASK_ID]'
+has $S/implementer-prompt.md 'feat([TASK_ID]):'
+lacks $S/task-reviewer-prompt.md 'Task N'
+has $S/task-reviewer-prompt.md 'Task [TASK_ID]'
+lacks $S/re-review-prompt.md 'Task N'
+has $S/re-review-prompt.md 'Task [TASK_ID]'
+lacks $S/references/resuming.md 'Task <N>'
+has $S/references/resuming.md 'nested part headings'
+lacks $S/references/fix-loop.md 'Task <N>'
+has $S/references/fix-loop.md 'Task <id>: parked'
+has $S/references/final-review.md 'fix(<plan id>):'
+has $S/references/final-review.md '(`Task K3.4: …`, `K3: …`)'
+lacks $S/references/preflight.md 'Task 1'
+has $S/references/preflight.md '<plan id>: Ruling:'
+
+# --- executing-plans ---
+E=skills/executing-plans
+lacks $E/SKILL.md 'Task <N>'
+lacks $E/SKILL.md 'Task N says'
+lacks $E/SKILL.md 'Task N:'
+lacks $E/SKILL.md '`Final: '
+lacks $E/SKILL.md 'Task 1'
+has $E/SKILL.md 'as its plan heading writes it'
+has $E/SKILL.md 'scripts/task-start PLAN_FILE <id>'
+has $E/SKILL.md 'scripts/task-done PLAN_FILE <id> BASE'
+has $E/SKILL.md '<plan id>: Final: Ruling:'
+has $E/SKILL.md '<plan id>: Ruling:'
+has $E/SKILL.md "named after the plan's id"
+has $E/SKILL.md 'never the parent on its own'
+has $E/SKILL.md 'nested part headings'
+has $E/SKILL.md 'for a plan with an id is named'
+has $E/SKILL.md '### Task <id>:'
+
 if ((failures)); then
   echo "FAIL: $failures of $checks id-form checks" >&2
   exit 1
