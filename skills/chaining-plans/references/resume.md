@@ -57,7 +57,7 @@ prints:
 - **Tasks:** before the action of a row other than `cut-off`, use
   `TaskCreate` to make one task for each of its parts: "A2: Missed close",
   "A2: Missed git ops". Block the Missed git ops task by its phase's Missed
-  close task, with `TaskUpdate` (`addBlockedBy`).
+  close task, with `TaskUpdate` (`addBlockedBy`). Status as in step 6.
 - **Close it** means: invoke `chaining-plans` through the Skill tool with
   `close <effort id> <phase id>`. When it has reported, come back here
   and go on with the row's action.
@@ -371,8 +371,8 @@ composed from memory.
   Phases section to match, on `base`. Every part gets this phase's id
   plus a letter (K3 into `K3a`, `K3b`); the first part takes its `spec`
   and `closing`, and the session goes on as that part: from here on, `id`
-  is `K3a`. Retitle each stage task that is not completed, with
-  `TaskUpdate` ("K3: Build" → "K3a: Build"). Log the ruling, and plan
+  is `K3a`. Retitle each stage task that is not completed, and its `activeForm`,
+  with `TaskUpdate` ("K3: Build" → "K3a: Build"). Log the ruling, and plan
   the first part with `K3a` as its plan id. (K2a, split again, becomes `K2a1` and `K2a2`.)
 
 ### Build

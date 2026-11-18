@@ -43,7 +43,10 @@ for f in skills/subagent-driven-development/SKILL.md skills/executing-plans/SKIL
   has "$f" '`TaskUpdate` (`addBlockedBy`)'
   has "$f" 'add the Deferred-findings round to its blockers'
   lacks "$f" '`blockedBy`'
-  has "$f" 'no completion line'
+  has "$f" 'the ledger does not mark done'
+  lacks "$f" 'no completion line'
+  has "$f" 'final message holds "Rulings I made" and "Unfinished"'
+  lacks "$f" 'the Finish lists'
 done
 
 # --- chaining-plans: resume ---
@@ -62,7 +65,8 @@ has "$R" '"A2: Missed git ops"'
 has "$R" 'by every task of step 3'
 has "$R" 'stays in_progress'
 has "$R" '("K3: Build" → "K3a: Build")'
-has "$R" 'Retitle each stage task that is not completed'
+has "$R" 'Retitle each stage task that is not completed, and its `activeForm`'
+has "$R" 'Status as in step 6'
 
 # --- chaining-plans: create and close ---
 C=skills/chaining-plans/references/create.md
@@ -71,6 +75,8 @@ has "$C" '"K: Run one sitting"'
 has "$C" '`TaskUpdate` (`addBlockedBy`)'
 lacks "$C" '`blockedBy`'
 has "$C" 'retitle'
+has "$C" 'Once step 1 finds the spec'
+lacks "$C" 'Before step 1, use'
 L=skills/chaining-plans/references/close.md
 has "$L" 'makes no tasks of its own'
 has "$L" '"A3: Close"'

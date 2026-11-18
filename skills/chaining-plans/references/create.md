@@ -9,12 +9,12 @@ Create writes nothing until your human partner has answered: no Phases
 section, no record, no commit, no plan, and no change to another effort's
 record.
 
-Before step 1, use `TaskCreate` to make one task for each step. Title it
-`<effort id>: <step heading>`, with the heading word for word
-("K: Draft the phases", "K: Run one sitting"). Block each task by the one
-before it, with `TaskUpdate` (`addBlockedBy`). A task stays in_progress while its step waits on
-your human partner. If step 4 uses a different letter, retitle each task
-with `TaskUpdate`.
+Once step 1 finds the spec's letter, use `TaskCreate` to make one task
+for each step. Title it `<effort id>: <step heading>`, with the heading
+word for word ("K: Draft the phases", "K: Run one sitting"). Block each
+task by the one before it, with `TaskUpdate` (`addBlockedBy`). A task
+stays in_progress while its step waits on your human partner. If step 4
+uses a different letter, retitle each task with `TaskUpdate`.
 
 ## 1. Draft the phases
 

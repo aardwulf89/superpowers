@@ -152,11 +152,12 @@ task list with `TaskCreate`. Title each task `<id>: <name>`, in this order:
 
 1. One task per plan task, with the id and name as its plan heading writes
    them ("K3.4: Add retry wrapper"). Do not make one task for a range
-   ("Tasks 1-14"). On a resume, make tasks only for the plan tasks with
-   no completion line in the ledger.
+   ("Tasks 1-14"). On a resume, make tasks only for the plan tasks
+   the ledger does not mark done.
 2. "<plan id>: Final whole-branch review".
-3. "<plan id>: Deferred-findings round". It ends when your final message
-   holds the Finish lists and the workspace is deleted.
+3. "<plan id>: Deferred-findings round". It ends when your
+   final message holds "Rulings I made" and "Unfinished", and the
+   workspace is deleted.
 4. "<plan id>: Finish", for `finishing-a-development-branch`.
 
 Do not make a task whose title is in the task list already.
