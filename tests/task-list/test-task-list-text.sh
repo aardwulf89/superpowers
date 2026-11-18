@@ -68,6 +68,17 @@ for f in $S/SKILL.md $E; do
   lacks "$f" 'Do not make a task whose title is in the task list already'
 done
 
+# --- chaining-plans: step tasks are `<name> (<id>)`, never `<id>: <name>` ---
+C=skills/chaining-plans
+has $C/SKILL.md '`<name> (<id>)`'
+has $C/SKILL.md 'never a `json:metadata` block'
+for step in 'Draft the phases' 'Find the open intent questions' 'Run one sitting' 'Write it down' 'Hand over'; do
+  has $C/references/create.md "\"$step (K)\""
+  lacks $C/references/create.md "\"K: $step\""
+done
+# Create touches only its own tasks: it never deletes brainstorming's.
+lacks $C/references/create.md 'status `deleted`'
+
 if ((failures)); then
   echo "FAIL: $failures of $checks task-list checks" >&2
   exit 1

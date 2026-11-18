@@ -347,6 +347,7 @@ Both keys go in one object when you use them together:
 | | `writing-plans` | Writes a detailed plan of small tasks. *Each task becomes a native task with its dependencies.* |
 | | `executing-plans` | Runs the plan in the current session with one review at the end. *Can resume from native tasks and stops at user gates.* |
 | | `subagent-driven-development` | Sends each task to a fresh subagent and reviews it twice: spec first, then code quality. |
+| | `chaining-plans` | Carries a spec that needs several plans from plan to plan: one sitting to settle every phase's intent, then one fresh session per phase, run up to its merge menu. *Each stage of a phase is a native task.* |
 | | `dispatching-parallel-agents` | Runs independent tasks in parallel subagents. |
 | | `using-git-worktrees` | Creates a separate workspace on its own branch. |
 | | `requesting-code-review` | Checks the work against the plan before it moves on. |
