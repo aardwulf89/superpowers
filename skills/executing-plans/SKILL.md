@@ -147,12 +147,24 @@ and the new one resumes from the same ledger.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch);
   if that happens, recover from `git log`.
 
-Read the plan once, note its context and Global Constraints, and call
-`TaskCreate` once per plan task, each titled with its task id and name
-("Task K3.4: Add retry wrapper"). Never one task for a range ("Tasks 1-14").
-After the last plan task, create two more:
-"<plan id>: Final whole-branch review" and
-"<plan id>: Deferred-findings round and finish".
+Read the plan once, note its context and Global Constraints, and make the
+task list with `TaskCreate`. Title each task `<id>: <name>`:
+
+1. One task per plan task, with the id and name as its plan heading writes
+   them ("K3.4: Add retry wrapper"). Do not make one task for a range
+   ("Tasks 1-14"). On a resume, make tasks only for the plan tasks with
+   no completion line in the ledger.
+2. "<plan id>: Final whole-branch review".
+3. "<plan id>: Deferred-findings round". It ends when your final message
+   holds the Finish lists and the workspace is deleted.
+4. "<plan id>: Finish", for `finishing-a-development-branch`.
+   If a task with that title exists already, do not make another.
+
+Set each task's `blockedBy` to the task before it. When Finish existed
+already, add the Deferred-findings round to its `blockedBy` with
+`TaskUpdate`. Mark Finish completed when your human partner has answered
+the menu.
+
 If the plan names a Spec, read that too: the spec is the
 authority the plan argues from, and conflicts inside the plan resolve
 against it. A plan with no reachable spec gets a ledger note saying so —
