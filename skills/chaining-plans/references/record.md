@@ -76,8 +76,9 @@ read from git (Phase states).
 }
 ```
 
-  `rulings` and `unfinished` fill in as each stage ends, so the close does
-  not depend on context surviving compaction. `learned` and `replan` stay
+  `rulings` fill in as the Design and Plan stages end, so the close does
+  not depend on context surviving compaction. The Build stage's rulings and
+  its unfinished lines arrive from `<phase id>.build.json` at the close. `learned` and `replan` stay
   null until the close; `replan` set (even to `[]`) means the phase is
   closed.
 
@@ -129,7 +130,7 @@ Below, `record.py <subcommand>` is short for that whole line.
 - **`REC` is the absolute path of the effort's record file, and `ID` a
   phase id.** Both are copied, never shortened.
 - **A JSON value** goes in `--value '<json>'` when it is short and holds
-  no single quote (`--value '"worktree-K2"'`, `--value '[]'`). Otherwise,
+  no single quote (`--value '"known"'`, `--value '[]'`). Otherwise,
   write it with the Write tool to a file under `.superpowers/tmp/` of the
   working tree you are in, and pass `--value-file <that path>`. Inside a
   worktree the Write tool cannot write into the main checkout, where the

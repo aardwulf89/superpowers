@@ -51,6 +51,10 @@ done
 
 has skills/dispatching-parallel-agents/SKILL.md "the working tree's copy"
 has skills/specifying-gates/SKILL.md "the working tree's copy"
+# The worktree must hold the plan commit, or there is no tasks file to update.
+for f in $S/SKILL.md $E; do
+  has "$f" 'git merge-base --is-ancestor <plan commit> HEAD'
+done
 
 if ((failures)); then
   echo "FAIL: $failures of $checks tasks-file checks" >&2

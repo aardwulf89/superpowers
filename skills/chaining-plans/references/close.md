@@ -9,7 +9,7 @@ from one of two places, and each has its own ending (step 4):
   `close-missed`. That phase was built in an earlier session.
 
 A close makes no tasks of its own. The task that invoked it covers it:
-"A3: Close" or "A2: Missed close".
+"Close (A3)" or "Missed close (A2)".
 
 Every command named here is a subcommand of the record script. Run it as
 `references/record.md` § Commands says: one plain command per Bash call.
@@ -117,6 +117,8 @@ that brought `<phase id>.build.json` into `<ref>`, every command as
   rebase, anything else that landed on `base` before the build did. The
   build's commits carry this phase's ids in their subjects (`feat(K3.4): …`,
   `fix(K3): …`, `docs(K3): build results`); read those, and skip the rest.
+  Always read `<end>` itself: after a squash or a rebase it holds the whole
+  build, whatever its subject says (a forge names it after the PR).
 
 Write it with `record.py set-closing-key`: `learned` with mode `replace`,
 and any missing `rulings` or `unfinished` lines with mode `append`, each

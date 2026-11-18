@@ -105,6 +105,13 @@ superpowers-extended-cc:using-git-worktrees to create one or verify the existing
 Never start implementation on a main/master branch without your human
 partner's explicit consent.
 
+**The worktree must hold the plan.** Once you are in it, find the commit that
+added the plan (`git log --diff-filter=A --format=%H -1 -- <plan-path>`, run
+where the plan is committed) and check that `git merge-base --is-ancestor <plan commit> HEAD` exits 0 from inside the worktree. If it does not, the
+worktree has no copy of the plan or its tasks file to update: stop and say
+so. In Claude Code, `EnterWorktree` starts from the current branch only when
+the setting `worktree.baseRef` is `head`.
+
 Conversation memory does not survive compaction. In real sessions,
 controllers that lost their place have re-dispatched entire completed task
 sequences — the single most expensive failure observed. Track progress in

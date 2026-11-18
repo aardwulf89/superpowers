@@ -70,6 +70,8 @@ has $R 'merged on the forge'
 
 # Missed git ops and PR cleanup follow finishing's lock rule.
 has $R 'lock rule'
+lacks $R 'If no worktree has it, it was built in place'
+has $R 'a `worktree-<phase id>` branch that no worktree has'
 
 if ((failures)); then
   echo "FAIL: $failures of $checks resume-text checks" >&2

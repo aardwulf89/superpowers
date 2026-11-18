@@ -19,8 +19,10 @@ Part of superpowers-extended-cc:subagent-driven-development.
    Verify and a `json:metadata` block (with a tier when routing is on),
    and add it to `.tasks.json`. The first part takes the parent's
    blockers; each later part is blocked by the one before. The parent task
-   stays: add every part to its blockers. It is never dispatched, and it
-   completes when its last part does.
+   stays: add every part to its blockers, and if it is in_progress (it was
+   being worked when it split), set it back to `pending`: an in_progress
+   task's tier stays in the model-routing gate. It is never dispatched, and
+   it completes when its last part does.
    Dispatch each part from its own task (TaskGet), with the parent's brief
    (`task-brief` with the parent id) for context. Each part gets its own
    report file (`task-<part id>-report.md`), its review gate against its

@@ -35,6 +35,7 @@ has $C 'show <ref>:docs/superpowers/plans/<phase id>.build.json'
 has $C '--ancestry-path <anchor>..<end>'
 has $C 'git log --format=%H -1 <ref> -- docs/superpowers/plans/<phase id>.build.json'
 lacks $C 'gh pr view'
+has $C 'Always read `<end>` itself'
 lacks $C "git log --merges --first-parent --format='%H %s'"
 lacks $C 'git rev-list --merges --first-parent'
 lacks $C "set\` the phase's \`branch\` to null"

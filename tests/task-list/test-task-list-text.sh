@@ -76,6 +76,13 @@ for step in 'Draft the phases' 'Find the open intent questions' 'Run one sitting
   has $C/references/create.md "\"$step (K)\""
   lacks $C/references/create.md "\"K: $step\""
 done
+# Close names its callers' tasks in the step form.
+has $C/references/close.md '"Close (A3)" or "Missed close (A2)"'
+lacks $C/references/close.md '"A3: Close"'
+# A split parent set in_progress goes back to pending: it is never
+# dispatched, and an in_progress tier widens the routing gate.
+has $S/references/handling-reports.md 'back to `pending`'
+has $E 'back to `pending`'
 # Create touches only its own tasks: it never deletes brainstorming's.
 lacks $C/references/create.md 'status `deleted`'
 

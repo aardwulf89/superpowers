@@ -17,8 +17,8 @@
 #   base already holds;
 # - the same for every such doc deleted in the history of base and HEAD,
 #   so an abandoned spec's or plan's id stays retired;
-# - every directory under <main checkout>/.superpowers/chain/ named by a
-#   spec letter, and with --phase K, every phase id in K's effort.json and
+# - every effort record <main checkout>/docs/superpowers/efforts/<letter>.json
+#   named by a spec letter, and with --phase K, every phase id in K.json and
 #   every K<n> named anywhere in spec K's own text (its Phases section keeps
 #   ids that a merge took out of the record: `**Merged from:** K5`).
 #
@@ -76,7 +76,7 @@ root=$(git rev-parse --show-toplevel 2>/dev/null) || {
   exit 2
 }
 common=$(git rev-parse --path-format=absolute --git-common-dir)
-chain="$(dirname "$common")/.superpowers/chain"
+efforts="$(dirname "$common")/docs/superpowers/efforts"
 specs=${dirs[0]:-docs/superpowers/specs}
 plans=${dirs[1]:-docs/superpowers/plans}
 # An absolute dir inside the repo is taken relative to its root, since base's
@@ -182,17 +182,19 @@ used_ids() {
       printf '%s\t%s\n' "${BASH_REMATCH[1]}${BASH_REMATCH[2]}" "$path"
     fi
   done < <(first_lines)
-  [[ -d $chain ]] || return 0
-  for d in "$chain"/*/; do
-    d=$(basename "$d")
-    [[ $d =~ ^[A-HJ-NP-Z]+$ ]] && printf '%s\t%s\n' "$d" record
-  done
-  if [[ -n $phase && -f $chain/$phase/effort.json ]]; then
-    command -v jq >/dev/null || {
-      echo "next-spec-id: jq is needed to read $chain/$phase/effort.json" >&2
-      exit 2
-    }
-    jq -r '.phases[]?.id // empty | . + "\trecord"' "$chain/$phase/effort.json"
+  if [[ -d $efforts ]]; then
+    for d in "$efforts"/*.json; do
+      [[ -f $d ]] || continue
+      d=$(basename "$d" .json)
+      [[ $d =~ ^[A-HJ-NP-Z]+$ ]] && printf '%s\t%s\n' "$d" record
+    done
+    if [[ -n $phase && -f $efforts/$phase.json ]]; then
+      command -v jq >/dev/null || {
+        echo "next-spec-id: jq is needed to read $efforts/$phase.json" >&2
+        exit 2
+      }
+      jq -r '.phases[]?.id // empty | . + "\trecord"' "$efforts/$phase.json"
+    fi
   fi
   [[ -z $phase ]] || spec_text_ids | sed 's/$/\tspec text/'
 }

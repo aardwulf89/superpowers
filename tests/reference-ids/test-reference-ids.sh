@@ -76,6 +76,13 @@ has skills/checking-gates/SKILL.md "Task <id>'s"
 lacks README.md 'subject: "Task 1:'
 lacks docs/user-gate-flow.md '- Task 7:'
 
+# --- task-format-reference examples ---
+T=skills/shared/task-format-reference.md
+lacks $T 'subject: "Gate 1:'
+lacks $T 'subject: "Add JIT selection prompt'
+has $T 'subject: "K3.7: End-to-end verification on one instance"'
+has $T 'subject: "K3.2: Add JIT selection prompt'
+
 # --- the at-end notice ---
 lacks hooks/session-start 'Task <N>: complete'
 has hooks/session-start 'Task <id>: complete (working tree, at-end strategy, review clean)'

@@ -72,7 +72,7 @@ Why both the flag and the prose: the prose protects the current session (visible
 
 ```yaml
 TaskCreate:
-  subject: "Gate 1: End-to-end verification on one instance"
+  subject: "K3.7: End-to-end verification on one instance"
   description: |
     **Goal:** Prove the full pipeline works on exactly ONE instance before scaling to all.
 
@@ -95,7 +95,7 @@ TaskCreate:
 
 ```yaml
 TaskCreate:
-  subject: "Add JIT selection prompt to /hame Pre-flight"
+  subject: "K3.2: Add JIT selection prompt to /hame Pre-flight"
   description: |
     **Goal:** Replace auto-latest JIT selection with interactive 3-option prompt.
 

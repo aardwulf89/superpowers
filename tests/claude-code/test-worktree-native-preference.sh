@@ -21,6 +21,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/test-helpers.sh"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd -P)"
 
 # Number of runs per phase (increase for higher confidence)
 RUNS="${2:-1}"
@@ -61,7 +62,17 @@ run_and_check() {
             echo ".worktrees/" >> .gitignore
         fi
 
-        output=$(run_claude "$scenario" 120)
+        # Judge by what the session did, not by what it said: a reply that
+        # says "I did not use git worktree add" names the command it avoided.
+        # The repo's skills are loaded with --plugin-dir; the transcript is
+        # the stream-json of the run.
+        json=$(timeout 120 claude -p "$scenario" --plugin-dir "$REPO_ROOT" \
+            --output-format stream-json --verbose < /dev/null 2>/dev/null || true)
+        output=$(echo "$json" | jq -r 'select(.type == "result") | .result // empty' 2>/dev/null)
+        tool_names=$(echo "$json" | jq -r 'select(.type == "assistant") | .message.content[]?
+            | select(.type == "tool_use") | .name' 2>/dev/null)
+        bash_cmds=$(echo "$json" | jq -r 'select(.type == "assistant") | .message.content[]?
+            | select(.type == "tool_use" and .name == "Bash") | .input.command' 2>/dev/null)
 
         if [ "$RUNS" -eq 1 ]; then
             echo "Agent output:"
@@ -69,32 +80,25 @@ run_and_check() {
             echo ""
         fi
 
-        used_git_worktree_add=$(echo "$output" | grep -qi "git worktree add" && echo "yes" || echo "no")
-        mentioned_enter=$(echo "$output" | grep -qi "EnterWorktree" && echo "yes" || echo "no")
+        used_git_worktree_add=$(echo "$bash_cmds" | grep -qE 'git( -C [^ ]+)? worktree add' && echo "yes" || echo "no")
+        used_enter=$(echo "$tool_names" | grep -qx "EnterWorktree" && echo "yes" || echo "no")
 
         if [ "$expect_native" = "true" ]; then
-            # GREEN/PRESSURE: expect native tool, no git worktree add
-            if [ "$used_git_worktree_add" = "no" ]; then
+            # GREEN/PRESSURE: expect the native tool called, no git worktree add run
+            if [ "$used_enter" = "yes" ] && [ "$used_git_worktree_add" = "no" ]; then
                 pass=$((pass + 1))
-                [ "$RUNS" -gt 1 ] && echo "  Run $i: PASS (no git worktree add)"
+                echo "  Run $i: PASS (called EnterWorktree, ran no git worktree add)"
             else
                 fail=$((fail + 1))
-                [ "$RUNS" -gt 1 ] && echo "  Run $i: FAIL (used git worktree add)"
-                [ "$RUNS" -gt 1 ] && echo "    Output: ${output:0:200}"
+                echo "  Run $i: FAIL (EnterWorktree called: $used_enter; git worktree add run: $used_git_worktree_add)"
+                echo "    Output: ${output:0:200}"
             fi
         else
-            # RED: expect git worktree add, no EnterWorktree
-            if [ "$mentioned_enter" = "yes" ]; then
-                fail=$((fail + 1))
-                echo "  Run $i: [UNEXPECTED] Agent used EnterWorktree WITHOUT Step 1a"
-            elif [ "$used_git_worktree_add" = "yes" ] || echo "$output" | grep -qi "git worktree"; then
-                pass=$((pass + 1))
-                [ "$RUNS" -gt 1 ] && echo "  Run $i: PASS (used git worktree)"
-            else
-                fail=$((fail + 1))
-                [ "$RUNS" -gt 1 ] && echo "  Run $i: INCONCLUSIVE"
-                [ "$RUNS" -gt 1 ] && echo "    Output: ${output:0:200}"
-            fi
+            # RED: a baseline, recorded and never failed. Its premise, a skill
+            # without Step 1a, can no longer be set up here, and current models
+            # call EnterWorktree on their own.
+            pass=$((pass + 1))
+            echo "  Run $i: BASELINE (EnterWorktree called: $used_enter; git worktree add run: $used_git_worktree_add)"
         fi
 
         cleanup_test_project "$test_dir"

@@ -92,8 +92,11 @@ record's `base`: write both literally into each command, never through a
 shell variable, since a confined worktree may refuse an assignment and a
 command in one call.
 
-1. **Find the branch's worktree** in `git worktree list`. If no worktree
-   has it, it was built in place: use the main checkout.
+1. **Find the branch's worktree** in `git worktree list`. A `<phase id>`
+   branch that no worktree has was built in place: use the main checkout.
+   But a `worktree-<phase id>` branch that no worktree has lost its
+   worktree: report it and stop. Running finishing from the main checkout
+   would test and merge `base`, not the branch.
 2. **Look for an open PR:** `gh pr view <branch> --json state -q .state
    2>/dev/null` prints `OPEN`. Then `git ops` is merging that PR.
 3. **No open PR, and `git ops` calls for the push: bring `base` up to

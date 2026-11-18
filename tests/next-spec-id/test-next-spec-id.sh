@@ -91,8 +91,13 @@ doc "$r" "$S/K.md" "# K: x"
 check "working tree only" L "$(run "$r")"
 
 r=$(new_repo)
+mkdir -p "$r/docs/superpowers/efforts"
+echo '{"phases":[]}' >"$r/docs/superpowers/efforts/M.json"
+check "record file" N "$(run "$r")"
+
+r=$(new_repo)
 mkdir -p "$r/.superpowers/chain/M"
-check "record dir" N "$(run "$r")"
+check "the retired .superpowers/chain is not read" A "$(run "$r")"
 
 r=$(new_repo)
 doc "$r" "notes/specs/F.md" "# F: x"
@@ -109,10 +114,16 @@ doc "$r" "$S/K3.md" "# K3: x"
 check "phase, docs" K4 "$(run "$r" --phase K)"
 
 r=$(new_repo)
-mkdir -p "$r/.superpowers/chain/K"
+mkdir -p "$r/docs/superpowers/efforts"
 printf '%s\n' '{"umbrella":"docs/superpowers/specs/K.md","base":"main","phases":[{"id":"K1"},{"id":"K2a"},{"id":"K2b"}]}' \
-  >"$r/.superpowers/chain/K/effort.json"
+  >"$r/docs/superpowers/efforts/K.json"
 check "phase, record" K3 "$(run "$r" --phase K)"
+
+# The spec's own text is read even when no effort record exists (the
+# old chain-dir code returned before reading it).
+r=$(new_repo)
+printf '%s\n' '# K: x' '' '## Phases' '' '### K1: One' '' '- **Merged from:** K3' >"$r/$S/K.md"
+check "phase, spec text ids without a record" K4 "$(run "$r" --phase K)"
 
 r=$(new_repo)
 doc "$r" "$P/KA9.md" "# KA9: x"
@@ -136,8 +147,8 @@ check "phase, deleted plan stays retired" K2 "$(run "$r" --phase K)"
 
 r=$(new_repo)
 printf '%s\n' '# K: x' '' '## Phases' '' '### K1: One' '' '### K2: Two' '' '- **Merged from:** K3' >"$r/$S/K.md"
-mkdir -p "$r/.superpowers/chain/K"
-printf '%s\n' '{"phases":[{"id":"K1"},{"id":"K2"}]}' >"$r/.superpowers/chain/K/effort.json"
+mkdir -p "$r/docs/superpowers/efforts"
+printf '%s\n' '{"phases":[{"id":"K1"},{"id":"K2"}]}' >"$r/docs/superpowers/efforts/K.json"
 check "phase, merged-away id stays retired" K4 "$(run "$r" --phase K)"
 
 r=$(new_repo)
@@ -193,7 +204,9 @@ check "--phase with no letter exits 2" 2 "$rc"
 # The repo's own tree: the specs and plans carried over from the obra-based
 # fork keep their letters, so the next ones continue after them.
 check "own tree: next spec letter" F "$(cd "$REPO_ROOT" && bash "$NEXT")"
-check "own tree: next phase of E" E2 "$(cd "$REPO_ROOT" && bash "$NEXT" --phase E)"
+# Spec E names E1–E3 in its text (labels of its record changes), which
+# the tool retires as phase ids, as it does every K<n> in spec K's text.
+check "own tree: next phase of E" E4 "$(cd "$REPO_ROOT" && bash "$NEXT" --phase E)"
 
 if ((failures)); then
   echo "$failures failure(s)" >&2

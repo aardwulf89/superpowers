@@ -146,6 +146,13 @@ Ensure the work happens in an isolated workspace. Before calling `using-git-work
 Never start implementation on a main/master branch without your human
 partner's explicit consent.
 
+**The worktree must hold the plan.** Once you are in it, find the commit that
+added the plan (`git log --diff-filter=A --format=%H -1 -- <plan-path>`, run
+where the plan is committed) and check that `git merge-base --is-ancestor <plan commit> HEAD` exits 0 from inside the worktree. If it does not, the
+worktree has no copy of the plan or its tasks file to update: stop and say
+so. In Claude Code, `EnterWorktree` starts from the current branch only when
+the setting `worktree.baseRef` is `head`.
+
 ### Workspace and Ledger
 
 Conversation memory does not survive compaction. An inline executor that
@@ -281,8 +288,10 @@ read its output, and compare. Three outcomes:
   Verify and a `json:metadata` block (with a tier when routing is on),
   and add it to `.tasks.json`. The first part takes the parent's
   blockers; each later part is blocked by the one before. The parent task
-  stays: add every part to its blockers. It is never dispatched, and it
-  completes when its last part does.
+  stays: add every part to its blockers, and if it is in_progress (it was
+  being worked when it split), set it back to `pending`: an in_progress
+  task's tier stays in the model-routing gate. It is never dispatched, and
+  it completes when its last part does.
   Start each part with `task-start` on the parent id, work it against its
   own task, and close it with its own `task-done` on the part id. Use the
   part ids from then on, in commits and the final message.
