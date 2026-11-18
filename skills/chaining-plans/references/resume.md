@@ -54,6 +54,9 @@ prints:
 | `close-missed` | Merged; the close was missed | Close it. The close reconstructs `learned` from the plan and the branch's commits |
 | `not-started`, `done`, `dropped` | — | Nothing |
 
+- **Tasks:** before a row's action, use `TaskCreate` to make one task for
+  each of its parts: "A2: Missed close", "A2: Missed git ops". Set the
+  Missed git ops task's `blockedBy` to its phase's Missed close task.
 - **Close it** means: invoke `chaining-plans` through the Skill tool with
   `close <effort id> <phase id>`. When it has reported, come back here
   and go on with the row's action.
@@ -264,8 +267,8 @@ answer your human partner gives between stages is folded in as
 `### Answers given outside a round` (step 3) says.
 
 Before you start the first stage, use `TaskCreate` to make one task for
-each stage that this session runs. Write the phase id and the stage name
-in the title ("A3 Design"). Do not make one task for two or more stages
+each stage that this session runs. Title it `<phase id>: <stage>`
+("A3: Design"). Do not make one task for two or more stages
 ("A3 Design → Plan → Build → Finish → Close").
 
 Do not make a task for a stage that does not run:
@@ -275,6 +278,12 @@ Do not make a task for a stage that does not run:
 
 If Design starts an Intent round, make the task for that round when the
 round starts.
+
+Set each task's `activeForm` ("Building A3"), and set its `blockedBy` to
+the task before it. The first task is blocked by every task of step 3.
+Set a task in_progress when its stage starts. Mark it completed only when
+its "Done when" holds. A task stays in_progress while its stage waits on
+your human partner or has stopped.
 
 | Stage | What it does | Done when |
 |---|---|---|
@@ -360,8 +369,9 @@ composed from memory.
   Phases section to match, on `base`. Every part gets this phase's id
   plus a letter (K3 into `K3a`, `K3b`); the first part takes its `spec`
   and `closing`, and the session goes on as that part: from here on, `id`
-  is `K3a`. Log the ruling, and plan the first part with `K3a` as its
-  plan id. (K2a, split again, becomes `K2a1` and `K2a2`.)
+  is `K3a`. Retitle each stage task that is not completed, with
+  `TaskUpdate` ("K3: Build" → "K3a: Build"). Log the ruling, and plan
+  the first part with `K3a` as its plan id. (K2a, split again, becomes `K2a1` and `K2a2`.)
 
 ### Build
 

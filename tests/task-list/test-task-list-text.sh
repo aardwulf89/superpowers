@@ -43,6 +43,21 @@ for f in skills/subagent-driven-development/SKILL.md skills/executing-plans/SKIL
   has "$f" 'no completion line'
 done
 
+# --- chaining-plans: resume ---
+R=skills/chaining-plans/references/resume.md
+has "$R" '("A3: Design")'
+lacks "$R" '("A3 Design")'
+has "$R" '("A3 Design → Plan → Build → Finish → Close")'
+has "$R" '"Building A3"'
+has "$R" '`activeForm`'
+has "$R" '`blockedBy`'
+has "$R" '"A2: Missed close"'
+has "$R" '"A2: Missed git ops"'
+has "$R" 'by every task of step 3'
+has "$R" 'stays in_progress'
+has "$R" '("K3: Build" → "K3a: Build")'
+has "$R" 'Retitle each stage task that is not completed'
+
 if ((failures)); then
   echo "FAIL: $failures of $checks task-list checks" >&2
   exit 1
