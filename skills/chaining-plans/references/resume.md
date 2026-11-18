@@ -38,6 +38,18 @@ command takes the record's absolute path as its `REC` argument.
 - **On `base`:** the main checkout has the record's `base` checked out,
   unless it has a phase's own branch checked out: `<phase id>`, for a
   phase built in place. Anything else: report it and stop.
+- **`base` up to date:** when the repo has a remote `origin`, bring `base`
+  up to date before anything is settled, so a PR merged on the forge
+  reads as merged (its `<phase id>.build.json` reaches `base`) and is
+  neither merged again nor rebuilt. With `base` checked out, run
+  `git pull --ff-only origin <base>`; with a phase's own branch checked
+  out, run `git fetch origin <base>:<base>`. Either one moves `base` only
+  by a fast-forward.
+  - It refuses because `base` and `origin` have diverged: report both
+    tips and stop. Your human partner decides; never merge or rebase
+    `base` yourself.
+  - `origin` cannot be reached: say so in the report, and go on with the
+    local `base`.
 
 ## 3. Settle every phase under way
 

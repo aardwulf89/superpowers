@@ -43,6 +43,10 @@ done
 for f in $S/references/final-review.md $E; do
   has "$f" 'if it changed'
   has "$f" 'chore(<plan id>): task status'
+  # At-end too: closing the final commit's own task rewrites the file after
+  # that commit, and a modified file blocks `git worktree remove`.
+  lacks "$f" 'with at-end commits, the final commit'
+  has "$f" 'even with at-end commits'
 done
 
 has skills/dispatching-parallel-agents/SKILL.md "the working tree's copy"

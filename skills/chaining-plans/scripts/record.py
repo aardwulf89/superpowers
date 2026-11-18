@@ -146,8 +146,12 @@ def phase_state(record: dict, pid: str) -> str:
     closing = ph.get("closing")
     closed = isinstance(closing, dict) and closing.get("replan") is not None
     base = record.get("base", "")
+    if not isinstance(base, str) or not base or not ref_exists(f"refs/heads/{base}"):
+        # Every rule below reads base; without it a built phase would read
+        # not-started, and Build would reset its branch.
+        raise Refused(f"no branch '{base}' (the record's base) in this repository")
     results = build_file(pid)
-    if base and has_file(f"refs/heads/{base}", results):
+    if has_file(f"refs/heads/{base}", results):
         return "done" if closed else "close-missed"
     branches = phase_branches(pid)
     if len(branches) > 1:

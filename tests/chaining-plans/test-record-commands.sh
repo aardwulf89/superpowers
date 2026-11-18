@@ -154,6 +154,14 @@ check "phase-state anomaly: both branch names exist" anomaly "$(state_of "$R" "$
 jq -n --argjson ph "$open" '{umbrella:"u.md", base:"main", phases:[$ph + {id:"K1"}]}' > "$TMP/anomaly.json"
 check "pick blocks on an anomaly" "blocked:K1" "$(cd "$TMP/anomaly" && record pick "$TMP/anomaly.json")"
 
+# a record whose base has no local branch: refuse, never read not-started
+# (Build would then reset the phase branch to base and lose its commits)
+jq -n --argjson ph "$open" '{umbrella:"u.md", base:"mian", phases:[$ph + {id:"K1"}]}' > "$TMP/nobase.json"
+st=0; out=$(cd "$TMP/anomaly" && record phase-state "$TMP/nobase.json" K1 2>"$TMP/nobase.err") || st=$?
+check "phase-state refuses a base with no local branch" "1:" "$st:$out"
+if grep -q "record phase-state: no branch 'mian'" "$TMP/nobase.err"; then pass "phase-state names the missing base"
+else fail "phase-state names the missing base: $(cat "$TMP/nobase.err")"; fi
+
 # pick and open-efforts. RD has results on main for K1, K2 and K3, so a
 # phase with one of those ids and a replan is done; other ids are not started.
 RD="$TMP/done"

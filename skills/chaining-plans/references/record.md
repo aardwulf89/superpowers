@@ -158,7 +158,9 @@ with a note on stderr.
 `record.py phase-state REC ID`
 
 Prints one state from the table above. It refuses an id the record does
-not have.
+not have, and a record whose `base` has no local branch: every rule
+reads `base`, and without it a built phase would read `not-started`. So
+do `pick` and `open-efforts` (which skips the record, with a note).
 
 ### pick
 

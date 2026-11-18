@@ -44,8 +44,9 @@ whatever you got wrong. A ruling that dies with the workspace was a decision
 made in secret.
 
 Before you delete the workspace, commit `<plan-path>.tasks.json` if it changed
-(`chore(<plan id>): task status`); with at-end commits, the final commit
-includes it. Then, when the deferred-findings round is done and its fixes are
+(`chore(<plan id>): task status`), even with at-end commits: closing the
+final commit's own task rewrites the file after that commit, and a modified
+file blocks `git worktree remove`. Then, when the deferred-findings round is done and its fixes are
 merged, delete this plan's workspace (`rm -rf <workspace>`) — the git history is
 the record now. Sibling directories belong to other plans; leave them
 alone.

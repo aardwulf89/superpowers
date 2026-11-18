@@ -61,6 +61,13 @@ has $R 'Subagent-Driven (this session)'
 has $R '<phase id>.md.tasks.json'
 has $R 'superpowers-extended-cc:subagent-driven-development'
 
+# Step 2 brings base up to date before the settle, so a PR merged on the
+# forge reads as merged (its results file is on base) and is not merged
+# again or rebuilt.
+has $R '**`base` up to date:**'
+has $R 'git pull --ff-only origin <base>'
+has $R 'merged on the forge'
+
 # Missed git ops and PR cleanup follow finishing's lock rule.
 has $R 'lock rule'
 
