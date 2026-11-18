@@ -54,9 +54,10 @@ prints:
 | `close-missed` | Merged; the close was missed | Close it. The close reconstructs `learned` from the plan and the branch's commits |
 | `not-started`, `done`, `dropped` | — | Nothing |
 
-- **Tasks:** before a row's action, use `TaskCreate` to make one task for
-  each of its parts: "A2: Missed close", "A2: Missed git ops". Set the
-  Missed git ops task's `blockedBy` to its phase's Missed close task.
+- **Tasks:** before the action of a row other than `cut-off`, use
+  `TaskCreate` to make one task for each of its parts: "A2: Missed close",
+  "A2: Missed git ops". Block the Missed git ops task by its phase's Missed
+  close task, with `TaskUpdate` (`addBlockedBy`).
 - **Close it** means: invoke `chaining-plans` through the Skill tool with
   `close <effort id> <phase id>`. When it has reported, come back here
   and go on with the row's action.
@@ -279,8 +280,9 @@ Do not make a task for a stage that does not run:
 If Design starts an Intent round, make the task for that round when the
 round starts.
 
-Set each task's `activeForm` ("Building A3"), and set its `blockedBy` to
-the task before it. The first task is blocked by every task of step 3.
+Set each task's `activeForm` ("Building A3"). Block each task by the
+stage task before it, with `TaskUpdate` (`addBlockedBy`). Block the first
+by every task of step 3. An Intent round that Design starts has no blocker.
 Set a task in_progress when its stage starts. Mark it completed only when
 its "Done when" holds. A task stays in_progress while its stage waits on
 your human partner or has stopped.

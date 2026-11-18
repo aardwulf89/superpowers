@@ -11,8 +11,8 @@ record.
 
 Before step 1, use `TaskCreate` to make one task for each step. Title it
 `<effort id>: <step heading>`, with the heading word for word
-("K: Draft the phases", "K: Run one sitting"). Set each task's `blockedBy`
-to the task before it. A task stays in_progress while its step waits on
+("K: Draft the phases", "K: Run one sitting"). Block each task by the one
+before it, with `TaskUpdate` (`addBlockedBy`). A task stays in_progress while its step waits on
 your human partner. If step 4 uses a different letter, retitle each task
 with `TaskUpdate`.
 

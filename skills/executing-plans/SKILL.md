@@ -148,7 +148,7 @@ and the new one resumes from the same ledger.
   if that happens, recover from `git log`.
 
 Read the plan once, note its context and Global Constraints, and make the
-task list with `TaskCreate`. Title each task `<id>: <name>`:
+task list with `TaskCreate`. Title each task `<id>: <name>`, in this order:
 
 1. One task per plan task, with the id and name as its plan heading writes
    them ("K3.4: Add retry wrapper"). Do not make one task for a range
@@ -158,12 +158,12 @@ task list with `TaskCreate`. Title each task `<id>: <name>`:
 3. "<plan id>: Deferred-findings round". It ends when your final message
    holds the Finish lists and the workspace is deleted.
 4. "<plan id>: Finish", for `finishing-a-development-branch`.
-   If a task with that title exists already, do not make another.
 
-Set each task's `blockedBy` to the task before it. When Finish existed
-already, add the Deferred-findings round to its `blockedBy` with
-`TaskUpdate`. Mark Finish completed when your human partner has answered
-the menu.
+Do not make a task whose title is in the task list already.
+Block each task by the one before it in this order, with
+`TaskUpdate` (`addBlockedBy`). The first task you make has no blocker.
+When Finish existed already, add the Deferred-findings round to its blockers.
+Mark Finish completed when your human partner has answered the menu.
 
 If the plan names a Spec, read that too: the spec is the
 authority the plan argues from, and conflicts inside the plan resolve
