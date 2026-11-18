@@ -207,7 +207,8 @@ TaskList
 
 When marking tasks completed via `TaskUpdate`, also sync `.tasks.json`:
 
-1. Read `<plan-path>.tasks.json`
+1. Read the working tree's copy of `<plan-path>.tasks.json`: the one in the
+   worktree you are working in, never the main checkout's
 2. Set the task's `"status"` to `"completed"`
 3. Set `"lastUpdated"` to current ISO timestamp
 4. Write back

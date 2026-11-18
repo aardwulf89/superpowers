@@ -155,7 +155,9 @@ After all questions answered:
 - **Subagent brief:** <Q5 if applicable>
 ```
 
-3. **Sync `.tasks.json`.** Update the task entry's description and metadata, set `lastUpdated`.
+3. **Sync `.tasks.json`.** In the working tree's copy (the one in the worktree you
+   are working in, never the main checkout's), update the task entry's description
+   and metadata, set `lastUpdated`.
 
 4. **Announce:** "Specification locked. Returning control to executing-plans to run the gate."
 

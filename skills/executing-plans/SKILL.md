@@ -128,7 +128,8 @@ digraph process {
    and resume from the first `pending`/`in_progress`. To check that they match, compare only work tasks; other skills' step tasks may sit in the same list
 5. If neither: bootstrap from the plan (Step 1b below)
 
-Update `.tasks.json` after every task status change.
+Update `.tasks.json` after every task status change, in the working tree's copy: the
+one in the worktree you are executing in. Inside a worktree Claude Code isolates (after `EnterWorktree`), Edit and Write to the main checkout are refused, and `git worktree remove` refuses a worktree with modified files: so the file the executors update is the one in the working tree they run in, and it is committed before they finish.
 
 ### Verify Workspace (Worktree Check)
 
@@ -321,7 +322,7 @@ if they pass — appends the completion line to the ledger:
 A failing run records nothing; the task is not complete. When it records:
 
 1. `TaskUpdate` the task to `completed`.
-2. **Sync `.tasks.json`:** Read the tasks file, update the task's `"status"` to `"completed"`, set `"lastUpdated"` to current ISO timestamp, write back. This keeps the persistence file in sync with native tasks for cross-session resume.
+2. **Sync `.tasks.json`:** Read the working tree's copy of the tasks file, update the task's `"status"` to `"completed"`, set `"lastUpdated"` to current ISO timestamp, write back. This keeps the persistence file in sync with native tasks for cross-session resume.
 3. Take the next task.
 
 ## Final Review
@@ -383,8 +384,10 @@ line under "Deferred minors". Both lists are exhaustive. Your final
 message is the only place the decisions you took on your human partner's
 behalf — and the findings you chose not to act on — reach them.
 
-When the final review is clean and its fixes are committed, delete this
-plan's workspace directory — the git history is the record now. Sibling
+Before you delete the workspace, commit `<plan-path>.tasks.json` if it changed
+(`chore(<plan id>): task status`); with at-end commits, the final commit
+includes it. Then, when the final review is clean and its fixes are committed,
+delete this plan's workspace directory — the git history is the record now. Sibling
 directories belong to other plans; leave them alone.
 
 Announce: "I'm using the finishing-a-development-branch skill to complete this work."

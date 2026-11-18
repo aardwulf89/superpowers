@@ -410,9 +410,15 @@ agent passes the disjointness test:
 
 After marking each task completed via `TaskUpdate`, update the `.tasks.json` file to stay in sync:
 
-1. Read `<plan-path>.tasks.json`
+1. Read the working tree's copy of `<plan-path>.tasks.json`: the one in the
+   worktree you are executing in, never the main checkout's
 2. Set the task's `"status"` to `"completed"`
 3. Set `"lastUpdated"` to current ISO timestamp
 4. Write the file back
+
+Inside a worktree Claude Code isolates (after `EnterWorktree`), Edit and Write
+to the main checkout are refused, and `git worktree remove` refuses a
+worktree with modified files: so the file the executors update is the one in
+the working tree they run in, and it is committed before they finish.
 
 This ensures cross-session resume works correctly. Without this, a new session loading `.tasks.json` would see completed tasks as `"pending"`.

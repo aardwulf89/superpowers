@@ -43,8 +43,10 @@ took on your human partner's behalf reach them — they read it and rework
 whatever you got wrong. A ruling that dies with the workspace was a decision
 made in secret.
 
-When the final whole-branch review is clean and its fixes are merged,
-delete this plan's workspace (`rm -rf <workspace>`) — the git history is
+Before you delete the workspace, commit `<plan-path>.tasks.json` if it changed
+(`chore(<plan id>): task status`); with at-end commits, the final commit
+includes it. Then, when the final whole-branch review is clean and its fixes are
+merged, delete this plan's workspace (`rm -rf <workspace>`) — the git history is
 the record now. Sibling directories belong to other plans; leave them
 alone.
 

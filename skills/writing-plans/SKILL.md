@@ -494,6 +494,13 @@ If the plan is saved to `docs/superpowers/plans/K3.md`, the tasks file MUST be s
 
 Both the plan `.md` and `.tasks.json` must be co-located in `docs/superpowers/plans/`.
 
+Then commit the plan and its tasks file together (`docs(<plan id>): plan`). The
+executors resume from the tasks file, and usually run in a worktree that starts
+from this commit. Inside a worktree Claude Code isolates (after `EnterWorktree`), Edit and Write
+to the main checkout are refused, and `git worktree remove` refuses a
+worktree with modified files: so the file the executors update is the one in
+the working tree they run in, and it is committed before they finish.
+
 ### Resuming Work
 
 Any new session can resume by running:
