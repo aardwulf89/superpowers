@@ -41,6 +41,7 @@ SUITES=(
     test-taskcreate-commit-strategy-hook.sh
     test-user-gate-hooks.sh
     test-stop-wait-guard.sh
+    test-task-hook-compat.sh
 )
 
 # `timeout` is GNU coreutils; on macOS it arrives as gtimeout (or not at all).
