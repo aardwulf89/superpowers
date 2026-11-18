@@ -91,6 +91,27 @@ not a second system next to them.
   `<id>: <name>`. Step tasks become `<name> (<id>)`.
 - D's single `<id>: <name>` for everything. Rejected: the hooks read
   `A3: Design` as a plan task (see Tasks).
+- Id first without the colon (`A3 Design`). Rejected: only the missing
+  colon keeps it from matching the hooks' title pattern.
+
+### Execution method in a chain
+
+- **Always subagent-driven-development, with the chain answering pcvelz's
+  handoff (picked).** The run stays unattended up to the merge menu.
+- Let writing-plans ask, as in pcvelz. Every phase would stop once at
+  Plan.
+- Ruled out: running `executing-plans` inside the session again. That
+  would undo one of pcvelz's divergences.
+
+### The final-commit exemption
+
+- **Widen the prefix to one word with no spaces, ending in a colon
+  (picked).** The anchor stays.
+- Our exact id grammar in the hook. Rejected: a second copy of
+  `next-spec-id`'s grammar that drifts.
+- Leave the commit task without an id. Rejected: its task title would no
+  longer match its `### Task K3.9:` heading, so the executors' match by id
+  breaks.
 
 ## Design
 
@@ -152,10 +173,35 @@ plan, a task or a tasks file. One naming scheme in the whole plugin.
   SDD prompts and references, specifying-gates, implementer-prompt,
   `skills/shared/task-format-reference.md` examples, README and
   `docs/*.md` examples.
-- **The hooks need no change.** Their "bare plan id" arm already treats
-  `K3.4:` as a work task. pcvelz's hook tests keep their `Task 3:`
-  fixtures, because a plan without ids still produces them, and gain
-  id-shaped cases.
+- **`hooks/session-start`'s at-end notice** uses ids too: its ledger form
+  becomes `Task <id>: complete (working tree, at-end strategy, review
+  clean)`, and the plan's single commit carries the plan id
+  (`feat(K3): …`).
+- **The tier hook needs no change.** Our work tasks always carry the
+  metadata block, which is the hook's explicit signal, so its title
+  patterns never decide them.
+- **The commit-strategy hook's final-commit exemption is widened, and
+  stays anchored.** Today it exempts a subject that is exactly `Commit the
+  full implementation`, optionally after `Task N:`. That's a fence (pcvelz
+  `6ef5c27`, `docs/workflow-config-flow.md`): the task can only be
+  recognized by its title, and the anchor stops a per-task commit from
+  hiding behind a longer title. The only prefix allowed is the plan's own
+  task number. Our id is that number, so the prefix becomes "`Task N:` or
+  one word with no spaces, ending in a colon":
+
+  ```
+  ^[ ]*(task[ ]*[0-9]+[.:][ ]*|[^[:space:]:]+:[ ]*)?commit the full implementation[.!]?[ ]*$
+  ```
+
+  The hook must not encode the id grammar. Ids are unpadded, have no
+  fixed width, and go to any depth (`K3.10`, `AA12.10`, `K3.4a1b`), and
+  their one definition is `next-spec-id`. New cases in
+  `test-taskcreate-commit-strategy-hook.sh`: `K3.9:`, `K3.10:`,
+  `AA12.10:`, `K3.4a1:`, `M1.1:` and a bare `3:` are exempt. Test 17's
+  cases, and a prefix with a space (`Step 2: Commit the full
+  implementation`), stay blocked.
+- pcvelz's hook tests keep their `Task 3:` fixtures, because a plan
+  without ids still produces them, and gain id-shaped cases.
 
 ### 4. Tasks
 
@@ -201,6 +247,13 @@ digit.)
 
 Rules:
 
+- **Never depend on the title patterns.** They are a heuristic, wrong
+  both ways (`v2: bump deps` and `IPv6: fix parsing` read as work tasks,
+  while a block-less `Implement lexer` doesn't). Our tasks are told apart
+  only by the explicit signal: work tasks always carry the metadata block,
+  and step tasks never carry it or the template headings. A step task's
+  title always starts with its fixed English step name, so no title
+  pattern can match it, whatever its id looks like.
 - **Work tasks are pcvelz's exactly:** template, metadata block, tier,
   user-gate tagging, `.tasks.json` sync. The only difference is the id in
   the subject. A plan task split in the plan (`#### Task K3.4a`) gets a
@@ -235,6 +288,11 @@ Rules:
   the closing steps not yet done.
 - **Close makes no tasks:** the caller's `Close (A3)` or `Missed close
   (A2)` covers it.
+- **Brainstorming's design-time tasks in a chained spec:** pcvelz's
+  brainstorming makes `Implement X` work tasks for the whole spec. Once
+  Create has split the spec into phases, it deletes those tasks
+  (`TaskUpdate`, status `deleted`). Each phase's writing-plans makes its
+  own. *My call.*
 
 ### 5. The deferred-findings round
 
@@ -250,6 +308,11 @@ This is ported into both of pcvelz's executors as on the archived `main`:
 pcvelz has no counterpart, so this is a pure addition, written into
 pcvelz's text.
 
+With `commitStrategy: at-end` on, the final review's fixes and the round's
+fixes are committed exactly as pcvelz's own final-review fix pass commits
+them. At-end governs plan tasks, which is all pcvelz's gate checks, so no
+rule of ours is added. *My call.*
+
 ### 6. chaining-plans, the record and next-spec-id
 
 - Port `skills/chaining-plans/` (SKILL.md, references, `scripts/record.py`)
@@ -257,6 +320,17 @@ pcvelz's text.
   change and the task rules of section 4 replacing D's task text.
 - Executor and stage references follow pcvelz's skill text where they
   quote it.
+- **The execution method (your human partner's ruling).** pcvelz's
+  writing-plans ends in a hard-gated three-option handoff. Two of the
+  options open a separate session, and pcvelz's `executing-plans` runs
+  only in a separate session. So in a chained session the Plan stage
+  answers the handoff itself with pcvelz's own default,
+  Subagent-Driven (this session), logged as a ruling, and Build always
+  runs `subagent-driven-development`. A chain never picks a Parallel
+  Session. A session nearly out of context stops as a chain already
+  stops, and the next session resumes. `executing-plans` is not widened
+  again. pcvelz's handoff hook only checks the shape of a handoff
+  question that is asked, so skipping the question doesn't trip it.
 - *My call:* the Plan stage's "Done when" also requires
   `K3.md.tasks.json` to be committed with the plan. The worktree starts
   from `base`, and the executor's cross-session resume reads that file
@@ -321,6 +395,7 @@ next on the new branch.
   pcvelz's `Task N:` tasks. It also feeds our blocker chains to
   `pre-task-blockedby-enforce.sh` in completion order, and they must all
   pass.
+- The commit-strategy hook's new exemption cases (section 3).
 - pcvelz's existing suites still pass.
 
 ### Order of the port
@@ -340,8 +415,10 @@ Then the tests, then the switch of `main`.
 - The marketplace path references point at `superpowers-aardwulf`.
 - The Plan stage commits `K3.md.tasks.json` with the plan.
 - Finishing's discard option uses `ExitWorktree` remove.
-- Step-task title form `<name> (<id>)`.
 - The `upstream` remote stays, fetch-only.
+- Under at-end, the final fixes and the deferred-findings round commit as
+  pcvelz's fix pass does.
+- Create deletes brainstorming's design-time tasks for a chained spec.
 
 ## Left to the builder
 
