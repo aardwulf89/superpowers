@@ -244,5 +244,19 @@ rc=$(run_hook "$INPUT")
 assert "bare git commit instruction still blocks" "2" "$rc"
 echo ""
 
+echo "Test 19: the exemption's prefix is the plan's task id, of any shape"
+for prefix in "K3.9:" "K3.10:" "AA12.10:" "K3.4a1:" "M1.1:" "3:"; do
+    INPUT=$(make_input "TaskCreate" "$prefix Commit the full implementation" "$DESC_GIT_COMMIT" "$PROJ")
+    rc=$(run_hook "$INPUT")
+    assert "'$prefix Commit the full implementation' is exempt" "0" "$rc"
+done
+INPUT=$(make_input "TaskCreate" "Step 2: Commit the full implementation" "$DESC_GIT_COMMIT" "$PROJ")
+rc=$(run_hook "$INPUT")
+assert "a prefix with a space is NOT exempt" "2" "$rc"
+INPUT=$(make_input "TaskCreate" "K3.9: Commit the full implementation of the widget" "$DESC_GIT_COMMIT" "$PROJ")
+rc=$(run_hook "$INPUT")
+assert "an id prefix does not unanchor the phrase" "2" "$rc"
+echo ""
+
 echo "=== Summary: $FAILED failure(s) ==="
 exit "$FAILED"

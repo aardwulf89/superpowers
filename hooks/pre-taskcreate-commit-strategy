@@ -89,10 +89,14 @@ fi
 
 # 6. Exempt the required final commit task. The notice names it verbatim -
 #    "Commit the full implementation" - so gate and notice agree on the title.
-#    Anchored: the phrase must BE the subject (optional "Task N:" prefix and
-#    trailing period allowed); a subject merely containing it mid-sentence is
-#    not exempt, so a real per-task commit cannot hide behind a verbose title.
-if printf '%s' "$SUBJECT" | grep -qiE '^[ ]*(task[ ]*[0-9]+[.:][ ]*)?commit the full implementation[.!]?[ ]*$'; then
+#    Anchored: the phrase must BE the subject (trailing period allowed); a
+#    subject merely containing it mid-sentence is not exempt, so a real
+#    per-task commit cannot hide behind a verbose title. The only prefix
+#    allowed is the plan's own task number: "Task N:", or one word with no
+#    spaces ending in a colon ("K3.9:", "AA12.10:", "3:"). The prefix is not
+#    parsed as an id: ids are unpadded and of any depth, and their one
+#    definition lives in skills/brainstorming/scripts/next-spec-id.
+if printf '%s' "$SUBJECT" | grep -qiE '^[ ]*(task[ ]*[0-9]+[.:][ ]*|[^[:space:]:]+:[ ]*)?commit the full implementation[.!]?[ ]*$'; then
     trace "?" "pass" "final-commit-task subject=$SUBJECT"
     echo "$ALLOW"; exit 0
 fi
