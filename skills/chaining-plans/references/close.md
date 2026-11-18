@@ -1,0 +1,316 @@
+# Close: what the plan learned, and the re-plan
+
+A close writes down what one phase's plan learned, re-plans the phases
+that are not done, and reports. It is invoked as `close <effort id> <phase id>`,
+from one of two places, and each has its own ending (step 4):
+
+- **The plan's own session,** after its merge menu was answered.
+- **Resume's settle step,** for a phase that is `finished-unclosed` or
+  `close-missed`. That phase was built in an earlier session.
+
+A close makes no tasks of its own. The task that invoked it covers it:
+"A3: Close" or "A2: Missed close".
+
+Every command named here is a subcommand of the record script. Run it as
+`references/record.md` § Commands says: one plain command per Bash call.
+
+## 0. Find the phase, and check the answer to the menu
+
+- **Find the record:** it is `docs/superpowers/efforts/<effort id>.json`
+  of the main checkout. If it is missing, or has no
+  phase with that id, say so and stop. Every later command takes that
+  path as its `REC` argument, and the phase id as its `ID`.
+- **Work from the main checkout,** the parent of
+  `git rev-parse --path-format=absolute --git-common-dir`. After option 2
+  or 3 the session may still be in the worktree. If the harness confines
+  it there (Claude Code, after `EnterWorktree`), leave it first with
+  `ExitWorktree`, action `keep`: from inside, git aimed at the main
+  checkout is refused. Otherwise run every git command as
+  `git -C <main checkout>`. If the phase was built in place and its
+  branch is still checked out there, switch to `base` before a commit and
+  back after.
+- **Ids are copied, never shortened.** Every line you write to
+  `rulings`, `unfinished`, `learned` or `replan` keeps the full ids it
+  names (`Task K3.4: …`, `K3: …`), and names a phase by its phase id.
+  Commits on `base` carry the narrowest id (`docs(K3): …`).
+- **Commit every write to the record,** in the main checkout on `base`,
+  with the close's docs commit it belongs to, or alone as
+  `docs(<phase id>): record`, before the close's next step.
+- **Write `closing` one key at a time,** with `record.py set-closing-key`.
+  It reads `closing` fresh, starts a null one, and keeps every key a step
+  does not name. When a step needs what is there, read it with
+  `record.py get REC ID closing`, every time, never from memory.
+- **`replan` already set:** the phase is closed. Say so, and go to the
+  ending (step 4). Never set `replan` back to null.
+
+**Which answer the menu got.** Invoked from Resume's settle step, there
+was no menu in this session: run steps 1 to 4. In the plan's own session:
+
+- **Option 1, 2 or 3:** run steps 1 to 4. After option 2 or 3 the branch
+  is not merged yet; the next Resume does its missed git ops before
+  anything new starts.
+- **A discard:** no close. The discarded branch's results never reach
+  `base`, so the phase reads `not-started` from here on and its next session
+  builds it again. `set` its `status` to `known`. Then read `record.py get REC ID closing`. When it
+  is not null, keep only its partner items. The executor's lines have no
+  prefix yet, so first sort every `unfinished` line by the sort at the
+  end of step 1. Then write `unfinished` with only the lines that start
+  with `Partner item: ` (`record.py set-closing-key
+  REC ID unfinished replace`, from a value file), and `rulings` as `[]`
+  (`record.py set-closing-key REC ID rulings replace --value '[]'`).
+  `learned` and `replan` stay null: no close ran. Report that, and stop.
+  Your human partner is present, and directs what happens next.
+
+## 1. Write `learned`
+
+`learned` is what later phases need from this one. It holds, in order:
+
+- **The answer to each `waits_on` question whose `from` is this phase,**
+  in any phase of the record, each naming the phase that asked it:
+  `record.py questions REC ID`.
+  Answer from what the plan found, not from what it set out to find. A
+  question the plan did not answer gets that as its answer.
+- **The surprises:** what the build found that its plan did not expect,
+  and that a later phase's design should know.
+
+**Check each line before you write it,** against `base`, or against
+the branch tip while the phase is not merged: `git -C <main checkout>
+grep <name> <ref>` and `git -C <main checkout> show <ref>:<path>`, with
+`<ref>` the record's `base` once merged, else the phase branch
+(`worktree-<phase id>`, or `<phase id>` built in place).
+Every name the line states exists there, and every claim it makes
+about what is there holds. The check reads the repo; it does not redo
+the build's research, so a finding about anything outside the repo
+stays as the build found it. A line states a behavior and how to find
+the code (a grep, a citation of a source). It never states an
+identifier as current truth without that check. Correct a line that
+fails, or leave it out.
+
+**The build's results are on `<ref>`:**
+`git -C <main checkout> show <ref>:docs/superpowers/plans/<phase id>.build.json`.
+Resume's Build stage wrote it from the executor's final message, so it holds
+that message's "Rulings I made" (`rulings`) and "Unfinished" (`unfinished`),
+whichever session the close runs in. Every line of its `rulings` must be in
+`closing.rulings`, and every line of its `unfinished` in
+`closing.unfinished`: add each that is missing. If the file is on neither
+`base` nor the phase branch, the build's results were never committed: stop,
+write nothing, and report that to your human partner.
+
+**From Resume's settle step,** the build's session is gone. Reconstruct
+`learned` from the plan (`plan`, when set) and the phase's commits: read
+the plan, the commits' messages and their diffs, and any notes or findings
+files they added. The phase's commits run from the anchor to the commit
+that brought `<phase id>.build.json` into `<ref>`, every command as
+`git -C <main checkout>`:
+- **The anchor** is the commit that added the plan:
+  `git log --diff-filter=A --format=%H -1 -- <plan>`. With `plan` null,
+  the commit that added the phase's own design file, or, when `spec`
+  is null or the umbrella, the commit that added the umbrella's Phases
+  section: `git log -S'## Phases' --format=%H --reverse -- <umbrella> | head -1`.
+- **The end** is the last commit on `<ref>` that touched the results file:
+  `git log --format=%H -1 <ref> -- docs/superpowers/plans/<phase id>.build.json`.
+  For a merge or a fast-forward, that is the branch's own results commit;
+  for a squash or a rebase, the commit that carried it onto `base`.
+- **Read** `git log -p --ancestry-path <anchor>..<end>`. The range can
+  also hold other commits made on `base` after the plan: the chain's own
+  docs commits (the record, a design change), and, for a squash or a
+  rebase, anything else that landed on `base` before the build did. The
+  build's commits carry this phase's ids in their subjects (`feat(K3.4): …`,
+  `fix(K3): …`, `docs(K3): build results`); read those, and skip the rest.
+
+Write it with `record.py set-closing-key`: `learned` with mode `replace`,
+and any missing `rulings` or `unfinished` lines with mode `append`, each
+list from a value file.
+
+**Then sort every `unfinished` line,** the lines copied from the executor
+included: the executor does not know the prefix. The sort runs on every
+close, from Resume's settle step too, over the lines already in the
+record: read them with `record.py get REC ID closing`.
+
+- **A partner item** is anything only your human partner may settle: an
+  intent question, a borderline call, a decision a stage left to them
+  ("the owner's call", "for the partner to decide"). Rewrite it as one
+  line that starts with `Partner item: ` and states, in this order: what
+  is open; the phase that raised it (`raised by K3`); its options, when
+  settling it means a choice; its interim default (as step 2 defines
+  it); and its cost of waiting, when each later phase makes the answer
+  dearer. Word it as an entry, not as a question to answer now, and keep
+  the full ids it names.
+- **A line that already starts with `Partner item: `** stays as it is,
+  with its suffix.
+- **A line that repeats a partner item already in the list,** as a
+  rebuild after a discard writes one again, is dropped. It is not given
+  the prefix a second time.
+- **Any other line** stays as it is, for step 2.
+
+Write the list back whole with `record.py set-closing-key REC ID
+unfinished replace`, from a value file.
+
+### 1a. Revise `learned`
+
+Read the `learned` of every done phase (`record.py get REC <phase id>
+closing`). For each line:
+
+- **Drop it** when it is used up (the phase it was for is done and took
+  it), when it is stale against `base` (a name it states is gone, or a
+  claim no longer holds), or when it repeats another line or a committed
+  doc.
+- **Correct it** when the correction is known, as a rename that `base`
+  shows.
+- **Else keep it.**
+
+Write back each changed list whole with `record.py set-closing-key REC
+<phase id> learned replace`, from a value file. Partner items are not
+touched here: they live in `unfinished`, and only your human partner
+changes them.
+
+## 2. Re-plan the phases that are not done
+
+Go through every phase that is not `done` or `dropped`, other than this
+one, with what was learned. For each change it causes, apply the **intent
+test**. Does the change alter any of these?
+
+- the umbrella's goals, non-goals or anti-goals;
+- a phase's purpose or limits in the Phases section;
+- an answer your human partner gave;
+- which phases exist, in a way that changes the outcome.
+
+**No: rule on it yourself, and apply it.** That covers:
+
+- **Resolving `waits_on`:** a `waiting` phase whose every `waits_on` is
+  answered (each `from` is this phase or a closed one) becomes `known`,
+  with `set`. Leave its `waits_on` in place: its Design stage reads the
+  answers through them.
+- **Reordering, a split, a merge, or a drop that keeps the outcome:**
+  follow the rules under `set-phases` in `references/record.md`, and
+  commit the umbrella's Phases section to match, on `base`: split parts
+  get their own entries (`### K2a: …`), and a merged entry gets a line
+  `**Merged from:** K5`. In a close, this phase counts as closed for a
+  new phase's `status`.
+- **A phase's technical design:** the umbrella holds intent only, so a
+  technical change never goes into it. A phase with a `plan` gets the
+  change in its plan file, and in its own design file if it has one,
+  committed on `base`. The plan's task ids are already issued: a task
+  added takes the next unused number, and a task split keeps its parent
+  heading with the parts nested under it (`#### Task K3.4a: …`), as
+  `writing-plans`' Ids section says. Else a phase whose `spec` is its own design file
+  gets it in that file, committed on `base`. Else (`spec` null, or the
+  umbrella) the phase has no file of its own: add the change to this
+  phase's `learned` as a line naming that phase, since its Design stage
+  reads `learned`; when its `spec` is the umbrella, `set` it to null so
+  that its Design stage runs. Write the line now with
+  `record.py set-closing-key`, key `learned`, mode `append`, so the
+  `replan` write keeps it.
+- **Each unfinished finding** that is not a partner item: move it to the
+  phase it belongs to, the same way as a technical design change, naming
+  the id it came from (`from K2: Task K2.3: …`). The moved text lives
+  only at its destination. Its line in `unfinished` keeps only the
+  pointer: the id and the phase it went to (`Task K2.3: moved to K3`).
+  Read the list with `record.py get REC ID closing`, and write it back
+  whole with `record.py set-closing-key`, key `unfinished`, mode
+  `replace`.
+
+**Yes: do not rule.** It is a partner item, as is each open
+partner-item line that step 1 wrote. Its interim default decides where
+it goes:
+
+- **The interim default** is what later stages do until your human
+  partner answers: the option that commits to nothing new and can be
+  reversed, usually the status quo. You never choose among the options:
+  a default picked by preference settles the item.
+- **Blocking means no such default exists:** a phase that is not done
+  cannot be designed until the item is answered. Only a blocking item
+  goes to `partner_questions`, as below.
+- **A non-blocking item stays, or for a change this re-plan found
+  becomes, a partner-item line in this phase's `unfinished`,** with its
+  default, written as step 1 says (`record.py set-closing-key REC ID
+  unfinished append`, from a value file). It goes to no
+  `partner_questions`, and no phase's `status` changes for it. Later
+  stages follow its default, and your human partner disposes of it at
+  the end of the effort.
+- **A dropped phase's blocking question,** in a drop this re-plan makes,
+  becomes a partner-item line in this phase's `unfinished`, so the drop
+  does not lose it. A question that came from a partner-item line gets
+  no new line: that line ends in `→ partner_questions of <the dropped id>`.
+  In the array you pass to `record.py set-phases` for the drop, take that
+  pointer off the line, with the space before it. The item is open
+  again, and it blocks nothing.
+
+For a blocking item, add the question to the blocked phase's
+`partner_questions` (read the list with
+`record.py get REC <phase id> partner_questions`, then `record.py set` it
+with the question added, from a value file), and `record.py set` its
+`status` to `needs-partner`. A waiting
+phase whose answer raised the question goes to `needs-partner`, not
+`known`. When the question came from a partner-item line, add
+`→ partner_questions of <phase id>` at the end of that line. Word it as
+a question, ending in a question mark, that stands
+on its own for a reader who did not see this session: what was learned,
+which intent decision it conflicts with, and the ways your human partner
+could answer. The ways to answer come before the question itself, so
+that the question mark is the last character. Do not edit the umbrella
+for it: your human partner's answer does that, in the phase's intent
+round.
+
+**When in doubt, automate:** rule on it, and mark it `borderline`.
+
+**Write `replan` last.** It marks the phase closed. It holds one entry
+per change, a question included:
+
+```json
+{ "intent": false, "borderline": false, "change": "...", "affects": ["K3"], "why": "...", "alternative": "..." }
+```
+
+- `intent`: true for a question to your human partner; `change` is then
+  what was proposed, not applied.
+- `alternative`: the option you did not take, or for a question, the
+  other answer your human partner could give.
+
+A non-blocking partner item is not a change, and gets no entry: its one
+copy is its line in `unfinished`.
+
+With no change at all, `replan` is `[]`. Write it with
+`record.py set-closing-key REC ID replan replace`.
+
+## 3. Report
+
+In this order:
+
+1. **The borderline rulings,** each with its alternative.
+2. **The questions for your human partner,** and which phase waits on
+   each. Then this line, with `<n>` the open partner items this close
+   wrote and `<m>` the open ones of every phase. Count only the lines
+   with no `→ partner_questions of` pointer: a line with one is a
+   question above, and a phase waits on it. It asks nothing:
+
+   ```
+   Open for you: <n> new items (<m> in all). They wait for the end of the effort; nothing waits on them.
+   ```
+
+   For one new item, write `1 new item`. When the whole list holds one item,
+   write `1 in all). It waits for the end of the effort; nothing waits on it.`
+
+3. **The other rulings.**
+4. **What the next session will do:** the missed git ops of this phase
+   if it is not merged, then the next phase and the stage it starts at
+   (an intent round for a `needs-partner` phase). Run `pick` to find it.
+   When it prints `items` or `none`, every phase is done or dropped: run
+   `## 5. The end of the effort` of `references/resume.md`, in this
+   session.
+
+## 4. The ending
+
+- **In the plan's own session:** ask your human partner to clear the
+  session and invoke the skill in a fresh one (for example: "Use
+  superpowers-extended-cc:chaining-plans to continue the effort."). Do not start
+  another phase in this session. When item 4 ran the end of the effort,
+  its end round or its last message replaces the request to clear, and
+  this session takes your human partner's answers as that section says.
+  An answer that adds a phase ends with the request to clear, not with a
+  pick.
+- **From Resume's settle step:** leave out item 4 of the report and do
+  not ask for a clear. Go back to Resume's settle step and go on with
+  the row's action: for a `finished-unclosed` phase, its missed git ops
+  come next. Then Resume runs `phase-state`, settles the rest, and
+  picks, in this session. Resume's own pick reaches the end of the
+  effort.

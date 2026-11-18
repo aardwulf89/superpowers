@@ -64,10 +64,10 @@ has $R/record.md 'The effort is closed out, unless an item is'
 # the Intent round.
 has $R/resume.md '### Answers given outside a round'
 lacks $R/resume.md '**Answers given outside any round,**'
-# `carried` reads only this repo's chain directory.
+# `carried` reads only this repo's efforts directory.
 has $R/resume.md "The next effort's Create in this repo will show them to you."
 # The check before writing names both refs it reads.
-has $R/close.md '`<ref>` the record'"'"'s `base` once merged, else the phase'"'"'s `branch`.'
+has $R/close.md '`<ref>` the record'"'"'s `base` once merged, else the phase branch'
 # The report line counts no blocking item.
 has $R/close.md 'Count only the lines'
 
