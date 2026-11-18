@@ -8,6 +8,9 @@ from one of two places, and each has its own ending (step 4):
 - **Resume's settle step,** for a phase that is `finished-unclosed` or
   `close-missed`. That phase was built in an earlier session.
 
+A close makes no tasks of its own. The task that invoked it covers it:
+"A3: Close" or "A2: Missed close".
+
 Every command named here is a subcommand of the record script. Run it as
 `references/record.md` § Commands says: one plain command per Bash call.
 

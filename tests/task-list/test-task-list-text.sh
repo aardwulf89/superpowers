@@ -58,6 +58,17 @@ has "$R" 'stays in_progress'
 has "$R" '("K3: Build" → "K3a: Build")'
 has "$R" 'Retitle each stage task that is not completed'
 
+# --- chaining-plans: create and close ---
+C=skills/chaining-plans/references/create.md
+has "$C" '"K: Draft the phases"'
+has "$C" '"K: Run one sitting"'
+has "$C" '`blockedBy`'
+has "$C" 'retitle'
+L=skills/chaining-plans/references/close.md
+has "$L" 'makes no tasks of its own'
+has "$L" '"A3: Close"'
+has "$L" '"A2: Missed close"'
+
 if ((failures)); then
   echo "FAIL: $failures of $checks task-list checks" >&2
   exit 1
