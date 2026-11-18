@@ -17,8 +17,61 @@ Write implementation plans for an engineer who has not seen this codebase or thi
 
 **Context:** If working in an isolated worktree, it should have been created via the `superpowers-extended-cc:using-git-worktrees` skill at execution time.
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `docs/superpowers/plans/<plan id>.md`
 - (User preferences for plan location override this default)
+
+## Ids
+
+Every plan, and every task in it, has an id that is unique across the
+repo, never reused, and written in full wherever it is named. The plan
+id is the spec's letter plus a number (`K3`); a task id is the plan id,
+a dot, and a number (`K3.4`). Ids carry no words.
+
+**The plan id.**
+- In an effort, `superpowers-extended-cc:chaining-plans` gives it: the phase id.
+- Otherwise, when the spec has a letter (its first line is `# K: …`),
+  run `bash ../brainstorming/scripts/next-spec-id --phase K` by its
+  absolute path, from the working tree you're writing in. It prints the
+  next unused phase id of spec K (`K1` for its first plan).
+- A spec that predates ids (a dated file name, no letter on its first
+  line) gets a letter once, from `bash ../brainstorming/scripts/next-spec-id`
+  run by its absolute path. Stamp it into the spec's first line as
+  `# K: <its existing title>`, keep the file's name, and commit it with
+  the plan. From then on it is spec K, and its next plan takes the next
+  phase id.
+- A plan with no spec gets a fresh letter of its own, the same way, and
+  is its phase 1 (`M1`). No spec file is written for the letter.
+
+**The plan's first line** is `# <plan id>: [Feature Name] Implementation Plan`.
+
+**Task ids.** Headings are `### Task <plan id>.<n>: …`, numbered in
+order. Until the plan is committed, renumber freely. A reference to
+another task, in this plan or another, uses its full id.
+
+**After the plan is committed,** its ids are fixed: never renumbered,
+reused, or given to other work.
+- A task added later takes the next number after the highest issued in
+  the plan, and sits where it belongs in the plan's order.
+- A plan rewritten for the same phase continues from the highest task
+  number the phase has ever issued.
+- A task split in a committed plan keeps its parent heading, and its
+  words are divided under headings one level deeper, with one lowercase
+  letter per part (skipping i, l and o), and nothing added the change
+  doesn't call for:
+
+  ```markdown
+  ### Task K3.4: Add retry
+  #### Task K3.4a: Retry wrapper
+  #### Task K3.4b: Backoff schedule
+  ```
+
+  `K3.4` still names the whole. A part that splits again alternates to
+  a number (`K3.4a1`, `K3.4a2`). Executors run the parts, never the
+  parent on its own.
+
+**Commits** carry the task id in their subject: as the scope in a repo
+that uses conventional commits (`feat(K3.4): …`), else as a `K3.4: `
+prefix.
 
 ## Scope Check
 
@@ -67,7 +120,7 @@ Key principle: TDD cycles happen WITHIN tasks, not as separate tasks. A task is 
 **Every plan MUST start with this header:**
 
 ```markdown
-# [Feature Name] Implementation Plan
+# <plan id>: [Feature Name] Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-extended-cc:subagent-driven-development (recommended) or superpowers-extended-cc:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -111,7 +164,7 @@ If the plan schedules questions for the user (a DECIDE list, an AskUserQuestion 
 ## Task Structure
 
 ````markdown
-### Task N: [Component Name]
+### Task <plan id>.<n>: [Component Name]
 
 **Goal:** [One sentence — what this task produces]
 
@@ -156,7 +209,7 @@ Expected: PASS
 
 ```bash
 git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
+git commit -m "feat(<plan id>.<n>): add specific feature"
 ```
 ````
 
@@ -191,11 +244,13 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **2. Step scan:** Every step must let the implementer write exactly one reasonable thing, and no step may carry more than that: a line that decides nothing is a gap, a function body the signature and tests already determine is a transcript. Fix both.
 
-**3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
+**3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task K3.3 but `clearFullLayers()` in Task K3.7 is a bug.
 
 **4. Review Focus:** For each input class or failure mode the spec implies, is there a task whose tests exercise it? The five uncovered ones most likely to bite a person go in the Review Focus section, and each line there gets its test added to the owning task. An empty section means you checked and found none, not that you skipped the check.
 
 **5. Proportion:** Compare the plan's length to the spec's. A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures, test names and assertions, and check that each step is still unambiguous.
+
+**6. Ids:** Is the first line `# <plan id>: …`, and is every task heading `### Task <plan id>.<n>: …`, numbered in order? Is every reference to another task its full id, naming a task that exists in this plan or a named earlier one?
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
@@ -227,7 +282,7 @@ Your ONLY permitted next action is calling `AskUserQuestion` with this EXACT str
 
 ```yaml
 AskUserQuestion:
-  question: "Plan complete and saved to docs/superpowers/plans/<filename>.md. How would you like to execute it?"
+  question: "Plan complete and saved to docs/superpowers/plans/<plan id>.md. How would you like to execute it?"
   header: "Execution"
   options:
     - label: "Subagent-Driven (this session)"
@@ -353,7 +408,7 @@ Each count MUST equal the number of tasks. If any count is lower → a task drop
 
 ```yaml
 TaskCreate:
-  subject: "Task N: [Component Name]"
+  subject: "<task id>: [Component Name]"
   description: |
     **Goal:** [From task's Goal line]
 
@@ -410,21 +465,21 @@ TaskUpdate:
 
 At plan completion, write the task persistence file **in the same directory as the plan document**.
 
-If the plan is saved to `docs/superpowers/plans/2026-01-15-feature.md`, the tasks file MUST be saved to `docs/superpowers/plans/2026-01-15-feature.md.tasks.json`.
+If the plan is saved to `docs/superpowers/plans/K3.md`, the tasks file MUST be saved to `docs/superpowers/plans/K3.md.tasks.json`.
 
 ```json
 {
-  "planPath": "docs/superpowers/plans/2026-01-15-feature.md",
+  "planPath": "docs/superpowers/plans/K3.md",
   "tasks": [
     {
       "id": 0,
-      "subject": "Task 0: ...",
+      "subject": "K3.1: ...",
       "status": "pending",
       "description": "**Goal:** ...\n\n**Files:**\n...\n\n```json:metadata\n{\"files\": [\"path/to/file.py\"], \"verifyCommand\": \"pytest tests/ -v\", \"acceptanceCriteria\": [\"criterion 1\"], \"modelTier\": \"mechanical\"}\n```"
     },
     {
       "id": 1,
-      "subject": "Task 1: ...",
+      "subject": "K3.2: ...",
       "status": "pending",
       "blockedBy": [0],
       "description": "**Goal:** ...\n\n```json:metadata\n{\"files\": [], \"verifyCommand\": \"\", \"acceptanceCriteria\": [], \"modelTier\": \"standard\"}\n```"

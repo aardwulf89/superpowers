@@ -15,7 +15,7 @@ Exactly one of:
 
 In all other cases — where `verifyCommand` is concrete and every `acceptanceCriteria` has an observable proof — the agent executes the gate directly and does NOT invoke this skill.
 
-**Announce at start:** "I'm using the specifying-gates skill to lock down verification mechanics for Task N."
+**Announce at start:** "I'm using the specifying-gates skill to lock down verification mechanics for Task <id>."
 
 ## CRITICAL — what this skill does NOT do
 

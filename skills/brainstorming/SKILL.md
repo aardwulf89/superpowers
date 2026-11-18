@@ -243,9 +243,16 @@ or two each and goes straight to your human partner, without the
 builder check.
 
 **Where it goes:** in a software repo,
-`docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`, committed.
-Otherwise, pick a sensible place and say where. Your human partner's
-preferences override both.
+`docs/superpowers/specs/<letter>.md`, committed, with `# <letter>: <Title>`
+as its first line. The letter is the spec's id: uppercase, skipping I and
+O, and never reused. Get it when you first save the doc by running
+`bash scripts/next-spec-id` by its absolute path, from the working tree
+you're writing in; it prints the next unused letter. Keep that letter
+through revisions; don't run it again for the same doc, since your own
+draft already counts as used. The commit subject
+carries the letter: `docs(K): …` in a repo that uses conventional
+commits, else `K: …`. Otherwise, pick a sensible place and
+say where. Your human partner's preferences override both.
 
 **Builder check** (for a project): dispatch a fresh subagent with
 `builder-check-prompt.md` in this directory. When you tell your human

@@ -46,7 +46,7 @@ The same plan, run on plain Superpowers and on this fork.
 |---|---|---|
 | **Plan** | Only a markdown file; nothing tracks which step Claude is on | Every plan step is a native task. Claude works from the task list, not from its memory of the plan. |
 | **Visibility** | You cannot see which task is running | Each task shows as pending, in progress or done. |
-| **Order** | Claude can jump ahead or skip a task | Task 2 shows as blocked until Task 1 is done; the opt-in [task order](#enforce-blockedby-ordering-on-in_progress) hook makes Claude respect it. |
+| **Order** | Claude can jump ahead or skip a task | K3.2 shows as blocked until K3.1 is done; the opt-in [task order](#enforce-blockedby-ordering-on-in_progress) hook makes Claude respect it. |
 | **Progress** | You follow progress by reading the output | `TaskList` shows what is done, blocked and next, and a new session can pick up from there. |
 
 ## What It Adds
@@ -158,7 +158,7 @@ flowchart LR
 
 ```yaml
 TaskCreate:
-  subject: "Task 1: Add price validation to optimizer"
+  subject: "K3.1: Add price validation to optimizer"
   description: |
     **Goal:** Validate input prices before optimization runs.
 

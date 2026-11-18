@@ -23,7 +23,7 @@ Any one of:
 
 If none of these apply, return to executing-plans without running this skill.
 
-**Announce at start:** "I'm using the checking-gates skill to verify Task N's acceptance criteria."
+**Announce at start:** "I'm using the checking-gates skill to verify Task <id>'s acceptance criteria."
 
 ## The three-step process
 

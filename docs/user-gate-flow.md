@@ -99,7 +99,7 @@ The tag intentionally covers three cases:
 
 | Shade | Example | Tagged? |
 |-------|---------|---------|
-| Strict user gate | User says "add a verification gate before Task 5" | Yes |
+| Strict user gate | User says "add a verification gate before Task K3.5" | Yes |
 | Strict agent gate | Write-plan decides "this API change needs a smoke test" | Yes |
 | Gray in-between | Task description reads "confirm the migration ran" | Yes |
 
@@ -176,22 +176,22 @@ User's original brief: *"Build the zoo, verify it works on one instance first, t
 
 **Layer 1 — writing-plans output (silent):**
 
-- Task 7: E2E on one instance
+- Task K3.7: E2E on one instance
   ```json
   {"userGate": true, "tags": ["user-gate"], "requiresUserSpecification": true, "gateScope": "one"}
   ```
   (Brief mentions "verify" + vague HOW → flagged for user specification)
 
-- Task 8: E2E on all instances (blocked by #7)
+- Task K3.8: E2E on all instances (blocked by #7)
   ```json
   {"userGate": true, "tags": ["user-gate"], "requiresUserSpecification": true, "gateScope": "all"}
   ```
 
 No user questions asked. Plan is written and saved.
 
-**Layer 2 — executing-plans reaches Task 7:**
+**Layer 2 — executing-plans reaches Task K3.7:**
 
-1. Agent marks Task 7 `in_progress`.
+1. Agent marks Task K3.7 (native task #7) `in_progress`.
 2. Hook is active → agent runs `/superpowers-extended-cc:gate-check 7`.
 3. `/superpowers-extended-cc:gate-check` loads metadata, sees `requiresUserSpecification: true`, hands off to `/superpowers-extended-cc:specify-gate 7`.
 
@@ -211,7 +211,7 @@ Metadata updated, `requiresUserSpecification` removed. Returns control to `/supe
 HOW is now concrete on all three axes. Dispatch the Sonnet subagent, capture the real output, post:
 
 ```
-Gate: Task 7 E2E on one instance
+Gate: Task K3.7 E2E on one instance
 AC: sensor optimization_status = idle — PROVEN BY curl /api/states/sensor.<device>_optimization_status → "idle"
 AC: JIT notification fires within 10s — PROVEN BY notification_message diff, ts delta 5.2s
 ```
