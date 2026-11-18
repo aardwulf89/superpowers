@@ -129,6 +129,25 @@ has $E/SKILL.md 'nested part headings'
 has $E/SKILL.md 'for a plan with an id is named'
 has $E/SKILL.md '### Task <id>:'
 
+# --- deferred-findings round ---
+has $S/references/deferred-findings.md 'fix(<plan id>):'
+has $S/references/deferred-findings.md 'superpowers-extended-cc:subagent-driven-development'
+lacks $E/references/deferred-findings.md '`Final: '
+has $E/references/deferred-findings.md '<plan id>: Final: fixed'
+has $E/references/deferred-findings.md 'fix(<plan id>):'
+has $E/references/deferred-findings.md 'superpowers-extended-cc:executing-plans'
+for f in $S/SKILL.md $E/SKILL.md; do
+  has "$f" '"Deferred-findings round: read references/deferred-findings.md"'
+  has "$f" '"Deferred-findings round done: delete this plan'"'"'s workspace"'
+  lacks "$f" '"Final review clean: delete this plan'"'"'s workspace"'
+done
+lacks $E/SKILL.md 'Deferred minors'
+has $E/SKILL.md 'under "Unfinished"'
+has $E/SKILL.md 'deferred-findings round fixes them'
+has $S/references/final-review.md 'references/deferred-findings.md'
+has $S/references/final-review.md 'when the deferred-findings round is done'
+has $E/SKILL.md 'when the deferred-findings round is done'
+
 if ((failures)); then
   echo "FAIL: $failures of $checks id-form checks" >&2
   exit 1
