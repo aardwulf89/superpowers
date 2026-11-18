@@ -138,7 +138,9 @@ one in the worktree you are executing in. Inside a worktree Claude Code isolates
 Ensure the work happens in an isolated workspace. Before calling `using-git-worktrees`, check if a worktree already exists:
 
 1. Run `git worktree list` to see all existing worktrees
-2. If a worktree for the plan's branch already exists: **cd into it — do NOT create a new one**
+2. If a worktree for the plan's branch already exists: **enter it — do NOT create a new one.** In
+   Claude Code, use `EnterWorktree` with its `path`: under the harness's worktree isolation a
+   `cd` is reset. Elsewhere, change into it
 3. If on main/master with no worktree: **REQUIRED SUB-SKILL:** Use `superpowers-extended-cc:using-git-worktrees` to create one
 
 Never start implementation on a main/master branch without your human

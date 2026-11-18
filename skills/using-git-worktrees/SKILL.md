@@ -141,11 +141,12 @@ Ready to implement <feature-name>
 
 ## Step 4: Exit the Worktree (when done)
 
-When feature work is finished, use the native `ExitWorktree` tool — the counterpart to `EnterWorktree` — to clean up. It can remove the worktree, or keep it / discard changes, and unwinds the harness state cleanly.
+When feature work is finished, `superpowers-extended-cc:finishing-a-development-branch` decides how the worktree is left. It follows two rules:
 
-Prefer this over `git worktree remove`. Reaching for git here leaves the same phantom state your harness can't see or manage that you avoided at create time.
+- **Work that is thrown away:** the native `ExitWorktree` tool, action `remove`, removes the worktree and its branch in one step and unwinds the harness state cleanly.
+- **A branch merged locally:** `ExitWorktree` can't do the cleanup. The merge can't run from inside the worktree, and `ExitWorktree` refuses to remove a worktree with commits (it doesn't check whether they reached the base branch) and does nothing once the session has left. So finishing leaves with `ExitWorktree`, action `keep`, merges from the main checkout, then removes the worktree with `git worktree remove`.
 
-Only fall back to `git worktree remove` if you have no native exit tool available.
+Without a native exit tool, use `git worktree remove` in both cases.
 
 ## Quick Reference
 
@@ -163,7 +164,7 @@ Only fall back to `git worktree remove` if you have no native exit tool availabl
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
-| Feature work done, cleaning up | Use native `ExitWorktree` (Step 4) |
+| Feature work done, cleaning up | `finishing-a-development-branch`: `ExitWorktree` remove when discarded; keep, merge, `git worktree remove` when merged locally (Step 4) |
 
 ## Common Rationalizations
 
