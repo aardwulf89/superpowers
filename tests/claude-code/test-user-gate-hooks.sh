@@ -644,5 +644,29 @@ rc=$(SUPERPOWERS_USERGATE_GUARD=0 run_pre_hook 1 "$WORK/pre-agent-only.jsonl")
 assert "pre + gate + guard=0 → pass (exit 0)" "0" "$rc"
 echo ""
 
+echo "Test BD: pre-blockedby treats a deleted blocker as cleared"
+# Task 1 blocks Task 2. Task 1 was made obsolete and deleted (the native
+# status for that). Starting Task 2 must be allowed; a pending or
+# in_progress blocker still blocks.
+for st in deleted pending in_progress; do
+    cat > "$WORK/blockedby-$st.jsonl" <<EOF
+{"type":"assistant","message":{"content":[{"type":"tool_use","name":"TaskCreate","input":{"subject":"V0.3 Old probe","description":"obsolete after re-plan"}}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","name":"TaskCreate","input":{"subject":"V1.3 Replay","description":"next"}}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","name":"TaskUpdate","input":{"taskId":"2","addBlockedBy":[1]}}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","name":"TaskUpdate","input":{"taskId":"1","status":"$st"}}]}}
+EOF
+    rc=$(printf '{"tool_name":"TaskUpdate","tool_input":{"taskId":"2","status":"in_progress"},"transcript_path":"%s"}' \
+        "$WORK/blockedby-$st.jsonl" | bash "$BLOCKEDBY_HOOK" 2>"$WORK/stderr" >/dev/null; echo $?)
+    if [ "$st" = deleted ]; then want=0; else want=2; fi
+    assert "pre-blockedby exit $want when blocker is $st" "$want" "$rc"
+done
+grep -qi "cancelled" "$WORK/stderr" \
+    && { echo "  [FAIL] block message still advises 'cancelled'"; FAILED=$((FAILED + 1)); } \
+    || echo "  [PASS] block message does not advise 'cancelled'"
+grep -q "status=deleted" "$WORK/stderr" \
+    && echo "  [PASS] block message advises status=deleted" \
+    || { echo "  [FAIL] block message does not advise status=deleted"; FAILED=$((FAILED + 1)); }
+echo ""
+
 echo "=== Summary: $FAILED failure(s) ==="
 exit "$FAILED"
