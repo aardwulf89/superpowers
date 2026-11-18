@@ -124,7 +124,8 @@ digraph process {
    - Include full `description` from .tasks.json (not just subject)
    - Include `metadata` field if present (files, verifyCommand, acceptanceCriteria)
    - Restore `blockedBy` with TaskUpdate
-4. If native tasks exist: verify they match plan, resume from first `pending`/`in_progress`
+4. If work tasks exist (those with a `json:metadata` block): verify they match the plan,
+   and resume from the first `pending`/`in_progress`. To check that they match, compare only work tasks; other skills' step tasks may sit in the same list
 5. If neither: bootstrap from the plan (Step 1b below)
 
 Update `.tasks.json` after every task status change.
@@ -161,7 +162,10 @@ and the new one resumes from the same ledger.
   directory is never yours to read or write.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
   line names your plan file, tasks with a `Task <id>: complete` line are
-  DONE — do not redo them; resume at the first task without one. Their
+  DONE — do not redo them; resume at the first task without one. A task
+  split by a `Task <id>: Ruling: split into …` line is DONE when every part the ruling names
+  has its own completion line; resume at the first
+  part without one. Their
   commits exist in git even when your context no longer remembers making
   them: after compaction, trust the ledger and `git log` over your own
   recollection. A ledger whose first line names a different plan file is
@@ -263,6 +267,20 @@ read its output, and compare. Three outcomes:
   as `Task <id>: Ruling: <finding> — <what you decided and why>`, and
   continue. The ruling is carried, not remembered: later tasks that touch
   the same interface read it from the ledger.
+- **The task must be done in parts.** Ledger
+  `Task <id>: Ruling: split into <id>a (<what>) and <id>b (<what>) — <why>`,
+  one lowercase letter per part, skipping i, l and o; a part that splits
+  again alternates to a number (K3.4 → K3.4a, K3.4b; K3.4a → K3.4a1, K3.4a2, never K3.4aa). Do not edit the plan: each part becomes a full work task
+  instead. `TaskCreate` it in writing-plans' format, titled
+  `<part id>: <what>`, with its own Goal, Files, Acceptance Criteria and
+  Verify and a `json:metadata` block (with a tier when routing is on),
+  and add it to `.tasks.json`. The first part takes the parent's
+  blockers; each later part is blocked by the one before. The parent task
+  stays: add every part to its blockers. It is never dispatched, and it
+  completes when its last part does.
+  Start each part with `task-start` on the parent id, work it against its
+  own task, and close it with its own `task-done` on the part id. Use the
+  part ids from then on, in commits and the final message.
 
 Commit as the plan's commit steps say. A task that spans several commits
 is fine; BASE is what the review range is cut from, never `HEAD~1`.

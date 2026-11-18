@@ -93,8 +93,11 @@ This structure informs the task decomposition. Each task should produce self-con
 **BEFORE exploring code or writing the plan, you MUST:**
 
 1. Call `TaskList` to check for existing tasks from brainstorming
-2. If tasks exist: you will enhance them with implementation details as you write the plan
-3. If no tasks: you will create them with `TaskCreate` as you write each plan task
+2. If tasks exist: enhance only the tasks that carry a `json:metadata` block — those are
+   work tasks — with implementation details as you write the plan. Leave every other task
+   alone: it is a step task, and it belongs to the skill that made it (a skill's checklist,
+   a chain's stages)
+3. If no work tasks exist: you will create them with `TaskCreate` as you write each plan task
 
 **Do not proceed to exploration until TaskList has been called.** This includes dispatching background or parallel investigation subagents — TaskList is fast and synchronous, so call it FIRST, then fan out any exploration agents.
 

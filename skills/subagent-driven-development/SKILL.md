@@ -146,11 +146,29 @@ none, and a line that would start with `<plan id>:` starts bare. Every
 task subject, dispatch, ledger line, commit subject and final-message line
 names its id in full, never a short form. A branch setup creates for a plan with an id is named after the plan's id (`K3`; Claude Code's `EnterWorktree` makes it `worktree-K3`). A task whose
 heading holds nested part headings (`#### Task K3.4a`, …) was split in the
-plan: run each part as its own task, never the parent on its own.
+plan: run each part as its own task, never the parent on its own. A task
+split during the build follows BLOCKED item 3 in
+[references/handling-reports.md](references/handling-reports.md).
 
 Before dispatching the first task, read [references/preflight.md](references/preflight.md)
 and run the conflict scan it describes. Its table and rulings go in the
-ledger. Then `TaskCreate` a task per plan task with the full task text.
+ledger.
+
+**Step 0: load the plan's work tasks.** A session may already hold them:
+the one that ran writing-plans does, and so does a resumed one. So load
+them in executing-plans' order, and never make a second copy:
+
+1. Call `TaskList`. Work tasks (those with a `json:metadata` block) that
+   match the plan's tasks are this plan's: use them. When you check that
+   the tasks match the plan, compare only work tasks; other skills' step
+   tasks may sit in the same list.
+2. Else read `<plan-path>.tasks.json` and recreate each entry with
+   `TaskCreate` (its full description), its status, and its `blockedBy`
+   with `TaskUpdate`.
+3. Else build them from the plan's `### Task <id>:` headings, in
+   writing-plans' format (Goal, Files, Acceptance Criteria, Verify, and
+   the `json:metadata` block), with the ledger's `Task <id>: complete`
+   lines marking which are done.
 
 ## Dispatching with Metadata
 
