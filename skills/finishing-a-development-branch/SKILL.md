@@ -27,8 +27,8 @@ Tests failing (<N> failures). Must fix before completing:
 
 ## Step 2: Detect Environment
 
-Run each of these as its own plain Bash call, and note the path each one
-prints: `GIT_DIR`, `GIT_COMMON` and `WORKTREE_PATH`, in that order.
+Run each command below as its own plain Bash call. Note the path that each
+one prints: `GIT_DIR`, `GIT_COMMON` and `WORKTREE_PATH`, in that order.
 
 ```bash
 git rev-parse --path-format=absolute --git-dir
@@ -36,10 +36,10 @@ git rev-parse --path-format=absolute --git-common-dir
 git rev-parse --show-toplevel
 ```
 
-Separate plain calls run inside a worktree the harness confines the
-session to (Claude Code, after `EnterWorktree`), which refuses a compound
-command that runs git. Capture `WORKTREE_PATH` now, while still inside the
-workspace: Step 5 changes directory before cleanup (Step 6) needs it.
+Use separate plain calls: an isolated worktree (Claude Code, after
+`EnterWorktree`) refuses a compound command that runs git. Capture
+`WORKTREE_PATH` now, while you are still inside the workspace. Step 5
+changes directory before cleanup (Step 6) needs it.
 
 This determines which menu to show and how cleanup works:
 
@@ -91,7 +91,7 @@ is theirs.
 
 ### Option 1: Merge Locally
 
-**If this session is confined to the worktree** (Claude Code, after `EnterWorktree`), leave it first with the harness's exit tool, keeping the worktree (`ExitWorktree`, action `keep`). From inside it the `cd` and the merge below are refused. The values captured in Step 2 still hold.
+**If this session is in an isolated worktree** (Claude Code, after `EnterWorktree`), leave it first with `ExitWorktree`, action `keep`. The worktree refuses the `cd` and the merge below. The values from Step 2 still hold.
 
 ```bash
 # Get main repo root for CWD safety
@@ -153,16 +153,16 @@ Type 'discard' to confirm.
 
 Wait for that exact confirmation. When it arrives:
 
-**If this session is confined to a worktree it created** (Claude Code, after
-`EnterWorktree` with a name), throw it away with the harness's exit tool:
-`ExitWorktree`, action `remove`, with `discard_changes: true`. It removes the
-worktree and its branch in one step, and the typed confirmation above is the
-confirmation it asks for. Done: skip Step 6.
+**If this session is in an isolated worktree that it created** (Claude Code,
+after `EnterWorktree` with a name), use `ExitWorktree`, action `remove`, with
+`discard_changes: true`. It removes the worktree and its branch in 1 step.
+The typed confirmation above is the confirmation that the tool asks for.
+Then you are done: skip Step 6.
 
-**If it refuses because this session is not the owner** (the session
-entered an existing worktree with `EnterWorktree` and its `path`, as a
-resumed build does), leave it with `ExitWorktree`, action `keep`, and go on
-below.
+**If `ExitWorktree` refuses because this session is not the owner** (the
+session entered an existing worktree with `EnterWorktree` and its `path`, as
+a resumed build does), leave with `ExitWorktree`, action `keep`. Then
+continue below.
 
 **Otherwise,** change to the main repo root:
 
@@ -191,8 +191,8 @@ Step 2, from before that directory change.
 `.claude/worktrees/` and this session entered it with the harness's
 worktree tool and left it in Step 5:** Superpowers created this worktree,
 or this session did through the harness and the harness's exit tool can no
-longer remove it — we own cleanup. `<WORKTREE_PATH>` is the path Step 2
-noted, written literally:
+longer remove it — we own cleanup. In the commands below, write
+`<WORKTREE_PATH>` literally, as the path that Step 2 noted:
 
 ```bash
 git worktree remove <WORKTREE_PATH>
@@ -223,11 +223,13 @@ Which?
 Carry out the choice, then remove the worktree.
 
 **If removal is refused because the worktree is locked** (`cannot remove a
-locked working tree`): a session that ended without leaving it, such as one
-cut off mid-build, left its lock, and nothing clears it. Read the lock's
-reason with `git worktree list --porcelain`: Claude Code writes
-`claude session <name> (pid <pid> start <start>)`. Then check that process
-with a plain `ps -p <pid>`.
+locked working tree`): a session that ended without leaving the worktree
+(for example, one cut off mid-build) left its lock. Nothing clears the lock
+for you.
+
+1. Read the lock's reason with `git worktree list --porcelain`. Claude Code
+   writes `claude session <name> (pid <pid> start <start>)`.
+2. Check that process with a plain `ps -p <pid>`.
 
 - **It is not running:** the lock is stale. Unlock and remove:
 
@@ -236,9 +238,9 @@ with a plain `ps -p <pid>`.
   git worktree remove <WORKTREE_PATH>
   ```
 
-- **It is running:** another session still has the worktree open, perhaps
-  your human partner's in another terminal. Stop and tell them which
-  session holds it. Never unlock it, and never force the removal.
+- **It is running:** another session still has the worktree open (perhaps
+  your human partner's, in another terminal). Stop and tell your human
+  partner which session holds it. Never unlock it. Never force the removal.
 
 **Otherwise:** The host environment owns this workspace — leave it in
 place. If your platform provides a workspace-exit tool, use it.
@@ -262,7 +264,7 @@ place. If your platform provides a workspace-exit tool, use it.
 | "'Yeah, get rid of it' counts as confirmation" | Only the typed word `discard` authorizes deletion. |
 | "The PR is up, so the worktree is clutter now" | PR feedback gets fixed in that worktree. It stays until the work lands. |
 | "This other worktree looks stale — I'll clean it too" | Clean up only worktrees under `.worktrees/` or `worktrees/`, or the `.claude/worktrees/` one this session entered and left. Everything else belongs to the host. |
-| "It's locked — unlocking is just finishing the cleanup" | Only a dead session's lock is stale. Check its process with `ps -p` first; a live one means the worktree is in use. |
+| "It's locked — unlocking is just finishing the cleanup" | Only a dead session's lock is stale. Check its process with `ps -p` first. A live process means the worktree is in use. |
 | "Removal refused — `--force` is just finishing the cleanup" | The refusal means files exist only in that worktree. `--force` destroys them permanently. Show your human partner and ask. |
 | "The merged-result failure is probably flaky" | A failing merged result stops everything. Branch and worktree stay put while you investigate. |
 | "The base branch is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |

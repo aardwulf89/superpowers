@@ -22,42 +22,41 @@ Write implementation plans for an engineer who has not seen this codebase or thi
 
 ## Ids
 
-Every plan, and every task in it, has an id that is unique across the
-repo, never reused, and written in full wherever it is named. The plan
-id is the spec's letter plus a number (`K3`); a task id is the plan id,
-a dot, and a number (`K3.4`). Ids carry no words.
+Every plan and every task in it has an id. An id is unique across the
+repo and is never reused. Write it in full wherever you name it. The plan
+id is the spec's letter plus a number (`K3`). A task id is the plan id, a
+dot and a number (`K3.4`). Ids carry no words.
 
 **The plan id.**
 - In an effort, `superpowers-extended-cc:chaining-plans` gives it: the phase id.
-- Otherwise, when the spec has a letter (its first line is `# K: …`),
-  run `bash ../brainstorming/scripts/next-spec-id --phase K` by its
-  absolute path, from the working tree you're writing in. It prints the
-  next unused phase id of spec K (`K1` for its first plan).
-- A spec that predates ids (a dated file name, no letter on its first
-  line) gets a letter once, from `bash ../brainstorming/scripts/next-spec-id`
-  run by its absolute path. Stamp it into the spec's first line as
-  `# K: <its existing title>`, keep the file's name, and commit it with
-  the plan. From then on it is spec K, and its next plan takes the next
-  phase id.
-- A plan with no spec gets a fresh letter of its own, the same way, and
-  is its phase 1 (`M1`). No spec file is written for the letter.
+- If the spec has a letter (its first line is `# K: …`), run
+  `bash ../brainstorming/scripts/next-spec-id --phase K`. Run it by its
+  absolute path, from the working tree you write in. It prints the next
+  unused phase id of spec K (`K1` for its first plan).
+- If the spec predates ids (a dated file name, no letter on its first
+  line), give it a letter once. Get the letter from
+  `bash ../brainstorming/scripts/next-spec-id`, run by its absolute path.
+  Write the letter into the spec's first line as `# K: <its existing title>`.
+  Keep the file's name. Commit the spec with the plan. From then on it is
+  spec K, and its next plan takes the next phase id.
+- If the plan has no spec, get a new letter for it the same way. The plan
+  is phase 1 of that letter (`M1`). Do not write a spec file for the letter.
 
 **The plan's first line** is `# <plan id>: [Feature Name] Implementation Plan`.
 
-**Task ids.** Headings are `### Task <plan id>.<n>: …`, numbered in
-order. Until the plan is committed, renumber freely. A reference to
+**Task ids.** Task headings are `### Task <plan id>.<n>: …`, numbered in
+order. Until you commit the plan, you can renumber freely. A reference to
 another task, in this plan or another, uses its full id.
 
-**After the plan is committed,** its ids are fixed: never renumbered,
-reused, or given to other work.
-- A task added later takes the next number after the highest issued in
-  the plan, and sits where it belongs in the plan's order.
-- A plan rewritten for the same phase continues from the highest task
+**After you commit the plan,** its ids are fixed. Never renumber them,
+reuse them or give them to other work.
+- A task added later takes the next number after the highest number issued
+  in the plan. Put it where it belongs in the plan's order.
+- If you rewrite a plan for the same phase, continue from the highest task
   number the phase has ever issued.
-- A task split in a committed plan keeps its parent heading, and its
-  words are divided under headings one level deeper, with one lowercase
-  letter per part (skipping i, l and o), and nothing added the change
-  doesn't call for:
+- To split a task in a committed plan, keep its parent heading. Divide its
+  words under headings 1 level deeper, with 1 lowercase letter per part
+  (skip i, l and o). Add nothing that the change does not need:
 
   ```markdown
   ### Task K3.4: Add retry
@@ -65,13 +64,13 @@ reused, or given to other work.
   #### Task K3.4b: Backoff schedule
   ```
 
-  `K3.4` still names the whole. A part that splits again alternates to
-  a number (`K3.4a1`, `K3.4a2`). Executors run the parts, never the
-  parent on its own.
+  `K3.4` still names the whole. If a part splits again, it alternates
+  to a number (`K3.4a1`, `K3.4a2`). Executors run the parts, never the parent
+  on its own.
 
-**Commits** carry the task id in their subject: as the scope in a repo
-that uses conventional commits (`feat(K3.4): …`), else as a `K3.4: `
-prefix.
+**Commits** carry the task id in their subject. In a repo that uses
+conventional commits, the id is the scope (`feat(K3.4): …`). Else it is a
+`K3.4: ` prefix.
 
 ## Scope Check
 
@@ -93,11 +92,11 @@ This structure informs the task decomposition. Each task should produce self-con
 **BEFORE exploring code or writing the plan, you MUST:**
 
 1. Call `TaskList` to check for existing tasks from brainstorming
-2. If tasks exist: enhance only the tasks that carry a `json:metadata` block — those are
-   work tasks — with implementation details as you write the plan. Leave every other task
-   alone: it is a step task, and it belongs to the skill that made it (a skill's checklist,
-   a chain's stages)
-3. If no work tasks exist: you will create them with `TaskCreate` as you write each plan task
+2. If tasks exist: enhance only the tasks that carry a `json:metadata` block (the work
+   tasks). Add implementation details to them as you write the plan. Leave every other task
+   alone: it is a step task, and the skill that made it owns it (a skill's checklist, a
+   chain's stages)
+3. If no work tasks exist: create them with `TaskCreate` as you write each plan task
 
 **Do not proceed to exploration until TaskList has been called.** This includes dispatching background or parallel investigation subagents — TaskList is fast and synchronous, so call it FIRST, then fan out any exploration agents.
 
@@ -253,7 +252,7 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **5. Proportion:** Compare the plan's length to the spec's. A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures, test names and assertions, and check that each step is still unambiguous.
 
-**6. Ids:** Is the first line `# <plan id>: …`, and is every task heading `### Task <plan id>.<n>: …`, numbered in order? Is every reference to another task its full id, naming a task that exists in this plan or a named earlier one?
+**6. Ids:** Is the first line `# <plan id>: …`? Is every task heading `### Task <plan id>.<n>: …`, numbered in order? Does every reference to another task use its full id? Does that task exist in this plan or in a named earlier plan?
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
@@ -494,12 +493,10 @@ If the plan is saved to `docs/superpowers/plans/K3.md`, the tasks file MUST be s
 
 Both the plan `.md` and `.tasks.json` must be co-located in `docs/superpowers/plans/`.
 
-Then commit the plan and its tasks file together (`docs(<plan id>): plan`). The
-executors resume from the tasks file, and usually run in a worktree that starts
-from this commit. Inside a worktree Claude Code isolates (after `EnterWorktree`), Edit and Write
-to the main checkout are refused, and `git worktree remove` refuses a
-worktree with modified files: so the file the executors update is the one in
-the working tree they run in, and it is committed before they finish.
+Then commit the plan and its tasks file together (`docs(<plan id>): plan`).
+Commit them before execution starts. The executor usually runs in an isolated
+worktree that starts from this commit. Without the commit, that worktree has
+no tasks file to resume from or update.
 
 ### Resuming Work
 

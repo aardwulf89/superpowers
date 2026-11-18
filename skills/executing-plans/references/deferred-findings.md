@@ -1,32 +1,41 @@
 # The Deferred-Findings Round
 
-Part of superpowers-extended-cc:executing-plans. The final whole-branch review's fix
-pass is done.
+Part of superpowers-extended-cc:executing-plans. The final whole-branch
+review's fix pass is done.
 
-Every `minor (deferred)` line in the ledger is still work. Sorting a
-finding to Minor deferred it; it did not close it.
+Every `minor (deferred)` line in the ledger is still open work. A finding
+sorted to Minor is deferred, not closed.
 
-Fix the deferred minors yourself — you are the implementer here — in ONE
-pass. Each fix is verified by TDD, not by a second reviewer: write the test
-that reproduces the finding, watch it fail, make it pass, then run the
-whole suite. Record each in the ledger as
-`<plan id>: Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`,
-with commit subjects that carry the plan id (`fix(<plan id>): …`). A fix
-without a test that failed first is not verified; a suite that is not
-green after the pass means the pass is not over. Do not dispatch a
-re-review: it would re-read a diff whose covering tests already answer
-"addressed" and whose suite run already answers "broke nothing".
+Fix the deferred minors yourself, in ONE pass. You are the implementer
+here. TDD verifies each fix, not a second reviewer. For each finding:
 
-A fix that needs a decision only your human partner can make is not
-guessed at: leave that finding open, with the question.
+1. Write the test that reproduces the finding.
+2. Watch it fail.
+3. Make it pass.
+4. Run the whole suite.
+5. Record the fix in the ledger as
+   `<plan id>: Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`.
+
+Commit subjects carry the plan id (`fix(<plan id>): …`). A fix without a
+test that failed first is not verified. If the suite is not green after
+the pass, the pass is not over. Do not dispatch a re-review: the covering
+tests already show each finding addressed, and the suite run already
+shows that nothing broke.
+
+If a fix needs a decision that only your human partner can make, do not
+guess. Leave that finding open, with the question.
 
 **After the round,** append to the ledger:
 `Deferred findings: round 1/1 (<X> addressed, <Y> open — <finding one-liners>; commits <a7>..<b7>)`
 
-There is no second round. Only the four things that stop a running plan
-(top of SKILL.md) stop you here. Every finding the round leaves open goes
-into your final message under "Unfinished", after "Rulings I made", each
-starting with the id it concerns and with what was tried. The list is exhaustive: if the round left a finding
-open, the list holds it.
+There is no second round. Only the 4 things that stop a running plan (top
+of SKILL.md) stop you here.
+
+Put every finding that the round leaves open in your final message under
+"Unfinished", after "Rulings I made".
+
+Start each line with the id it concerns: the task id, or the plan id for
+a branch-wide finding. Say what was tried. The list is exhaustive: if the
+round left a finding open, the list holds it.
 
 Then continue with Finish in [SKILL.md](../SKILL.md).

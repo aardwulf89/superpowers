@@ -1,161 +1,183 @@
 # Create: the intent sitting
 
-Your human partner is present, having just approved a spec that needs
-several plans. This sitting is the one time they decide the intent of every
-phase. After it, each phase runs in its own session without them, up to its
-merge menu.
+Your human partner is present and has just approved a spec that needs
+several plans. In this sitting, and only here, they decide the intent of
+every phase. After it, each phase runs in its own session without them, up
+to its merge menu.
 
 Create writes nothing until your human partner has answered: no Phases
-section, no record, no commit, no plan, and no change to another effort's
-record.
+section, no record, no commit, no plan, and no change to the record of
+another effort.
 
-Once step 1 finds the spec's letter, use `TaskCreate` to make one step task
-for each step, as `SKILL.md` § Tasks says: `"Draft the phases (K)"`,
-`"Find the open intent questions (K)"`, `"Run one sitting (K)"`,
-`"Write it down (K)"`, `"Hand over (K)"`, each named by its heading word for
-word. Block each task by the one before it, with `TaskUpdate`
-(`addBlockedBy`). A task stays in_progress while its step waits on your
-human partner. If step 4 uses a different letter, retitle each task with
-`TaskUpdate`. Leave every other task in the list alone, brainstorming's
-included: they belong to the skills that made them, and they end with this
-session.
+When step 1 finds the spec's letter, make the step tasks, as `SKILL.md`
+§ Tasks says:
+1. Use `TaskCreate` to make 1 step task for each step: `"Draft the phases (K)"`,
+   `"Find the open intent questions (K)"`, `"Run one sitting (K)"`,
+   `"Write it down (K)"`, `"Hand over (K)"`. Each title is its step's
+   heading, word for word.
+2. Block each task by the task before it, with `TaskUpdate`
+   (`addBlockedBy`).
+
+A task stays in_progress while its step waits on your human partner. If
+step 4 uses a different letter, retitle each task with `TaskUpdate`. Leave
+every other task in the list alone, brainstorming's included: they belong
+to the skills that made them, and they end with this session.
 
 ## 1. Draft the phases
 
 - **Find the umbrella spec.** It is the `<spec path>` argument, or the spec
-  this session just approved. If the session holds no spec, ask which one to
-  use, and stop until your human partner answers.
-- **Find `base`,** the branch every phase merges into. When the main
-  checkout is on the repository's default branch, that branch is `base`:
-  the one `git symbolic-ref --short refs/remotes/origin/HEAD` names,
-  without `origin/`, or, with no remote, `main` or `master`. On any other
-  branch, which branch is `base` is a question for the sitting.
+  this session just approved. If the session holds no spec, ask which spec
+  to use. Stop until your human partner answers.
+- **Find `base`,** the branch every phase merges into.
+  - If the main checkout is on the repository's default branch, that
+    branch is `base`. The default branch is the one
+    `git symbolic-ref --short refs/remotes/origin/HEAD` names, without
+    `origin/`. With no remote, it is `main` or `master`.
+  - If the main checkout is on any other branch, ask which branch is `base`
+    in the sitting (step 3).
 - **Find the spec's letter.** It is the id on the spec's first line
-  (`# K: …`), and it is the effort id. A spec that predates ids (a dated
-  file name, no letter on its first line) gets one now: run
+  (`# K: …`), and it is the effort id. If the spec predates ids (a dated
+  file name, no letter on its first line), give it a letter now. Run
   `bash ../brainstorming/scripts/next-spec-id` by its absolute path, from
-  the main checkout. The letter is not issued until step 4 commits it, so
-  until then it and the phase ids may change.
-- **Check for an existing effort.** The effort id is the spec's letter. If
-  `docs/superpowers/efforts/<id>.json` already exists in the main checkout
-  (`references/record.md`), this spec is already an
-  effort. Say so, and point your human partner at Resume.
-- **Work from the spec and from the reasons for the split** that the session
-  holds, such as `writing-plans`' Scope Check finding several subsystems.
+  the main checkout. Step 4's commit issues the letter. Until then, the
+  letter and the phase ids may change.
+- **Check for an existing effort.** If `docs/superpowers/efforts/<id>.json`
+  already exists in the main checkout, this spec is already an effort. Say
+  so, and point your human partner at Resume.
+- **Work from the spec and from the reasons for the split** that the
+  session holds, such as the Scope Check of `writing-plans` that found
+  several subsystems.
 - **For each phase, draft:**
-  - an id, the spec's letter plus a number in work order (`K1`, `K2`,
-    …), and a title. Ids carry no words. A plan already written for this
-    spec has an id (`K1`): its phase keeps that number, and the other
-    phases take the numbers no plan has used, in work order;
-  - its purpose and its limits (what it builds, and what it leaves to other
-    phases);
+  - an id: the spec's letter plus a number in work order (`K1`, `K2`, …).
+    Ids carry no words. If a plan for this spec already has an id (`K1`),
+    its phase keeps that number. The other phases take the numbers that no
+    plan has used, in work order;
+  - a title;
+  - its purpose and its limits: what it builds, and what it leaves to other
+    phases;
   - `depends_on`: the phases whose code it builds on (build order);
-  - `waits_on`: each question an earlier phase's plan must answer before this
-    phase can be designed, and which phase answers it (knowledge order).
-    Every phase a phase waits on is also in its `depends_on`: it cannot start
-    before its question is answered, and Resume's pick reads only
-    `depends_on`.
-- **Order the phases.** The order is the order of work: each phase comes after
-  every phase it depends on and every phase it waits on.
+  - `waits_on`: each question that the plan of an earlier phase must answer
+    before this phase can be designed, and which phase answers it
+    (knowledge order). Put every phase in `waits_on` also in `depends_on`:
+    the phase cannot start before its question is answered, and Resume's
+    pick reads only `depends_on`.
+- **Order the phases** in the order of work. Each phase comes after every
+  phase it depends on and every phase it waits on.
 
 ## 2. Find the open intent questions
 
-An intent question is one whose answer changes what a phase builds, and that
-the spec does not answer: who a feature is for, what is in or out of scope,
-a preference between outcomes, a rule that cuts across phases.
+An intent question is a question that the spec does not answer, and whose
+answer changes what a phase builds. Examples: who a feature is for, what is
+in or out of scope, a preference between outcomes, a rule that cuts across
+phases.
 
-Technical questions are not on this list: how to build it, which library,
-which data structure, the format a measurement should decide, a technical
-choice every phase will share, such as the language or the runtime. They are
-decided when the phase is designed, with what earlier phases learned. Asking
-them now freezes a guess.
+Technical questions are not intent questions. Examples: how to build it,
+which library, which data structure, a format that a measurement will
+decide, a technical choice that every phase will share (such as the
+language or the runtime). Decide them when the phase is designed, with what
+earlier phases learned. If you ask them now, you freeze a guess.
 
 ## 3. Run one sitting
 
-**First, read the carried items:** run `record.py carried`. Each entry is a
-partner item that an earlier effort carried past its end. Its effort is the
-name of its `record` file, without `.json`.
+**First, read the carried items.** Run `record.py carried`. Each entry is a
+partner item that an earlier effort carried past its end. The entry's
+effort is the name of its `record` file, without `.json`.
 
-Show your human partner, in one message:
-- the phases in order, as a numbered list: id, title, purpose, and what each
-  depends on and waits on;
-- the intent questions, in one round, most important first, each naming the
+Show your human partner, in 1 message:
+- the phases in order, as a numbered list: id, title, purpose, and what
+  each phase depends on and waits on;
+- the intent questions, in 1 round, most important first, each naming the
   phase it shapes;
-- an invitation to correct the phase list (add, drop, merge, split, reorder)
-  in the same reply;
-- each carried item, with its effort and phase, and the question, in the
-  same round: adopt it into a phase of this effort (which one), carry it
-  again, or drop it. When `carried` printed `[]`, say nothing about carried
-  items.
+- an invitation to correct the phase list (add, drop, merge, split,
+  reorder) in the same reply;
+- each carried item, with its effort and phase, and a question in the same
+  round: adopt it into a phase of this effort (which one), carry it again,
+  or drop it;
+- the question of which branch is `base`, if step 1 found that it is a
+  question.
 
-If `base` is a question (step 1), ask it in the same round.
+If `carried` printed `[]`, say nothing about carried items.
 
-Then end your turn and wait for the answers. Do not write anything while the
-sitting is open. If an answer opens a new intent question, ask it before writing.
+Then end your turn and wait for the answers. Write nothing while the
+sitting is open. If an answer opens a new intent question, ask it before
+you write.
 
-If your human partner defers a question ("decide it later"), it stays open:
-it goes into that phase's `partner_questions`, and Resume asks it when the
-phase comes up.
+If your human partner defers a question ("decide it later"), it stays open.
+Put it in that phase's `partner_questions`. Resume asks it when the phase
+comes up.
 
 ## 4. Write it down
 
-All of this happens in the main checkout, on `base`.
+Do all of this in the main checkout, on `base`.
 
-1. **Add the Phases section** to the umbrella spec, in the format below, with
-   your human partner's answers and corrections folded in. An adopted
-   carried item goes into its phase's entry, in the "Answers:" or "Limits:"
-   line. For a spec that predates ids, run `bash ../brainstorming/scripts/next-spec-id` by its
-   absolute path again: if it now prints a different letter, use that one
-   and renumber the phase ids to match. Stamp the letter into the spec's
-   first line as `# K: <its existing title>`; the file keeps its name.
-2. **Plans already written.** By the time Create runs, the session may have
-   written plans for this spec: none, the first phase's, or several.
-   - **Link a plan only to a phase with no `waits_on`.** That phase's `plan`
-     is the plan's path, and its `spec` is the plan's Spec path, so Resume
-     neither designs nor re-plans it. Don't rewrite the plan.
-   - **A plan for a waiting phase** assumed answers nobody has yet. Don't link
-     it. Name it in the hand-over, and leave it for your human partner to keep
-     or delete. Its phase keeps the plan's number either way; if the plan is
-     deleted, that number is not given to anything else.
-3. **Check that `.superpowers/` is ignored:** `git check-ignore -q
-   .superpowers`. If it is not, add `.superpowers/` to `.gitignore`; value
-   files and the executors' workspaces live there, and an untracked one
-   would leave the tree dirty for Resume.
+1. **Add the Phases section** to the umbrella spec, in the format below.
+   Fold in your human partner's answers and corrections. Put an adopted
+   carried item in its phase's entry, in the "Answers:" or "Limits:" line.
+   For a spec that predates ids:
+   - Run `bash ../brainstorming/scripts/next-spec-id` by its absolute path
+     again.
+   - If it now prints a different letter, use that letter. Renumber the
+     phase ids to match.
+   - Stamp the letter into the spec's first line as
+     `# K: <its existing title>`. The file keeps its name.
+2. **Plans already written.** Before Create runs, the session may have
+   written plans for this spec: none, the plan of the first phase, or
+   several.
+   - **Link a plan only to a phase with no `waits_on`.** Set that phase's
+     `plan` to the plan's path, and its `spec` to the plan's Spec path.
+     Then Resume neither designs nor re-plans the phase. Do not rewrite the
+     plan.
+   - **A plan for a waiting phase** assumed answers that nobody has yet. Do
+     not link it. Name it in the hand-over, and leave it for your human
+     partner to keep or delete. Its phase keeps the plan's number either
+     way. If the plan is deleted, never give that number to anything else.
+3. **Check that `.superpowers/` is ignored.** Run
+   `git check-ignore -q .superpowers`. If it is not ignored, add
+   `.superpowers/` to `.gitignore`: an untracked file there would stop the
+   next Resume, which needs a clean tree.
 4. **Write the record** with `record.py new-record`
-   (`references/record.md` § Commands): write the whole record as JSON to a
-   value file, then run `record.py new-record
-   <main checkout>/docs/superpowers/efforts/<id>.json --value-file <path>`.
-   This one write creates the whole file, in the shape
-   `references/record.md` gives:
+   (`references/record.md` § Commands):
+   - Write the whole record as JSON to a value file.
+   - Run `record.py new-record
+     <main checkout>/docs/superpowers/efforts/<id>.json --value-file <path>`.
+
+   Use the shape that `references/record.md` gives:
    - `umbrella`: the spec's repo-relative path; `base`: the branch;
-   - `phases`: in the order of work, every phase with all nine keys, and
-     every `waits_on[].from` also listed in that phase's `depends_on`;
+   - `phases`: in the order of work;
    - `status`: `needs-partner` if it has `partner_questions`, else `waiting`
      if it has `waits_on`, else `known`;
    - `spec` and `plan`: null, except for a linked plan; `closing`: null.
 
-   If it fails, it wrote nothing: correct the value file and run it
-   again. Every later change goes through `record.py set`,
-   `record.py set-closing-key` or `record.py set-phases`.
+   If the command fails, it wrote nothing. Correct the value file and run
+   it again.
 5. **Mark the carried items** that your human partner adopted or dropped,
    in the old record, at the `record` path that `carried` printed. The
-   `[carried]` at the end of the line becomes `[adopted by <phase id>]`
-   or `[dropped]`. Read `record.py get <record> <phase> closing`, change
-   the line at `index` of `unfinished` (if it is not the `item` text, find
-   that text), write the whole list to a value file, and run
-   `record.py set-closing-key <record> <phase> unfinished replace
-   --value-file <path>`. An item carried again stays as it is.
-6. **Commit** the spec, the new record, any old record you marked, any
-   plan you linked, and `.gitignore` if it changed, on `base`, in one
-   commit with the letter in the subject (`docs(K): phases`). This commit
-   issues the ids: from here on they are never renumbered.
+   `[carried]` at the end of the line becomes `[adopted by <phase id>]` or
+   `[dropped]`. For each item:
+   - Run `record.py get <record> <phase> closing`.
+   - Change the line at `index` of `unfinished`. If that line is not the
+     `item` text, find that text.
+   - Write the whole list to a value file.
+   - Run `record.py set-closing-key <record> <phase> unfinished replace
+     --value-file <path>`.
+
+   Leave an item that was carried again as it is.
+6. **Commit** in 1 commit on `base`, with the letter in the subject
+   (`docs(K): phases`). Put these in the commit:
+   - the spec;
+   - the new record;
+   - any old record you marked;
+   - any plan you linked;
+   - `.gitignore`, if it changed.
+
+   This commit issues the ids. From here on, never renumber them.
 
 ### The Phases section
 
 Append it to the umbrella spec. Resume copies a phase's entry word for word
-into that phase's design, together with the "Across phases" line, which is
-part of every entry's copy. So each entry, read with that line, must stand on
-its own; don't repeat a cross-phase rule inside the entries.
+into that phase's design, together with the "Across phases" line. So each
+entry, read with that line, must stand on its own. Do not repeat a
+cross-phase rule inside the entries.
 
 ```markdown
 ## Phases
@@ -184,10 +206,10 @@ Report, briefly:
 - the commit that added the Phases section;
 - the record's path, `docs/superpowers/efforts/<id>.json`;
 - each carried item, and whether it was adopted, carried again or dropped;
-- each plan you linked, and each plan you did not, for your human partner to
-  keep or delete;
+- each plan you linked, and each plan you did not link, for your human
+  partner to keep or delete;
 - the first phase the next session will run.
 
 Then ask your human partner to clear the session and invoke the skill in a
-fresh one (for example: "Use superpowers-extended-cc:chaining-plans to continue the
-effort."). Do not start the first phase in this session.
+fresh session (for example: "Use superpowers-extended-cc:chaining-plans to
+continue the effort."). Do not start the first phase in this session.

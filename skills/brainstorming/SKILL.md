@@ -245,13 +245,13 @@ builder check.
 **Where it goes:** in a software repo,
 `docs/superpowers/specs/<letter>.md`, committed, with `# <letter>: <Title>`
 as its first line. The letter is the spec's id: uppercase, skipping I and
-O, and never reused. Get it when you first save the doc by running
+O, and never reused. Get the letter when you first save the doc: run
 `bash scripts/next-spec-id` by its absolute path, from the working tree
-you're writing in; it prints the next unused letter. Keep that letter
-through revisions; don't run it again for the same doc, since your own
-draft already counts as used. The commit subject
-carries the letter: `docs(K): …` in a repo that uses conventional
-commits, else `K: …`. Otherwise, pick a sensible place and
+you write in. It prints the next unused letter. Keep that letter through
+revisions. Do not run the script again for the same doc: your own draft
+already counts as used. The commit subject carries the letter:
+`docs(K): …` in a repo that uses conventional commits, else `K: …`.
+Otherwise, pick a sensible place and
 say where. Your human partner's preferences override both.
 
 **Builder check** (for a project): dispatch a fresh subagent with

@@ -105,12 +105,16 @@ superpowers-extended-cc:using-git-worktrees to create one or verify the existing
 Never start implementation on a main/master branch without your human
 partner's explicit consent.
 
-**The worktree must hold the plan.** Once you are in it, find the commit that
-added the plan (`git log --diff-filter=A --format=%H -1 -- <plan-path>`, run
-where the plan is committed) and check that `git merge-base --is-ancestor <plan commit> HEAD` exits 0 from inside the worktree. If it does not, the
-worktree has no copy of the plan or its tasks file to update: stop and say
-so. In Claude Code, `EnterWorktree` starts from the current branch only when
-the setting `worktree.baseRef` is `head`.
+**The worktree must hold the plan.** After you enter the worktree, check it:
+
+1. Find the commit that added the plan. Run
+   `git log --diff-filter=A --format=%H -1 -- <plan-path>` where the plan is committed.
+2. From inside the worktree, run `git merge-base --is-ancestor <plan commit> HEAD`.
+3. If it does not exit 0, stop and say so. The worktree has no copy of the
+   plan or its tasks file to update.
+
+In Claude Code, `EnterWorktree` starts from the current branch only if the
+setting `worktree.baseRef` is `head`.
 
 Conversation memory does not survive compaction. In real sessions,
 controllers that lost their place have re-dispatched entire completed task
@@ -149,35 +153,37 @@ a ledger file, not only in the task list.
 Read the plan once, note its context and Global Constraints. If the plan names a Spec, read that too: the spec is the authority the plan argues from, and conflicts inside the plan resolve against it. A plan with no reachable spec gets a ledger note saying so — rulings made without one are provisional.
 
 **Ids.** In every form below, `<id>` is the task's id
-as its plan heading writes it: `K3.4` in a plan with ids, `3` in one without. `<plan id>` is
-the plan's id from its first line (`# K3: …`); a plan without one has
-none, and a line that would start with `<plan id>:` starts bare. Every
-task subject, dispatch, ledger line, commit subject and final-message line
-names its id in full, never a short form. A branch setup creates for a plan with an id is named after the plan's id (`K3`; Claude Code's `EnterWorktree` makes it `worktree-K3`). A task whose
-heading holds nested part headings (`#### Task K3.4a`, …) was split in the
-plan: run each part as its own task, never the parent on its own. A task
-split during the build follows BLOCKED item 3 in
+as its plan heading writes it: `K3.4` in a plan with ids, `3` in one without.
+`<plan id>` is the plan's id from its first line (`# K3: …`). If the plan has
+no id, a line that would start with `<plan id>:` starts bare. Name the id in
+full in every task subject, dispatch, ledger line, commit subject and final-message
+line. Never use a short form. A branch that setup creates
+for a plan with an id is named after the plan's id (`K3`; Claude Code's
+`EnterWorktree` makes it `worktree-K3`). If a task heading holds nested part headings
+(`#### Task K3.4a`, …), the plan split the task. Run each part as its own
+task, never the parent on its own.
+
+If a task splits during the build, follow BLOCKED item 3 in
 [references/handling-reports.md](references/handling-reports.md).
 
 Before dispatching the first task, read [references/preflight.md](references/preflight.md)
 and run the conflict scan it describes. Its table and rulings go in the
 ledger.
 
-**Step 0: load the plan's work tasks.** A session may already hold them:
-the one that ran writing-plans does, and so does a resumed one. So load
-them in executing-plans' order, and never make a second copy:
+**Step 0: load the plan's work tasks.** The session may already hold them:
+the session that ran writing-plans does, and so does a resumed one. Never
+make a second copy. Load them in executing-plans' order:
 
-1. Call `TaskList`. Work tasks (those with a `json:metadata` block) that
-   match the plan's tasks are this plan's: use them. When you check that
-   the tasks match the plan, compare only work tasks; other skills' step
-   tasks may sit in the same list.
-2. Else read `<plan-path>.tasks.json` and recreate each entry with
-   `TaskCreate` (its full description), its status, and its `blockedBy`
-   with `TaskUpdate`.
+1. Call `TaskList`. If it holds work tasks (those with a `json:metadata`
+   block) that match the plan, use them. To check, compare only work tasks:
+   other skills' step tasks may sit in the same list.
+2. Else read `<plan-path>.tasks.json`. Recreate each entry with
+   `TaskCreate` (its full description). Restore its status and its
+   `blockedBy` with `TaskUpdate`.
 3. Else build them from the plan's `### Task <id>:` headings, in
    writing-plans' format (Goal, Files, Acceptance Criteria, Verify, and
-   the `json:metadata` block), with the ledger's `Task <id>: complete`
-   lines marking which are done.
+   the `json:metadata` block). Mark a task completed if the ledger has a
+   `Task <id>: complete` line for it.
 
 ## Dispatching with Metadata
 
@@ -425,9 +431,8 @@ After marking each task completed via `TaskUpdate`, update the `.tasks.json` fil
 3. Set `"lastUpdated"` to current ISO timestamp
 4. Write the file back
 
-Inside a worktree Claude Code isolates (after `EnterWorktree`), Edit and Write
-to the main checkout are refused, and `git worktree remove` refuses a
-worktree with modified files: so the file the executors update is the one in
-the working tree they run in, and it is committed before they finish.
+In an isolated worktree, the harness refuses Edit and Write to the main
+checkout. A modified tasks file blocks `git worktree remove`, so the
+executor commits it before it deletes the workspace (see [references/final-review.md](references/final-review.md)).
 
 This ensures cross-session resume works correctly. Without this, a new session loading `.tasks.json` would see completed tasks as `"pending"`.

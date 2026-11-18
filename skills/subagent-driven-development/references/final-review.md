@@ -28,26 +28,27 @@ Adjudicate any residual findings as in the fix loop's breaker
 (references/fix-loop.md): park with rulings, or rule on the load-bearing
 ones and ledger what you decided. Only the four things that stop a running
 plan (top of SKILL.md) stop you here. There is no second fix wave —
-residual findings go to the deferred-findings round: read
-references/deferred-findings.md and run it before you finish.
+residual findings go to the deferred-findings round. Before you finish,
+run it as references/deferred-findings.md says.
 
 ### Finish
 
 Before you delete anything, collect every ledger line containing `Ruling:` —
 preflight rulings, parked findings, breaker adjudications, all of them — into
 your final message under "Rulings I made", in the order you made them, each
-with what it costs if wrong and starting with the id the ledger line names
-(`Task K3.4: …`, `K3: …`). The list is exhaustive: if the ledger holds a
+with what it costs if wrong. Start each one with the id that its ledger
+line names (`Task K3.4: …`, `K3: …`). The list is exhaustive: if the ledger holds a
 ruling, the list holds it. That list is the only place the decisions you
 took on your human partner's behalf reach them — they read it and rework
 whatever you got wrong. A ruling that dies with the workspace was a decision
 made in secret.
 
 Before you delete the workspace, commit `<plan-path>.tasks.json` if it changed
-(`chore(<plan id>): task status`), even with at-end commits: closing the
-final commit's own task rewrites the file after that commit, and a modified
-file blocks `git worktree remove`. Then, when the deferred-findings round is done and its fixes are
-merged, delete this plan's workspace (`rm -rf <workspace>`) — the git history is
+(`chore(<plan id>): task status`). Do this even with at-end commits. When
+you close the final commit's own task, the file changes after that commit,
+and a modified file blocks `git worktree remove`.
+Then, when the deferred-findings round is done and its fixes are merged,
+delete this plan's workspace (`rm -rf <workspace>`) — the git history is
 the record now. Sibling directories belong to other plans; leave them
 alone.
 

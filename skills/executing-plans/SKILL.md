@@ -126,32 +126,40 @@ digraph process {
    - Include full `description` from .tasks.json (not just subject)
    - Include `metadata` field if present (files, verifyCommand, acceptanceCriteria)
    - Restore `blockedBy` with TaskUpdate
-4. If work tasks exist (those with a `json:metadata` block): verify they match the plan,
-   and resume from the first `pending`/`in_progress`. To check that they match, compare only work tasks; other skills' step tasks may sit in the same list
+4. If work tasks exist (those with a `json:metadata` block): check that they match the plan.
+   To check, compare only work tasks: other skills' step tasks may sit in the same list.
+   Resume from the first `pending`/`in_progress` task
 5. If neither: bootstrap from the plan (Step 1b below)
 
-Update `.tasks.json` after every task status change, in the working tree's copy: the
-one in the worktree you are executing in. Inside a worktree Claude Code isolates (after `EnterWorktree`), Edit and Write to the main checkout are refused, and `git worktree remove` refuses a worktree with modified files: so the file the executors update is the one in the working tree they run in, and it is committed before they finish.
+Update `.tasks.json` after every task status change. Update the working tree's copy:
+the one in the worktree you are executing in, never the main checkout's.
+In an isolated worktree, the harness refuses Edit and Write to the main
+checkout. A modified tasks file blocks `git worktree remove`, so the
+executor commits it before it deletes the workspace (see Finish).
 
 ### Verify Workspace (Worktree Check)
 
 Ensure the work happens in an isolated workspace. Before calling `using-git-worktrees`, check if a worktree already exists:
 
 1. Run `git worktree list` to see all existing worktrees
-2. If a worktree for the plan's branch already exists: **enter it — do NOT create a new one.** In
-   Claude Code, use `EnterWorktree` with its `path`: under the harness's worktree isolation a
-   `cd` is reset. Elsewhere, change into it
+2. If a worktree for the plan's branch already exists: **enter it — do NOT create a new one.**
+   In Claude Code, use `EnterWorktree` with its `path`, because the harness resets a `cd`.
+   Elsewhere, change into it
 3. If on main/master with no worktree: **REQUIRED SUB-SKILL:** Use `superpowers-extended-cc:using-git-worktrees` to create one
 
 Never start implementation on a main/master branch without your human
 partner's explicit consent.
 
-**The worktree must hold the plan.** Once you are in it, find the commit that
-added the plan (`git log --diff-filter=A --format=%H -1 -- <plan-path>`, run
-where the plan is committed) and check that `git merge-base --is-ancestor <plan commit> HEAD` exits 0 from inside the worktree. If it does not, the
-worktree has no copy of the plan or its tasks file to update: stop and say
-so. In Claude Code, `EnterWorktree` starts from the current branch only when
-the setting `worktree.baseRef` is `head`.
+**The worktree must hold the plan.** After you enter the worktree, check it:
+
+1. Find the commit that added the plan. Run
+   `git log --diff-filter=A --format=%H -1 -- <plan-path>` where the plan is committed.
+2. From inside the worktree, run `git merge-base --is-ancestor <plan commit> HEAD`.
+3. If it does not exit 0, stop and say so. The worktree has no copy of the
+   plan or its tasks file to update.
+
+In Claude Code, `EnterWorktree` starts from the current branch only if the
+setting `worktree.baseRef` is `head`.
 
 ### Workspace and Ledger
 
@@ -174,10 +182,10 @@ and the new one resumes from the same ledger.
   directory is never yours to read or write.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
   line names your plan file, tasks with a `Task <id>: complete` line are
-  DONE — do not redo them; resume at the first task without one. A task
-  split by a `Task <id>: Ruling: split into …` line is DONE when every part the ruling names
-  has its own completion line; resume at the first
-  part without one. Their
+  DONE — do not redo them; resume at the first task without one. If a
+  `Task <id>: Ruling: split into …` line split a task, that task is DONE
+  when every part the ruling names has its own completion line. Resume at
+  the first part without one. Their
   commits exist in git even when your context no longer remembers making
   them: after compaction, trust the ledger and `git log` over your own
   recollection. A ledger whose first line names a different plan file is
@@ -195,23 +203,27 @@ and conflicts inside the plan resolve against it. A plan with no reachable
 spec gets a ledger note saying so — rulings made without one are provisional.
 
 **Ids.** In every form below, `<id>` is the task's id
-as its plan heading writes it: `K3.4` in a plan with ids, `3` in one without. `<plan id>` is
-the plan's id from its first line (`# K3: …`); a plan without one has
-none, and a line that would start with `<plan id>:` starts bare. Every
-task subject, ledger line, commit subject and final-message line names its
-id in full, never a short form. Commit subjects carry the narrowest id: a
-task's commits its task id (`feat(K3.4): …` in a repo that uses
-conventional commits, else `K3.4: …`); the final review's fix pass and the deferred-findings round the plan id
-(`fix(K3): …`). A branch setup creates for a plan with an id is named after the plan's id (`K3`; Claude Code's `EnterWorktree` makes it `worktree-K3`). A task whose heading holds nested
-part headings (`#### Task K3.4a`, …) was split in the plan: take each part
-as its own task, never the parent on its own.
+as its plan heading writes it: `K3.4` in a plan with ids, `3` in one without.
+`<plan id>` is the plan's id from its first line (`# K3: …`). If the plan has
+no id, a line that would start with `<plan id>:` starts bare. Name the id in
+full in every task subject, ledger line, commit subject and final-message
+line. Never use a short form. A branch that setup creates
+for a plan with an id is named after the plan's id (`K3`; Claude Code's
+`EnterWorktree` makes it `worktree-K3`). If a task heading holds nested part headings
+(`#### Task K3.4a`, …), the plan split the task. Run each part as its own
+task, never the parent on its own.
+
+Commit subjects carry the narrowest id. A task's commits carry its task id
+(`feat(K3.4): …` in a repo that uses conventional commits, else `K3.4: …`).
+The final review's fix pass and the deferred-findings round carry the plan
+id (`fix(K3): …`).
 
 ### Step 1b: Bootstrap Tasks from Plan (if needed)
 
 If TaskList returned no tasks and no `.tasks.json` exists, or tasks don't match plan:
 
 1. Parse the plan document for its `### Task <id>:` headings (`## Task <id>:` in an
-   older plan), taking nested part headings as tasks in their parent's place
+   older plan). Take nested part headings as tasks in their parent's place
 2. For each task found, use TaskCreate with:
    - subject: `<id>: <name>`, as the plan heading writes them ("K3.4: Add retry")
    - description: Full structured content (Goal, Files, Acceptance Criteria, Verify, Steps) with `json:metadata` code fence at the end containing files, verifyCommand, acceptanceCriteria
@@ -280,21 +292,23 @@ read its output, and compare. Three outcomes:
   continue. The ruling is carried, not remembered: later tasks that touch
   the same interface read it from the ledger.
 - **The task must be done in parts.** Ledger
-  `Task <id>: Ruling: split into <id>a (<what>) and <id>b (<what>) — <why>`,
-  one lowercase letter per part, skipping i, l and o; a part that splits
-  again alternates to a number (K3.4 → K3.4a, K3.4b; K3.4a → K3.4a1, K3.4a2, never K3.4aa). Do not edit the plan: each part becomes a full work task
-  instead. `TaskCreate` it in writing-plans' format, titled
-  `<part id>: <what>`, with its own Goal, Files, Acceptance Criteria and
-  Verify and a `json:metadata` block (with a tier when routing is on),
-  and add it to `.tasks.json`. The first part takes the parent's
-  blockers; each later part is blocked by the one before. The parent task
-  stays: add every part to its blockers, and if it is in_progress (it was
-  being worked when it split), set it back to `pending`: an in_progress
-  task's tier stays in the model-routing gate. It is never dispatched, and
-  it completes when its last part does.
-  Start each part with `task-start` on the parent id, work it against its
-  own task, and close it with its own `task-done` on the part id. Use the
-  part ids from then on, in commits and the final message.
+  `Task <id>: Ruling: split into <id>a (<what>) and <id>b (<what>) — <why>`.
+  - Give each part 1 lowercase letter, skipping i, l and o. If a part splits
+    again, it alternates to a number (K3.4 → K3.4a, K3.4b; K3.4a → K3.4a1, K3.4a2, never K3.4aa).
+  - Do not edit the plan. Make each part a full work task instead:
+    `TaskCreate` it in writing-plans' format, titled `<part id>: <what>`.
+    Give it its own Goal, Files, Acceptance Criteria, Verify and
+    `json:metadata` block (with a tier when routing is on). Add it to
+    `.tasks.json`.
+  - The first part takes the parent's blockers. Each later part is blocked
+    by the part before it.
+  - Keep the parent task, and add every part to its blockers. If the parent
+    is `in_progress`, set it back to `pending`: the tier of an `in_progress`
+    task stays in the model-routing gate. The parent is never dispatched,
+    and it completes when its last part does.
+  - Start each part with `task-start` on the parent id. Work it against its
+    own task. Close it with its own `task-done` on the part id.
+  - Use the part ids from then on, in commits and the final message.
 
 Commit as the plan's commit steps say. A task that spans several commits
 is fine; BASE is what the review range is cut from, never `HEAD~1`.
@@ -386,25 +400,27 @@ re-review: it would re-read a diff whose covering tests already answer
 
 A finding you decide not to fix is a ruling — `<plan id>: Final: Ruling: <finding> —
 <why the code stands> — <cost if wrong>` — and reaches your human partner
-in the rulings list. There is no second fix pass — deferred minors go to
-the deferred-findings round: read references/deferred-findings.md and run
-it before you finish.
+in the rulings list. There is no second fix pass. The deferred minors go to
+the deferred-findings round. Before you finish, read
+references/deferred-findings.md and run the round.
 
 ## Finish
 
 Before you delete anything, collect every ledger line containing
 `Ruling:` into your final message under "Rulings I made", in the order you
-made them, each with what it costs if wrong and starting with the id the
-ledger line names (`Task K3.4: …`, `K3: …`), and every finding the
+made them, each with what it costs if wrong. Start each line with the id
+the ledger line names (`Task K3.4: …`, `K3: …`). Put every finding the
 deferred-findings round left open under "Unfinished", each starting with
 the id it concerns. Both lists are exhaustive. Your final message is the
 only place the decisions you took on your human partner's behalf — and the
 findings left unfinished — reach them.
 
 Before you delete the workspace, commit `<plan-path>.tasks.json` if it changed
-(`chore(<plan id>): task status`), even with at-end commits: closing the
-final commit's own task rewrites the file after that commit, and a modified
-file blocks `git worktree remove`. Then, when the deferred-findings round is done and its fixes are committed,
+(`chore(<plan id>): task status`). Do this even with at-end commits: when
+you close the final commit's own task, the file changes after that commit.
+A modified file blocks `git worktree remove`.
+
+Then, when the deferred-findings round is done and its fixes are committed,
 delete this plan's workspace directory — the git history is the record now. Sibling
 directories belong to other plans; leave them alone.
 
