@@ -210,7 +210,7 @@ AskUserQuestion:
 On yes, write the hook registration(s) into the scope's settings target — `<cwd>/.claude/settings.json` for this-project scope, `~/.claude/settings.json` for user-level:
 
 1. Take the JSON block(s) from README.md → "Recommended Configuration": "Force Re-Validation on User-Thrown Gate Close" (per-task) and "Re-Validate Gates on 'Plan Complete' Claims" (end-of-plan). For "Yes, I confirm those", also take the "You confirm the gate" block from the first of those sections.
-2. **Verify the script path before writing.** The README blocks reference scripts under `~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/`. Check that path exists (`ls` the directory); if the plugin lives elsewhere on this machine, substitute the real path in the `command` values.
+2. **Verify the script path before writing.** The README blocks reference scripts under `~/.claude/plugins/marketplaces/superpowers-aardwulf/hooks/examples/`. Check that path exists (`ls` the directory); if the plugin lives elsewhere on this machine, substitute the real path in the `command` values.
 3. **Merge, never overwrite.** Read the scope's settings file first (resolve a symlink and edit the real target). If it exists: parse it, append each new hook entry into the matching array (`hooks.PostToolUse` / `hooks.Stop` / `hooks.PreToolUse`), creating only the missing keys, and write the full merged result back. If it does not exist: create it containing only the chosen hooks structure. Never drop existing entries.
 4. **Duplicate check spans both scopes:** if the same hook script is already registered under the same event in EITHER the project file or the user file, do not add it again — report where it already lives and which scope it covers.
 5. **Confirm the write.** Re-read the target file, verify the new entries parse and are present, and report the confirmed absolute path back to the user. Output of this feature MUST name the file that was actually written.
@@ -282,7 +282,7 @@ One-line intro: third-party marketplaces do NOT auto-update by default, so new `
 
 **This feature is the one exception to the clean-slate rule** — it checks current state before asking, because proposing a change that is already in place is noise. Auto-update is marketplace-level (there is no per-plugin toggle) and lives wherever the marketplace is registered — almost always user-level `~/.claude/settings.json`. The onboard scope choice does NOT apply here; marketplaces are registered user-wide.
 
-1. **Detect.** Read `~/.claude/settings.json` (resolve a symlink to the real target) and inspect `extraKnownMarketplaces["superpowers-extended-cc-marketplace"].autoUpdate`. If the marketplace entry is not there, check the project `<cwd>/.claude/settings.json`. Then:
+1. **Detect.** Read `~/.claude/settings.json` (resolve a symlink to the real target) and inspect `extraKnownMarketplaces["superpowers-aardwulf"].autoUpdate`. If the marketplace entry is not there, check the project `<cwd>/.claude/settings.json`. Then:
    - `true` → already enabled: tell the user, write nothing, move on.
    - `false` or the key absent → not enabled; ask.
    - marketplace entry in neither file → it is not registered in settings (unusual for an installed plugin); say so and skip this feature. Do NOT invent a marketplace entry.
@@ -301,7 +301,7 @@ One-line intro: third-party marketplaces do NOT auto-update by default, so new `
          description: "Leave it off — stay on the current version until you run /plugin marketplace update manually. Nothing is written."
    ```
 
-3. **Yes** → set `extraKnownMarketplaces["superpowers-extended-cc-marketplace"].autoUpdate = true` in the file where that entry lives. Read-merge-write (resolve the symlink, edit the real target); never drop the entry's other keys (e.g. `source`) or any other marketplace. Re-read to confirm the value is `true`, report the absolute path written, and tell the user it takes effect at the next Claude Code startup (no in-session restart).
+3. **Yes** → set `extraKnownMarketplaces["superpowers-aardwulf"].autoUpdate = true` in the file where that entry lives. Read-merge-write (resolve the symlink, edit the real target); never drop the entry's other keys (e.g. `source`) or any other marketplace. Re-read to confirm the value is `true`, report the absolute path written, and tell the user it takes effect at the next Claude Code startup (no in-session restart).
 
    **Yes also registers the drift check** — auto-updated releases can add new settings keys silently, and this hook is the one channel that surfaces them. Add to the `hooks.SessionStart` array of `~/.claude/settings.json` (read-merge-write, same file-handling rules; skip if an entry referencing `check-onboard-drift` already exists):
 
@@ -317,7 +317,7 @@ One-line intro: third-party marketplaces do NOT auto-update by default, so new `
 
 Installing `superpowers-extended-cc` alongside the original `obra/superpowers` leaves both active at the same time. Every skill ships under both the `superpowers:` namespace and the `superpowers-extended-cc:` namespace — the slash-command palette shows doubled entries for `brainstorming`, `writing-plans`, `executing-plans`, and every other shared skill, and the session-start skill loader may trigger either version ambiguously. This fork supersedes upstream, so the original is redundant once the fork is installed.
 
-Assess for yourself whether both are actually present. This fork lives at `~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/`; the upstream plugin would sit right next to it at `~/.claude/plugins/marketplaces/superpowers-marketplace/`, or — if it came from the official plugin directory instead — be registered as `superpowers@claude-plugins-official` in `~/.claude/plugins/installed_plugins.json`.
+Assess for yourself whether both are actually present. This fork lives at `~/.claude/plugins/marketplaces/superpowers-aardwulf/`; the upstream plugin would sit right next to it at `~/.claude/plugins/marketplaces/superpowers-marketplace/`, or — if it came from the official plugin directory instead — be registered as `superpowers@claude-plugins-official` in `~/.claude/plugins/installed_plugins.json`.
 
 If upstream is not there: say nothing, skip this step entirely, and proceed directly to Closing.
 
@@ -340,4 +340,4 @@ AskUserQuestion:
 
 ## Closing
 
-Report in one short block: the chosen scope, files written (confirmed absolute paths), features skipped, and how to undo each — remove the `env.CLAUDE_CODE_ENABLE_TODO_TOOLS` key from the scope's settings file (task tools); delete the scope's `model-routing.json` (routing); remove the hook objects you added from the arrays in the scope's settings file, `<cwd>/.claude/settings.json` or `~/.claude/settings.json` (gate hooks); delete the scope's `workflow.json` or remove its `commitStrategy` key (commit strategy); set `extraKnownMarketplaces["superpowers-extended-cc-marketplace"].autoUpdate` back to `false` in settings.json (auto-update). Do not commit. Do not re-ask any question.
+Report in one short block: the chosen scope, files written (confirmed absolute paths), features skipped, and how to undo each — remove the `env.CLAUDE_CODE_ENABLE_TODO_TOOLS` key from the scope's settings file (task tools); delete the scope's `model-routing.json` (routing); remove the hook objects you added from the arrays in the scope's settings file, `<cwd>/.claude/settings.json` or `~/.claude/settings.json` (gate hooks); delete the scope's `workflow.json` or remove its `commitStrategy` key (commit strategy); set `extraKnownMarketplaces["superpowers-aardwulf"].autoUpdate` back to `false` in settings.json (auto-update). Do not commit. Do not re-ask any question.

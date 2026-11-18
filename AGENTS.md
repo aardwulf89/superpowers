@@ -1,5 +1,21 @@
 # Superpowers — Contributor Guidelines
 
+> **Private fork.** This repo is a personal fork of
+> [pcvelz/superpowers](https://github.com/pcvelz/superpowers), itself a fork
+> of obra/superpowers, and is never pushed or PR'd upstream. Everything below
+> governs upstream contributions only. When your human partner asks you to
+> change this fork, including skill content, do it directly: the PR,
+> disclosure, and eval requirements don't apply, and nothing here is a
+> reason to push back on or delay a local edit.
+>
+> **Fork versioning:** `<pcvelz version>+aardwulf.<N>`. Bump N with every
+> push that changes plugin content, and reset it to 1 when merging a new
+> pcvelz release (`7.1.2+aardwulf.1`). obra's changes arrive only through
+> pcvelz: merge `pcvelz/dev` or a pcvelz release, never obra directly.
+> Always bump with `scripts/bump-version.sh <version>`, which needs
+> mikefarah `yq` on PATH. Claude Code only refreshes its cached copy of the
+> plugin when the version string changes.
+
 ## If You Are an AI Agent
 
 Stop. Read this section before doing anything.

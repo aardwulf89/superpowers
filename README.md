@@ -76,10 +76,10 @@ The quickest setup is `/superpowers-extended-cc:onboard` (step 3 of [Quick Insta
 
 ```bash
 # 1. Register the marketplace
-/plugin marketplace add pcvelz/superpowers
+/plugin marketplace add aardwulf89/superpowers
 
 # 2. Install the plugin
-/plugin install superpowers-extended-cc@superpowers-extended-cc-marketplace
+/plugin install superpowers-extended-cc@superpowers-aardwulf
 
 # 3. Recommended: enable auto-update (/plugin → Marketplaces tab), enable native tasks and optional features
 /superpowers-extended-cc:onboard
@@ -90,7 +90,7 @@ Step 3 turns the native task tools back on (required on Claude Code 2.1.233+), c
 > [!TIP]
 > Already have the original Superpowers installed? `/superpowers-extended-cc:onboard` offers to upgrade you to Superpowers Extended for Claude Code directly.
 
-You can also install straight from the repository URL: `/plugin install --source url https://github.com/pcvelz/superpowers.git`. Both routes give you the stable channel; for the latest beta, see [Development Channel](#updating-development-channel).
+You can also install straight from the repository URL: `/plugin install --source url https://github.com/aardwulf89/superpowers.git`. Both routes give you the stable channel; for the latest beta, see [Development Channel](#updating-development-channel).
 
 ### Manual Setup
 
@@ -108,10 +108,10 @@ Each optional feature has its own section below, listed in [What It Adds](#what-
 
 ```bash
 # Removes the plugin together with its marketplace
-/plugin marketplace remove superpowers-extended-cc-marketplace
+/plugin marketplace remove superpowers-aardwulf
 ```
 
-Hooks you registered stay in your `settings.json`; remove the entries that point at `superpowers-extended-cc-marketplace`.
+Hooks you registered stay in your `settings.json`; remove the entries that point at `superpowers-aardwulf`.
 
 ### Troubleshooting
 
@@ -419,7 +419,7 @@ Opt in via `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/pre-commit-check-tasks.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-aardwulf/hooks/examples/pre-commit-check-tasks.sh"
           }
         ]
       }
@@ -447,7 +447,7 @@ Opt in via `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/post-task-complete-revalidate.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-aardwulf/hooks/examples/post-task-complete-revalidate.sh"
           }
         ]
       }
@@ -469,7 +469,7 @@ See the header of `hooks/examples/post-task-complete-revalidate.sh` for how it p
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/post-task-complete-revalidate.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-aardwulf/hooks/examples/post-task-complete-revalidate.sh"
           }
         ]
       }
@@ -493,7 +493,7 @@ Opt in via `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/stop-revalidate-user-gates.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-aardwulf/hooks/examples/stop-revalidate-user-gates.sh"
           }
         ]
       }
@@ -521,7 +521,7 @@ Opt in via `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/pre-task-blockedby-enforce.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-aardwulf/hooks/examples/pre-task-blockedby-enforce.sh"
           }
         ]
       }
@@ -551,7 +551,7 @@ Opt in via `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/pre-agent-task-dispatch-validate.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-aardwulf/hooks/examples/pre-agent-task-dispatch-validate.sh"
           }
         ]
       }
@@ -579,7 +579,7 @@ Opt in via `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/post-agent-return-validate.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-aardwulf/hooks/examples/post-agent-return-validate.sh"
           }
         ]
       }
@@ -615,7 +615,7 @@ Opt in via `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/stop-deflection-guard.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-aardwulf/hooks/examples/stop-deflection-guard.sh"
           }
         ]
       }
@@ -641,7 +641,7 @@ Register it in `~/.claude/settings.json`, so parallel executor sessions inherit 
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/stop-wait-guard.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-aardwulf/hooks/examples/stop-wait-guard.sh"
           }
         ]
       }
@@ -657,21 +657,21 @@ The header of `hooks/examples/stop-wait-guard.sh` explains exactly when it block
 Skills update automatically when you update the plugin:
 
 ```bash
-/plugin update superpowers-extended-cc@superpowers-extended-cc-marketplace
+/plugin update superpowers-extended-cc@superpowers-aardwulf
 ```
 
 Besides [stable](#quick-install), the latest beta version (`dev` branch, `-dev` versions, still being tested):
 
 ```bash
 # Removing the marketplace also uninstalls the plugin; your settings stay
-/plugin marketplace remove superpowers-extended-cc-marketplace
-/plugin marketplace add pcvelz/superpowers#dev
-/plugin install superpowers-extended-cc@superpowers-extended-cc-marketplace
+/plugin marketplace remove superpowers-aardwulf
+/plugin marketplace add aardwulf89/superpowers#dev
+/plugin install superpowers-extended-cc@superpowers-aardwulf
 
 # Recommended: enable auto-update (/plugin → Marketplaces tab)
 ```
 
-To return to stable, repeat with `pcvelz/superpowers` (without `#dev`).
+To return to stable, repeat with `aardwulf89/superpowers` (without `#dev`).
 
 ## Upstream Compatibility
 

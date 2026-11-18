@@ -7,7 +7,7 @@
 # executor sessions inherit it, or in a project's .claude/settings.json:
 #
 #   {"hooks": {"Stop": [{"matcher": "", "hooks": [{"type": "command",
-#     "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/stop-wait-guard.sh"}]}]}}
+#     "command": "bash ~/.claude/plugins/marketplaces/superpowers-aardwulf/hooks/examples/stop-wait-guard.sh"}]}]}}
 #
 # ## The failure this catches
 #
