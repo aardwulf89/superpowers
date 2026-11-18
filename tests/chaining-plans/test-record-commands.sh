@@ -120,7 +120,7 @@ git -C "$R" merge -q --ff-only worktree-K1
 check "phase-state close-missed after a fast-forward" close-missed "$(state_of "$R" "$open")"
 
 R="$TMP/squash"; new_repo "$R"; build_on "$R" worktree-K1; advance_main "$R"
-git -C "$R" merge -q --squash worktree-K1
+git -C "$R" merge -q --squash worktree-K1 >/dev/null 2>&1
 git -C "$R" commit -q -m squash
 check "phase-state close-missed after a squash (branch kept)" close-missed "$(state_of "$R" "$open")"
 git -C "$R" branch -q -D worktree-K1
@@ -159,9 +159,9 @@ check "pick blocks on an anomaly" "blocked:K1" "$(cd "$TMP/anomaly" && record pi
 RD="$TMP/done"
 new_repo "$RD"
 for id in K1 K2 K3; do build_on "$RD" "worktree-$id" "$id"; git -C "$RD" merge -q --no-ff "worktree-$id" -m "merge $id"; done
-phase() { # id status done|open depends_on_json [unfinished_json] -> JSON, all nine keys
+phase() { # id status closed|open depends_on_json [unfinished_json] -> JSON, all nine keys
   local closing=null unfinished="${5:-}"
-  if [[ "$3" == done ]]; then
+  if [[ "$3" == closed ]]; then
     closing='{"replan":[]}'
     [[ -n "$unfinished" ]] && closing="{\"replan\":[],\"unfinished\":$unfinished}"
   elif [[ -n "$unfinished" ]]; then
@@ -177,11 +177,11 @@ write_rec() { # file phase_json...
 R="$RD"
 run_pick() { (cd "$R" && record pick "$1"); }
 
-write_rec "$TMP/pick1.json" "$(phase K1 known done '[]')" "$(phase K4 known open '["K1"]')"
+write_rec "$TMP/pick1.json" "$(phase K1 known closed '[]')" "$(phase K4 known open '["K1"]')"
 check "pick returns the first startable phase" "id:K4" "$(run_pick "$TMP/pick1.json")"
 write_rec "$TMP/pick2.json" "$(phase K4 dropped open '[]')" "$(phase K5 known open '["K4"]')"
 check "pick blocks on a dropped dependency" "blocked:K5" "$(run_pick "$TMP/pick2.json")"
-write_rec "$TMP/pick3.json" "$(phase K1 known done '[]')"
+write_rec "$TMP/pick3.json" "$(phase K1 known closed '[]')"
 check "pick with everything done" none "$(run_pick "$TMP/pick3.json")"
 write_rec "$TMP/pick4.json" "$(phase K4 known open '[]')" "$(phase K5 known open '["K4"]')"
 check "pick takes a phase with no dependencies" "id:K4" "$(run_pick "$TMP/pick4.json")"
@@ -191,21 +191,21 @@ write_rec "$TMP/pick6.json" "$(phase K1 known open '[]')"
 check "pick: results on base with no replan is a missed close, not done" "blocked:K1" "$(run_pick "$TMP/pick6.json")"
 
 # pick: items and none
-write_rec "$TMP/pn.json" "$(phase K1 known done '[]' '[]')"
+write_rec "$TMP/pn.json" "$(phase K1 known closed '[]' '[]')"
 check "pick on a done record with no item" none "$(run_pick "$TMP/pn.json")"
-write_rec "$TMP/pi.json" "$(phase K1 known done '[]' '["Partner item: x. Default: as is."]')"
+write_rec "$TMP/pi.json" "$(phase K1 known closed '[]' '["Partner item: x. Default: as is."]')"
 check "pick on a done record with an open item" items "$(run_pick "$TMP/pi.json")"
 for suffix in ' [settled: K1]' ' [dropped]' ' [carried]' ' [adopted by M2]'; do
-  write_rec "$TMP/ps.json" "$(phase K1 known done '[]' "$(jq -nc --arg s "$suffix" '["Partner item: x. Default: as is." + $s]')")"
+  write_rec "$TMP/ps.json" "$(phase K1 known closed '[]' "$(jq -nc --arg s "$suffix" '["Partner item: x. Default: as is." + $s]')")"
   check "pick: the suffix '$suffix' closes an item" none "$(run_pick "$TMP/ps.json")"
 done
 write_rec "$TMP/pd.json" "$(phase K4 dropped open '[]' '["Partner item: x. Default: as is."]')"
 check "pick: an open item in a dropped phase" items "$(run_pick "$TMP/pd.json")"
-write_rec "$TMP/pq.json" "$(phase K1 known done '[]' '["Partner item: keep \"[carried]\" as the word? Default: as is."]')"
+write_rec "$TMP/pq.json" "$(phase K1 known closed '[]' '["Partner item: keep \"[carried]\" as the word? Default: as is."]')"
 check "pick: a suffix that is not at the end leaves the item open" items "$(run_pick "$TMP/pq.json")"
 write_rec "$TMP/pz.json" "$(phase K4 dropped open '[]')" \
-  "$(phase K2 known done '[]')" \
-  "$(phase K3 known done '[]' null)"
+  "$(phase K2 known closed '[]')" \
+  "$(phase K3 known closed '[]' null)"
 st=0; out=$(run_pick "$TMP/pz.json" 2>&1) || st=$?
 check "pick with no closing, no unfinished and a null unfinished" "0:none" "$st:$out"
 NI="$TMP/niche"
@@ -220,8 +220,8 @@ check "pick: the open phase wins over an open item" "id:K4" "$(run_pick "$TMP/po
 # open-efforts with partner items, and carried
 CI="$TMP/items"
 write_rec "$CI/A.json" "$(phase K4 known open '[]')"
-write_rec "$CI/B.json" "$(phase K1 known done '[]' '["Partner item: x. Default: as is."]')"
-write_rec "$CI/C.json" "$(phase K1 known done '[]' '[]')"
+write_rec "$CI/B.json" "$(phase K1 known closed '[]' '["Partner item: x. Default: as is."]')"
+write_rec "$CI/C.json" "$(phase K1 known closed '[]' '[]')"
 printf '{' > "$CI/D.json"
 st=0; out=$(cd "$R" && record open-efforts --efforts-dir "$CI" 2>"$TMP/oe.err") || st=$?
 check "open-efforts lists open phases and open items" "0:$CI/A.json
@@ -229,9 +229,9 @@ $CI/B.json" "$st:$out"
 if grep -q "$CI/D.json" "$TMP/oe.err"; then pass "open-efforts names the unreadable record"; else fail "open-efforts names the unreadable record"; fi
 
 CC="$TMP/carried"
-write_rec "$CC/A.json" "$(phase K1 known done '[]' '[]')" \
-  "$(phase K2 known done '[]' '["none", "Partner item: a [carried]", "Partner item: b [dropped]"]')"
-write_rec "$CC/B.json" "$(phase K1 known done '[]' '["Partner item: c [carried]"]')"
+write_rec "$CC/A.json" "$(phase K1 known closed '[]' '[]')" \
+  "$(phase K2 known closed '[]' '["none", "Partner item: a [carried]", "Partner item: b [dropped]"]')"
+write_rec "$CC/B.json" "$(phase K1 known closed '[]' '["Partner item: c [carried]"]')"
 want='[{"record":"'$CC'/A.json","phase":"K2","index":1,"item":"Partner item: a [carried]"},{"record":"'$CC'/B.json","phase":"K1","index":0,"item":"Partner item: c [carried]"}]'
 check "carried lists each carried line" "$want" "$(cd "$R" && record carried --efforts-dir "$CC")"
 printf '{' > "$CC/C.json"
@@ -241,9 +241,9 @@ if grep -q "$CC/C.json" "$TMP/c.err"; then pass "carried names the unreadable re
 
 CD="$TMP/chains"
 write_rec "$CD/A.json" "$(phase K4 known open '[]')"
-write_rec "$CD/B.json" "$(phase K1 known done '[]')" "$(phase K4 known open '["K1"]')"
-write_rec "$CD/C.json" "$(phase K1 known done '[]')"
-write_rec "$CD/D.json" "$(phase K4 dropped open '[]')" "$(phase K2 known done '[]')"
+write_rec "$CD/B.json" "$(phase K1 known closed '[]')" "$(phase K4 known open '["K1"]')"
+write_rec "$CD/C.json" "$(phase K1 known closed '[]')"
+write_rec "$CD/D.json" "$(phase K4 dropped open '[]')" "$(phase K2 known closed '[]')"
 check "open-efforts lists only efforts with open phases" \
   "$CD/A.json
 $CD/B.json" \

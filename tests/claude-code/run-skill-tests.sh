@@ -89,6 +89,11 @@ tests=(
 # Integration tests (slow, full execution)
 integration_tests=(
     "test-subagent-driven-development-integration.sh"
+    "test-chaining-plans-create.sh"
+    "test-chaining-plans-resume.sh"
+    "test-chaining-plans-close.sh"
+    "test-chaining-plans-close-items.sh"
+    "test-chaining-plans-end.sh"
 )
 
 # Add integration tests if requested

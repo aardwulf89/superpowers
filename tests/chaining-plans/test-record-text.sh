@@ -53,7 +53,7 @@ lacks $RM '### chain-dir'
 lacks $RM '--chain-dir'
 has $RM '--efforts-dir'
 has $RM 'docs/superpowers/efforts/<id>.json'
-for state in dropped cut-off close-missed done finished-unclosed closed-unmerged anomaly not-started; do
+for state in dropped cut-off close-missed "done" finished-unclosed closed-unmerged anomaly not-started; do
   has $RM "| \`$state\` |"
 done
 has $RM 'nine keys'
