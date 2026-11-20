@@ -37,7 +37,7 @@ R=skills/subagent-driven-development/references/resuming.md
 
 has   "$S" "Never two writers in one working tree; to run tasks in parallel, read [references/parallel-dispatch.md](references/parallel-dispatch.md) first."
 lacks "$S" "Never dispatch multiple implementation subagents in parallel (conflicts)"
-has   "$S" "each in its own worktree (references/parallel-dispatch.md)"
+has   "$S" "Each runs in its own worktree (references/parallel-dispatch.md)"
 has   "$S" "neither depends on the other in the pre-flight's dependency ruling"
 lacks "$S" "in the other's \`blockedBy\` chain"
 lacks "$S" "remains the default; parallelism is the optimization"
@@ -51,6 +51,11 @@ has   "$R" "rule 6 of [parallel-dispatch.md]"
 has   "$R" "approved (commits"
 has   "$S" "holds in every mode"
 lacks "$S" "is the default for the sequential loop"
+
+lacks "$S" "The \`files\` metadata IS the test"
+has   "$S" "The \`files\` lists are the first check, not the whole test"
+has   "$S" "(dispatch, fix round, approved, complete, minor, parked, BLOCKED)"
+has   "$S" "agent passes the disjointness test:"
 
 if ((failures)); then
   echo "FAIL: $failures of $checks parallel-dispatch skill text checks" >&2

@@ -138,7 +138,7 @@ a ledger file, not only in the task list.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch); if
   that happens, recover from `git log`.
 - The ledger records STATE, not reasoning. Entries are the one-line forms
-  in this skill (dispatch, fix round, complete, minor, parked, BLOCKED) —
+  in this skill (dispatch, fix round, approved, complete, minor, parked, BLOCKED) —
   one event, one line; only a parked ruling may run to three. No
   methodology narration, no reviewer praise, no self-correction essays, no
   restating an earlier entry's facts — every extra line is re-read on
@@ -412,11 +412,11 @@ covers the whole-branch review, its single fix wave, and how you finish.
 
 Overlapping writers are forbidden, not parallelism itself — "Never two
 writers in one working tree" above holds in every mode. Dispatch
-implementers concurrently only when every running agent passes the
-disjointness test:
+implementers concurrently only when every running
+agent passes the disjointness test:
 
 - **Read-only agents are always parallel-safe**: audits, log analysis, verification gates, long-running test suites (these are also ideal for free local agent types while implementation continues).
-- **Implementers may run concurrently ONLY when** their tasks' `files` lists share no path AND neither depends on the other in the pre-flight's dependency ruling, and each in its own worktree (references/parallel-dispatch.md). The `files` metadata IS the test — no overlap means no conflict.
+- **Implementers may run concurrently ONLY when** their tasks' `files` lists share no path AND neither depends on the other in the pre-flight's dependency ruling. Each runs in its own worktree (references/parallel-dispatch.md). The `files` lists are the first check, not the whole test (references/parallel-dispatch.md rule 1).
 - **Never** two writers on one file, and never use parallelism to skip reviews: each task still gets its own task review as it completes.
 - Mark every parallel task `in_progress` BEFORE dispatching its agent — model routing resolves each dispatch against the union of in-progress tiers, and an unmarked task's dispatch will be blocked against the wrong tier.
 - When overlap is uncertain, serialize. Run independent tasks as references/parallel-dispatch.md says.
