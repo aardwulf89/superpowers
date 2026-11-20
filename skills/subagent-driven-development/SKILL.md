@@ -287,6 +287,9 @@ and fix-round diffs need it.
 - Record the implementer's agent identity from the dispatch result —
   fix-loop rounds 1-3 resume this agent.
 - Never two writers in one working tree; to run tasks in parallel, read [references/parallel-dispatch.md](references/parallel-dispatch.md) first.
+- A task reviewer reads only its own task's tree. In one tree, dispatch the
+  next task only after the previous task's review is clean, or its findings
+  are parked at the cap.
 
 Template: [implementer-prompt.md](implementer-prompt.md)
 

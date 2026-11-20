@@ -17,11 +17,21 @@ its own text agrees with itself — the tests it specifies against the code it
 specifies, the files it creates against the files it later touches. "The scan
 is clean" without those rows is not a scan you ran.
 
-Every scan ends with the dependency ruling, even a clean one.
-First read rule 1 of [parallel-dispatch.md](parallel-dispatch.md). Rule by
-its list, from the table's rows and the plan's text, and record
+Every scan ends with the dependency ruling, even a clean one. Two tasks
+are dependent if:
+
+- one consumes an interface that the other produces;
+- one needs a generated or git-ignored artifact that the other makes;
+- both take from an allocator (anything that hands out numbers or names
+  across branches);
+- anything about the pair is unclear.
+
+Rule from the table's rows and the plan's text, and give only these
+reasons. A shared file is never a reason: each parallel writer works in its
+own worktree. One worktree is never a reason. Record
 `<plan id>: Ruling: dependencies — <which tasks depend on which> — <why> — cost if wrong: <what breaks>`.
-When two or more tasks are ready, read the rest of that file.
+When two or more tasks are ready, read
+[parallel-dispatch.md](parallel-dispatch.md) before you dispatch.
 
 Write the table to the ledger. Rule on everything you find before execution
 begins — each finding against the plan text that mandates it — and record

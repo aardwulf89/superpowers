@@ -57,7 +57,12 @@ has   "$S" "The \`files\` lists are the first check, not the whole test"
 has   "$S" "(dispatch, fix round, approved, complete, minor, parked, BLOCKED)"
 has   "$S" "agent passes the disjointness test:"
 
-has   "$P" "First read rule 1 of [parallel-dispatch.md](parallel-dispatch.md)"
+has   "$P" "A shared file is never a reason"
+has   "$P" "One worktree is never a reason"
+has   "$P" "both take from an allocator"
+has   "$P" "[parallel-dispatch.md](parallel-dispatch.md) before you dispatch."
+has   "$S" "A task reviewer reads only its own task's tree."
+has   "$S" "are parked at the cap."
 lacks "$P" "From the table's rows for shared files and interfaces, rule"
 
 has   "$P" "from the table's rows and the plan's text"

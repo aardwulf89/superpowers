@@ -1,25 +1,16 @@
 # Parallel Dispatch
 
-Part of superpowers-extended-cc:subagent-driven-development. Every
-pre-flight scan reads rule 1. When two or more tasks are ready at once,
-read the whole file and run them in parallel without asking. Each task
-keeps its full loop.
+Part of superpowers-extended-cc:subagent-driven-development. When the
+pre-flight's dependency ruling shows two or more tasks ready at once, read
+this file and run them in parallel without asking. Each task keeps its full
+loop.
 
 ## 1. Dependencies come from the pre-flight scan, every run
 
-Two tasks are dependent if they share any of these:
-
-- a file;
-- an interface that one produces and the other consumes;
-- a generated or git-ignored artifact;
-- an allocator (anything that hands out numbers or names across branches).
-
-They are also dependent if a glob cannot be expanded, or if anything is
-unclear. Disjoint `files` lists are not enough.
-
-Record the ruling as
-`<plan id>: Ruling: dependencies — <which tasks depend on which> — <why> — cost if wrong: <what breaks>`.
-Leave the plan's `blockedBy` chain as written.
+The pre-flight scan rules which tasks are dependent, by the list in
+[preflight.md](preflight.md). A shared file is not a dependency: each writer
+has its own worktree, and rule 4 handles a rebase conflict. Leave the plan's
+`blockedBy` chain as written.
 
 A task is ready when every task it depends on has its completion line.
 Its `blockedBy` entries do not hold it back. Plan order picks which ready
