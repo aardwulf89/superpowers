@@ -19,11 +19,11 @@ what each phase is for, its limits, their preferences, and the rules that
 cut across phases. Intent does not depend on what earlier phases find. Their
 attention is the scarce resource: 1 sitting, then a long unattended run.
 
-**You alone do the technical design, just in time.** Write a phase's design
-when its session starts. Use what earlier phases learned, and stay inside
+**You alone do the technical design, just in time.** When its session starts, write a
+phase's design. Use what earlier phases learned, and stay inside
 the intent your human partner set.
 
-**This split gives the test between plans.** If a plan's results would
+**This split gives the test between plans.** If a plan's results
 change an intent decision, ask your human partner. If they change only
 technical detail, rule and report.
 
@@ -67,14 +67,14 @@ the same message, so its handoff does not stop the session:
 > invoke `superpowers-extended-cc:subagent-driven-development`.
 
 **What it does not cover:**
-- Intent. A question that would change what your human partner intended is
+- Intent. A question that changes what your human partner intended is
   theirs. Ask it, or record it for them. Never rule on it.
 - The executor's own stop conditions. They still stop the build.
 - The merge menu. `finishing-a-development-branch` shows it in its own
   words, and your human partner answers it. "git ops" means:
   1. Option 1 (merge locally).
   2. Push `base`.
-  3. Delete the remote branch, if it exists.
+  3. If the remote branch exists, delete it.
 
   If the branch has an open PR, "git ops" means: merge that PR.
 
@@ -117,7 +117,7 @@ depends on and waits on.
 `docs/superpowers/specs/<phase id>.md`, with first line
 `# <phase id>: <title>`, committed on `base`. The design copies the phase's
 entry from the Phases section word for word, with the section's "Across
-phases" line, because the executor reads only the plan and its Spec. If the
+phases" line. It does so because the executor reads only the plan and its Spec. If the
 umbrella already covers a phase in enough detail, the phase needs no
 separate design, and its `spec` links the umbrella.
 
@@ -145,8 +145,8 @@ checkout, on a branch named `<phase id>`. Create that branch from `base`
 before the executor starts. Commit the docs (the Phases section, phase designs, plans) and
 the record on `base` in the main checkout, never on a phase branch.
 
-**`closing` carries knowledge forward.** The executor deletes its workspace
-when it finishes, the ledger included. Never read the ledger of another
+**`closing` carries knowledge forward.** When it finishes, the executor
+deletes its workspace, the ledger included. Never read the ledger of another
 plan. The build's "Rulings I made" and "Unfinished", from the executor's
 final message, travel with the build:
 1. Before finishing starts, write them to the build results file,
@@ -156,7 +156,7 @@ final message, travel with the build:
 The close copies them into `closing`. `learned` carries knowledge to later
 Design stages. Each close keeps `learned` small and
 true. A `Partner item:` line in `unfinished`, or a question in
-`partner_questions`, holds what only your human partner may settle. No
+`partner_questions`, holds what only your human partner can settle. No
 stage settles it. An effort is closed out only when each item has your
 human partner's disposition and none is `[carried]`.
 

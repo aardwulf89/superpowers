@@ -166,7 +166,7 @@ with a note on stderr.
 Prints 1 state from the table above. It refuses:
 - an id that the record does not have;
 - a record whose `base` has no local branch. Every rule reads `base`, and
-  without it a built phase would read `not-started`.
+  without it a built phase reads `not-started`.
 
 `pick` refuses the same. `open-efforts` skips such a record, with a note.
 
@@ -272,7 +272,7 @@ from the Plan stage of Resume:
   phase it depends on or waits on.
 - **A split:**
   - Every part gets the split phase's id plus 1 lowercase letter, in work
-    order (K2 splits into `K2a`, `K2b`, …, skipping i, l and o). No part
+    order. K2 splits into `K2a`, `K2b`, …, skipping i, l and o. No part
     keeps the bare id, which still names the whole.
   - A part that splits again alternates to a number (`K2a` into `K2a1`,
     `K2a2`).

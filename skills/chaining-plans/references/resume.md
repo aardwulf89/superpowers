@@ -47,7 +47,7 @@ command takes the record's absolute path as its `REC` argument.
   - If a phase's own branch is checked out, run
     `git fetch origin <base>:<base>`.
   - Both commands move `base` only by a fast-forward. If the command
-    refuses because `base` and `origin` have diverged, report both tips
+    refuses because `base` and `origin` diverged, report both tips
     and stop. Your human partner decides. Never merge or rebase `base`
     yourself.
   - If `origin` cannot be reached, say so in the report. Continue with
@@ -71,13 +71,13 @@ action for the state it prints:
 | `not-started`, `done`, `dropped` | — | Nothing |
 
 - **Tasks:** before you do the action of a row other than `cut-off`, make
-  1 step task with `TaskCreate` for each part of the action, as
+  1 step task with `TaskCreate` for each part of the action. Name them as
   `SKILL.md` § Tasks says: "Missed close (A2)", "Missed git ops (A2)".
   Block each Missed git ops task by the Missed close task of its phase,
   with `TaskUpdate` (`addBlockedBy`). Set each task's status as step 6
   says.
 - **Close it** means: invoke `chaining-plans` through the Skill tool with
-  `close <effort id> <phase id>`. When the close has reported, come back
+  `close <effort id> <phase id>`. When the close reports back, come back
   here and continue with the row's action.
 - **After the whole action of each row, run `record.py phase-state`
   again.** For `finished-unclosed`, the whole action is the close and
@@ -99,9 +99,9 @@ assignment and a command.
 1. **Find the branch's worktree** in `git worktree list`.
    - A `<phase id>` branch that no worktree has was built in place. Use
      the main checkout.
-   - But a `worktree-<phase id>` branch that no worktree has lost its
+   - But a `worktree-<phase id>` branch that no worktree has is missing its
      worktree. Report it and stop: finishing from the main checkout
-     would test and merge `base`, not the branch.
+     tests and merges `base`, not the branch.
 2. **Look for an open PR.** If
    `gh pr view <branch> --json state -q .state 2>/dev/null` prints `OPEN`,
    `git ops` means: merge that PR.
@@ -134,7 +134,7 @@ assignment and a command.
         `git pull --ff-only origin <base>`, so the next phase builds on
         the merged code. For a phase built in place, check out `base`
         first.
-     4. Do the cleanup that option 1 would have done. Remove the
+     4. Do the cleanup that option 1 does. Remove the
         branch's worktree with `git worktree remove <path>`, never
         `--force`, if it is under `.worktrees/` or `worktrees/`, or
         under `.claude/worktrees/` and this session entered it. If the
@@ -149,12 +149,13 @@ assignment and a command.
         `git push origin --delete <branch>`.
 
 **If any safeguard fails, stop.** That means a red suite, a merge
-conflict, a refused worktree removal, a refused push (the dry run or the
-real one), or a failed `gh pr merge`. A step that `git ops` calls for
-and that fails, such as a configured remote that is unreachable or
-refuses the push, is a stop, not a step to skip. (When your human
-partner's definition is "the relevant subset" and no remote is
-configured, the push is not relevant, and a local merge is correct.)
+conflict, or a failed `gh pr merge`. It also means a refused worktree
+removal or a refused push (the dry run or the real one). A step that
+`git ops` calls for and that fails is a stop, not a step to skip. An
+example is a configured remote that is unreachable or refuses the push.
+When your human partner's definition is "the relevant subset" and no
+remote is configured, the push is not relevant, and a local merge is
+correct.
 Report what failed, and leave everything as it is: no force, no other
 route, no undoing a merge already made. Your human partner decides what
 happens next. Do not pick.
@@ -165,7 +166,7 @@ whether you pushed `base`.
 
 ### Answers given outside a round
 
-Your human partner may answer at any time: in the request, or between
+Your human partner can answer at any time: in the request, or between
 stages. Fold in each such answer at once, before the pick or the next
 stage:
 
@@ -191,9 +192,9 @@ Run `record.py pick`. It prints 1 of these:
   `depends_on`, with its `phase-state`. A `dropped` dependency will
   never be done. Stop. Your human partner decides.
 - **`id:<id>`:** this session runs that phase. Read its `status`:
-  - `waiting`: a close should have resolved it, so the record is
+  - `waiting`: a close resolves it, so the record is
     inconsistent. Say so with that word. Report the phase, its
-    `waits_on`, and the close that should have answered them. Stop. Do
+    `waits_on`, and the close that answers them. Stop. Do
     not design it.
   - `needs-partner`: start at the Intent round.
   - `known`: start at the first stage whose link (`spec`, `plan`) is
@@ -315,7 +316,7 @@ round starts.
   Intent round that Design starts has no blocker.
 - Set a task in_progress when its stage starts. Mark it completed only
   when its "Done when" holds. A task stays in_progress while its stage
-  waits on your human partner or has stopped.
+  waits on your human partner or stops.
 
 | Stage | What it does | Done when |
 |---|---|---|
@@ -348,7 +349,7 @@ rulings go in `<phase id>.build.json` instead (Build, below).
   The answer is your human partner's, so this is not a disposition that
   you give.
 - **When you fold in any answer, run `close.md` step 2** over the phases
-  that are not done, other than this one: they may rest on the old
+  that are not done, other than this one: they can rest on the old
   default. Log each change as a ruling of this phase
   (`set-closing-key … rulings append`). Write no `replan`: that write
   belongs to the close.
@@ -423,7 +424,7 @@ rulings go in `<phase id>.build.json` instead (Build, below).
 - **In place, for a `not-started` phase:** in the main checkout, on
   `base`, run `git checkout -b <phase id>` before you invoke the
   executor. If a branch of that name exists already, it has no commits of
-  its own (else `phase-state` would read `anomaly`): check it out and
+  its own (else `phase-state` reads `anomaly`): check it out and
   continue. Never implement on `base`.
 - **In place, for a `cut-off` phase:** its branch is checked out
   already. Re-invoke the executor there, with no `checkout -b`.

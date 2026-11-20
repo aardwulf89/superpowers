@@ -16,7 +16,7 @@ the ledger's deferred-minor and parked lines so it can triage which must be
 fixed before merge.
 
 If the final whole-branch review returns findings, dispatch ONE fix subagent
-with the complete findings list — not one fixer per finding. Its commit
+with the complete findings list, not one fixer per finding. Its commit
 subjects carry the plan id (`fix(<plan id>): …`).
 Per-finding fixers each rebuild context and re-run suites; a real
 session's final-review fix wave cost more than all its tasks combined.

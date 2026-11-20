@@ -5,7 +5,7 @@ several plans. In this sitting, and only here, they decide the intent of
 every phase. After it, each phase runs in its own session without them, up
 to its merge menu.
 
-Create writes nothing until your human partner has answered: no Phases
+Create writes nothing until your human partner answers: no Phases
 section, no record, no commit, no plan, and no change to the record of
 another effort.
 
@@ -40,7 +40,7 @@ to the skills that made them, and they end with this session.
   file name, no letter on its first line), give it a letter now. Run
   `bash ../brainstorming/scripts/next-spec-id` by its absolute path, from
   the main checkout. Step 4's commit issues the letter. Until then, the
-  letter and the phase ids may change.
+  letter and the phase ids can change.
 - **Check for an existing effort.** If `docs/superpowers/efforts/<id>.json`
   already exists in the main checkout, this spec is already an effort. Say
   so, and point your human partner at Resume.
@@ -51,7 +51,7 @@ to the skills that made them, and they end with this session.
   - an id: the spec's letter plus a number in work order (`K1`, `K2`, …).
     Ids carry no words. If a plan for this spec already has an id (`K1`),
     its phase keeps that number. The other phases take the numbers that no
-    plan has used, in work order;
+    plan uses, in work order;
   - a title;
   - its purpose and its limits: what it builds, and what it leaves to other
     phases;
@@ -120,7 +120,7 @@ Do all of this in the main checkout, on `base`.
      phase ids to match.
    - Stamp the letter into the spec's first line as
      `# K: <its existing title>`. The file keeps its name.
-2. **Plans already written.** Before Create runs, the session may have
+2. **Plans already written.** Before Create runs, the session can have
    written plans for this spec: none, the plan of the first phase, or
    several.
    - **Link a plan only to a phase with no `waits_on`.** Set that phase's
@@ -133,7 +133,7 @@ Do all of this in the main checkout, on `base`.
      way. If the plan is deleted, never give that number to anything else.
 3. **Check that `.superpowers/` is ignored.** Run
    `git check-ignore -q .superpowers`. If it is not ignored, add
-   `.superpowers/` to `.gitignore`: an untracked file there would stop the
+   `.superpowers/` to `.gitignore`: an untracked file there stops the
    next Resume, which needs a clean tree.
 4. **Write the record** with `record.py new-record`
    (`references/record.md` § Commands):
@@ -146,7 +146,7 @@ Do all of this in the main checkout, on `base`.
    - `phases`: in the order of work;
    - `status`: `needs-partner` if it has `partner_questions`, else `waiting`
      if it has `waits_on`, else `known`;
-   - `spec` and `plan`: null, except for a linked plan; `closing`: null.
+   - `spec` and `plan`: null, except for a linked plan. `closing`: null.
 
    If the command fails, it wrote nothing. Correct the value file and run
    it again.

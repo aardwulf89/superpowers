@@ -127,7 +127,7 @@ digraph process {
    - Include `metadata` field if present (files, verifyCommand, acceptanceCriteria)
    - Restore `blockedBy` with TaskUpdate
 4. If work tasks exist (those with a `json:metadata` block): check that they match the plan.
-   To check, compare only work tasks: other skills' step tasks may sit in the same list.
+   To check, compare only work tasks: other skills' step tasks can sit in the same list.
    Resume from the first `pending`/`in_progress` task
 5. If neither: bootstrap from the plan (Step 1b below)
 
@@ -142,7 +142,7 @@ executor commits it before it deletes the workspace (see Finish).
 Ensure the work happens in an isolated workspace. Before calling `using-git-worktrees`, check if a worktree already exists:
 
 1. Run `git worktree list` to see all existing worktrees
-2. If a worktree for the plan's branch already exists: **enter it — do NOT create a new one.**
+2. If a worktree for the plan's branch already exists: **enter it. Do NOT create a new one.**
    In Claude Code, use `EnterWorktree` with its `path`, because the harness resets a `cd`.
    Elsewhere, change into it
 3. If on main/master with no worktree: **REQUIRED SUB-SKILL:** Use `superpowers-extended-cc:using-git-worktrees` to create one
@@ -182,7 +182,7 @@ and the new one resumes from the same ledger.
   directory is never yours to read or write.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
   line names your plan file, tasks with a `Task <id>: complete` line are
-  DONE — do not redo them; resume at the first task without one. If a
+  DONE. Do not redo them. Resume at the first task without one. If a
   `Task <id>: Ruling: split into …` line split a task, that task is DONE
   when every part the ruling names has its own completion line. Resume at
   the first part without one. Their
@@ -205,11 +205,11 @@ spec gets a ledger note saying so — rulings made without one are provisional.
 **Ids.** In every form below, `<id>` is the task's id
 as its plan heading writes it: `K3.4` in a plan with ids, `3` in one without.
 `<plan id>` is the plan's id from its first line (`# K3: …`). If the plan has
-no id, a line that would start with `<plan id>:` starts bare. Name the id in
+no id, a line that normally starts with `<plan id>:` starts bare. Name the id in
 full in every task subject, ledger line, commit subject and final-message
 line. Never use a short form. A branch that setup creates
-for a plan with an id is named after the plan's id (`K3`; Claude Code's
-`EnterWorktree` makes it `worktree-K3`). If a task heading holds nested part headings
+for a plan with an id is named after the plan's id (`K3`). In Claude Code,
+`EnterWorktree` makes it `worktree-K3`. If a task heading holds nested part headings
 (`#### Task K3.4a`, …), the plan split the task. Run each part as its own
 task, never the parent on its own.
 
@@ -236,7 +236,7 @@ If TaskList returned no tasks and no `.tasks.json` exists, or tasks don't match 
 ### Load TDD and Pre-flight
 
 **REQUIRED SUB-SKILL:** load superpowers-extended-cc:test-driven-development now,
-before the first task. It governs every step of every task below; a plan whose
+before the first task. It governs every step of every task below. A plan whose
 steps already say "write the failing test first" does not exempt you
 from reading it.
 
@@ -340,7 +340,7 @@ the claim. If any item is missing, the task is not complete: finish it.
 ### 4. Complete the task
 
 Run this skill's `scripts/task-done PLAN_FILE <id> BASE -- <test command>`
-by its absolute path, from the working tree you're executing in, with the test command the brief names for the whole task. It runs the
+by its absolute path. Run it from the working tree you are executing in, with the test command the brief names for the whole task. It runs the
 tests, keeps the full output in the workspace, prints the tail, and — only
 if they pass — appends the completion line to the ledger:
 
@@ -374,7 +374,7 @@ skip it, and do not replace it with your own read of the diff.
 Sort the findings before you act on any of them. The reviewer's severity
 labels are advice; the gate is yours. Its "Declined to judge" list is
 yours too: every line there is a ruling you make and ledger, exactly like
-a plan conflict — `<plan id>: Final: Ruling: <behavior the reviewer set aside> —
+a plan conflict: `<plan id>: Final: Ruling: <behavior the reviewer set aside> —
 <what a reasonable person using this software gets, and why that stands
 or why it is now a finding> — <cost if wrong>`. Re-grade first, by effect: the
 spec is a vision document, and a finding's grade is what a reasonable
@@ -385,7 +385,7 @@ because the spec was silent has graded the spec, not the effect. Then:
 - **Critical and Important** enter the fix pass.
 - **Minor** goes to the ledger as `<plan id>: Final: minor (deferred): <one-liner>`
   for the deferred-findings round. Minors never enter
-  the fix pass, and never become rulings — a ruling is a decision about a
+  the fix pass, and never become rulings. A ruling is a decision about a
   conflict, not a note that you declined a polish suggestion.
 
 Fix the Critical and Important findings yourself — you are the
@@ -393,13 +393,13 @@ implementer here — in ONE pass. Each fix is verified by TDD, not by a
 second reviewer: write the test that reproduces the finding, watch it
 fail, make it pass, then run the whole suite. Record each in the ledger as
 `<plan id>: Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`. A fix
-without a test that failed first is not verified; a suite that is not
+without a test that failed first is not verified. A suite that is not
 green after the pass means the pass is not over. Do not dispatch a
 re-review: it would re-read a diff whose covering tests already answer
 "addressed" and whose suite run already answers "broke nothing".
 
-A finding you decide not to fix is a ruling — `<plan id>: Final: Ruling: <finding> —
-<why the code stands> — <cost if wrong>` — and reaches your human partner
+A finding you decide not to fix is a ruling: `<plan id>: Final: Ruling: <finding> —
+<why the code stands> — <cost if wrong>`. It reaches your human partner
 in the rulings list. There is no second fix pass. The deferred minors go to
 the deferred-findings round. Before you finish, read
 references/deferred-findings.md and run the round.
@@ -412,8 +412,8 @@ made them, each with what it costs if wrong. Start each line with the id
 the ledger line names (`Task K3.4: …`, `K3: …`). Put every finding the
 deferred-findings round left open under "Unfinished", each starting with
 the id it concerns. Both lists are exhaustive. Your final message is the
-only place the decisions you took on your human partner's behalf — and the
-findings left unfinished — reach them.
+only place where the decisions you took on your human partner's behalf and the
+findings left unfinished reach them.
 
 Before you delete the workspace, commit `<plan-path>.tasks.json` if it changed
 (`chore(<plan id>): task status`). Do this even with at-end commits: when
@@ -421,7 +421,7 @@ you close the final commit's own task, the file changes after that commit.
 A modified file blocks `git worktree remove`.
 
 Then, when the deferred-findings round is done and its fixes are committed,
-delete this plan's workspace directory — the git history is the record now. Sibling
+delete this plan's workspace directory. The git history is the record now. Sibling
 directories belong to other plans; leave them alone.
 
 Announce: "I'm using the finishing-a-development-branch skill to complete this work."
@@ -444,4 +444,4 @@ Announce: "I'm using the finishing-a-development-branch skill to complete this w
 | "Subagents are slow and expensive, I'll skip the final review too" | Inline already removed the per-task reviewers. One review of the whole branch is the floor, not the ceiling. |
 | "The reviewer said Minor, so it's Minor" | The label graded the spec's silence. Grade what the person gets. Re-grade, then gate. |
 | "The fix is obvious, no need for a failing test first" | The failing test is the only proof the finding was real and is now gone. Without it you have a diff and a hope. |
-| "I'll fix the minors too while I'm in there" | Every minor you fix is a test, a fix, and a suite run your partner did not ask for. Ledger them; the deferred-findings round fixes them. |
+| "I'll fix the minors too while I'm in there" | Every minor you fix is a test, a fix, and a suite run your partner did not ask for. Ledger them. The deferred-findings round fixes them. |

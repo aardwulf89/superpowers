@@ -159,10 +159,10 @@ after `EnterWorktree` with a name), use `ExitWorktree`, action `remove`, with
 The typed confirmation above is the confirmation that the tool asks for.
 Then you are done: skip Step 6.
 
-**If `ExitWorktree` refuses because this session is not the owner** (the
-session entered an existing worktree with `EnterWorktree` and its `path`, as
-a resumed build does), leave with `ExitWorktree`, action `keep`. Then
-continue below.
+**If `ExitWorktree` refuses because this session is not the owner,** leave
+with `ExitWorktree`, action `keep`. This happens when the session entered an
+existing worktree with `EnterWorktree` and its `path`, as a resumed build
+does. Then continue below.
 
 **Otherwise,** change to the main repo root:
 
@@ -191,7 +191,7 @@ Step 2, from before that directory change.
 `.claude/worktrees/` and this session entered it with the harness's
 worktree tool and left it in Step 5:** Superpowers created this worktree,
 or this session did through the harness and the harness's exit tool can no
-longer remove it — we own cleanup. In the commands below, write
+longer remove it. We own cleanup. In the commands below, write
 `<WORKTREE_PATH>` literally, as the path that Step 2 noted:
 
 ```bash
@@ -231,7 +231,7 @@ for you.
    writes `claude session <name> (pid <pid> start <start>)`.
 2. Check that process with a plain `ps -p <pid>`.
 
-- **It is not running:** the lock is stale. Unlock and remove:
+- **It is not running:** the lock is stale. Release the lock and remove:
 
   ```bash
   git worktree unlock <WORKTREE_PATH>

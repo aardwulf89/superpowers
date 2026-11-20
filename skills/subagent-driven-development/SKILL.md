@@ -138,8 +138,8 @@ a ledger file, not only in the task list.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch); if
   that happens, recover from `git log`.
 - The ledger records STATE, not reasoning. Entries are the one-line forms
-  in this skill (dispatch, fix round, approved, complete, minor, parked, BLOCKED) —
-  one event, one line; only a parked ruling may run to three. No
+  in this skill (dispatch, fix round, approved, complete, minor, parked, BLOCKED).
+  One event, one line. Only a parked ruling can run to three. No
   methodology narration, no reviewer praise, no self-correction essays, no
   restating an earlier entry's facts — every extra line is re-read on
   every later turn. A lesson about your own process is not state: put it
@@ -155,11 +155,11 @@ Read the plan once, note its context and Global Constraints. If the plan names a
 **Ids.** In every form below, `<id>` is the task's id
 as its plan heading writes it: `K3.4` in a plan with ids, `3` in one without.
 `<plan id>` is the plan's id from its first line (`# K3: …`). If the plan has
-no id, a line that would start with `<plan id>:` starts bare. Name the id in
+no id, a line that normally starts with `<plan id>:` starts bare. Name the id in
 full in every task subject, dispatch, ledger line, commit subject and final-message
 line. Never use a short form. A branch that setup creates
-for a plan with an id is named after the plan's id (`K3`; Claude Code's
-`EnterWorktree` makes it `worktree-K3`). If a task heading holds nested part headings
+for a plan with an id is named after the plan's id (`K3`). In Claude Code,
+`EnterWorktree` makes it `worktree-K3`. If a task heading holds nested part headings
 (`#### Task K3.4a`, …), the plan split the task. Run each part as its own
 task, never the parent on its own.
 
@@ -170,13 +170,13 @@ Before dispatching the first task, read [references/preflight.md](references/pre
 and run the conflict scan it describes. Its table and rulings go in the
 ledger.
 
-**Step 0: load the plan's work tasks.** The session may already hold them:
+**Step 0: load the plan's work tasks.** The session can already hold them:
 the session that ran writing-plans does, and so does a resumed one. Never
 make a second copy. Load them in executing-plans' order:
 
 1. Call `TaskList`. If it holds work tasks (those with a `json:metadata`
    block) that match the plan, use them. To check, compare only work tasks:
-   other skills' step tasks may sit in the same list.
+   other skills' step tasks can sit in the same list.
 2. Else read `<plan-path>.tasks.json`. Recreate each entry with
    `TaskCreate` (its full description). Restore its status and its
    `blockedBy` with `TaskUpdate`.
@@ -410,13 +410,13 @@ covers the whole-branch review, its single fix wave, and how you finish.
 
 ## Bounded Parallel Dispatch
 
-Overlapping writers are forbidden, not parallelism itself — "Never two
+Overlapping writers are forbidden, not parallelism itself. "Never two
 writers in one working tree" above holds in every mode. Dispatch
 implementers concurrently only when every running
 agent passes the disjointness test:
 
 - **Read-only agents are always parallel-safe**: audits, log analysis, verification gates, long-running test suites (these are also ideal for free local agent types while implementation continues).
-- **Implementers may run concurrently ONLY when** their tasks' `files` lists share no path AND neither depends on the other in the pre-flight's dependency ruling. Each runs in its own worktree (references/parallel-dispatch.md). The `files` lists are the first check, not the whole test (references/parallel-dispatch.md rule 1).
+- **Implementers can run concurrently ONLY when** their tasks' `files` lists share no path AND neither depends on the other in the pre-flight's dependency ruling. Each runs in its own worktree (references/parallel-dispatch.md). The `files` lists are the first check, not the whole test (references/parallel-dispatch.md rule 1).
 - **Never** two writers on one file, and never use parallelism to skip reviews: each task still gets its own task review as it completes.
 - Mark every parallel task `in_progress` BEFORE dispatching its agent — model routing resolves each dispatch against the union of in-progress tiers, and an unmarked task's dispatch will be blocked against the wrong tier.
 - When overlap is uncertain, serialize. Run independent tasks as references/parallel-dispatch.md says.

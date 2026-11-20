@@ -1,8 +1,8 @@
 # Parallel Dispatch
 
 Part of superpowers-extended-cc:subagent-driven-development. Every
-pre-flight scan reads rule 1. Read the whole file when two or more tasks
-are ready at once, and run them in parallel without asking. Each task
+pre-flight scan reads rule 1. When two or more tasks are ready at once,
+read the whole file and run them in parallel without asking. Each task
 keeps its full loop.
 
 ## 1. Dependencies come from the pre-flight scan, every run
@@ -103,8 +103,8 @@ For each unfinished task:
   worktree. Never run `git worktree add` for it again.
 - An `approved` line and no completion line: run rule 4 from step 1. If
   the nested worktree is gone, steps 1-3 already ran. Run
-  `git branch --list <task id>`, run `git branch -d <task id>` if it is
-  listed, and write the completion line.
+  `git branch --list <task id>`. If it is listed, run
+  `git branch -d <task id>`. Then write the completion line.
 
 ## 7. When parallel dispatch does not run
 
@@ -149,5 +149,5 @@ handling-reports.md.
 - The harness refuses `git worktree add` outside the session worktree.
 - The harness refuses compound git commands in an isolated worktree. Run
   one plain command per call.
-- A lesson in an effort record may be untested. Check it before you copy it
+- A lesson in an effort record can be untested. Check it before you copy it
   into a dispatch.

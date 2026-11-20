@@ -142,7 +142,7 @@ Write the results with `record.py set-closing-key`:
 executor's lines included: the executor does not know the prefix. Read
 them with `record.py get REC ID closing`.
 
-- **A partner item** is anything that only your human partner may
+- **A partner item** is anything that only your human partner can
   settle: an intent question, a borderline call, or a decision that a
   stage left to them ("the owner's call", "for the partner to decide").
   Rewrite it as one line that starts with `Partner item: `. The line
@@ -291,7 +291,7 @@ each change, and for each question:
 - `intent`: true for a question to your human partner. `change` is then
   what was proposed, not applied.
 - `alternative`: the option you did not take. For a question, it is the
-  other answer your human partner could give.
+  other answer your human partner can give.
 
 A non-blocking partner item is not a change, and gets no entry. Its only
 copy is its line in `unfinished`.

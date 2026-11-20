@@ -4,8 +4,8 @@ Part of superpowers-extended-cc:subagent-driven-development. This plan's workspa
 already has a ledger at `<workspace>/progress.md`.
 
 If the ledger's first line names your plan file, tasks with a `Task <id>:
-complete` line are DONE — do not re-dispatch them; resume at the first
-task without one. A task whose plan heading has nested part headings
+complete` line are DONE. Do not re-dispatch them. Resume at the first
+task without one. A task whose plan heading holds nested part headings
 (`#### Task <id>a`, …) is DONE when every part has its own `Task <part id>:
 complete` line. Its parts are the tasks, and it has no line of its own.
 A task that the ledger split during the build (`Task <id>: Ruling: split
