@@ -4,13 +4,13 @@
     {
       "id": 0,
       "subject": "F1.1: The parallel-dispatch reference file",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** `references/parallel-dispatch.md` holds the ten rules of spec F §Design, with a text test.\n\n**Files:**\n- Create: `skills/subagent-driven-development/references/parallel-dispatch.md`\n- Create: `tests/parallel-dispatch/test-reference-text.sh`\n\n**Acceptance Criteria:**\n- [ ] The file opens like the other reference files: a `#` title, then \"Part of superpowers-extended-cc:subagent-driven-development.\" and when to read it.\n- [ ] It states spec F §Design items 1-10, in that order, each traceable to its spec item.\n- [ ] `bash tests/parallel-dispatch/test-reference-text.sh` prints `PASS` and exits 0.\n- [ ] The existing tests `tests/sdd-helper-paths/test-sdd-helper-paths.sh`, `tests/reference-ids/test-reference-ids.sh` and `tests/skill-layout/test-no-dev-files-in-skills.sh` still pass.\n\n**Verify:** `bash tests/parallel-dispatch/test-reference-text.sh` → `PASS: …`, exit 0\n\n```json:metadata\n{\"files\": [\"skills/subagent-driven-development/references/parallel-dispatch.md\", \"tests/parallel-dispatch/test-reference-text.sh\"], \"verifyCommand\": \"bash tests/parallel-dispatch/test-reference-text.sh\", \"acceptanceCriteria\": [\"opens like the other reference files\", \"states spec F Design items 1-10 in order\", \"test-reference-text.sh prints PASS, exit 0\", \"existing sdd-helper-paths, reference-ids, skill-layout tests pass\"], \"modelTier\": \"standard\"}\n```"
     },
     {
       "id": 1,
       "subject": "F1.2: Trigger, pcvelz phrases, pre-flight, resume",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** `SKILL.md`, `references/preflight.md` and `references/resuming.md` point at the new file and make the dependency ruling part of every pre-flight scan.\n\n**Files:**\n- Modify: `skills/subagent-driven-development/SKILL.md` (line 289; §Bounded Parallel Dispatch, lines ~411-422; the Setup node of the process graph, lines 75 and 82)\n- Modify: `skills/subagent-driven-development/references/preflight.md`\n- Modify: `skills/subagent-driven-development/references/resuming.md`\n- Create: `tests/parallel-dispatch/test-skill-text.sh`\n\n**Acceptance Criteria:**\n- [ ] Line 289's sentence is replaced by the exact trigger sentence below.\n- [ ] §Bounded Parallel Dispatch carries the three phrase changes of spec F and quotes the new ban sentence; every other line of it is unchanged (`git diff` shows only those lines).\n- [ ] Both occurrences of the Setup node label read `Setup: worktree, ledger check, read plan, pre-flight review and dependency ruling`.\n- [ ] `preflight.md` ends with the dependency ruling (spec F §Design item 1) and its ledger form.\n- [ ] `resuming.md` has one line pointing at `parallel-dispatch.md` for tasks in flight in nested worktrees.\n- [ ] `bash tests/parallel-dispatch/test-skill-text.sh` prints `PASS`, exit 0; the existing tests named in Task F1.1 still pass.\n\n**Verify:** `bash tests/parallel-dispatch/test-skill-text.sh` → `PASS: …`, exit 0\n\n```json:metadata\n{\"files\": [\"skills/subagent-driven-development/SKILL.md\", \"skills/subagent-driven-development/references/preflight.md\", \"skills/subagent-driven-development/references/resuming.md\", \"tests/parallel-dispatch/test-skill-text.sh\"], \"verifyCommand\": \"bash tests/parallel-dispatch/test-skill-text.sh\", \"acceptanceCriteria\": [\"line 289 trigger sentence\", \"three pcvelz phrase changes, rest unchanged\", \"Setup node label both occurrences\", \"preflight dependency ruling\", \"resuming pointer\", \"test-skill-text.sh PASS\"], \"modelTier\": \"mechanical\"}\n```",
       "blockedBy": [
         0
@@ -19,12 +19,12 @@
     {
       "id": 2,
       "subject": "F1.3: Version bump",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** The plugin version becomes `7.1.2-dev+aardwulf.3`, so Claude Code refreshes its cached copy.\n\n**Files:**\n- Modify: the files `scripts/bump-version.sh` writes (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` and the others it lists)\n\n**Acceptance Criteria:**\n- [ ] `grep '\"version\"' .claude-plugin/plugin.json` prints `7.1.2-dev+aardwulf.3`.\n- [ ] `scripts/bump-version.sh --check` reports no drift.\n\n**Verify:** `grep -c '7.1.2-dev+aardwulf.3' .claude-plugin/plugin.json` → `1`\n\n```json:metadata\n{\"files\": [\".claude-plugin/plugin.json\", \".claude-plugin/marketplace.json\", \".version-bump.json\"], \"verifyCommand\": \"grep -c '7.1.2-dev+aardwulf.3' .claude-plugin/plugin.json\", \"acceptanceCriteria\": [\"plugin.json version is 7.1.2-dev+aardwulf.3\", \"bump-version.sh --check reports no drift\"], \"modelTier\": \"mechanical\"}\n```",
       "blockedBy": [
         1
       ]
     }
   ],
-  "lastUpdated": "2026-11-20T16:33:12.511652+00:00"
+  "lastUpdated": "2026-11-20T16:39:21.842966+00:00"
 }
