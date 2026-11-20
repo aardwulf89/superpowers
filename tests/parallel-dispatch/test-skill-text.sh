@@ -35,9 +35,9 @@ S=skills/subagent-driven-development/SKILL.md
 P=skills/subagent-driven-development/references/preflight.md
 R=skills/subagent-driven-development/references/resuming.md
 
-has   "$S" "Never two writers in one working tree; to run tasks in parallel, read [references/parallel-dispatch.md](references/parallel-dispatch.md) first."
+has   "$S" "you dispatch: each writer gets its own worktree. Never two writers in one"
 lacks "$S" "Never dispatch multiple implementation subagents in parallel (conflicts)"
-has   "$S" "Each runs in its own worktree (references/parallel-dispatch.md)"
+has   "$S" "**Run implementers concurrently ONLY when** neither depends on the other in the pre-flight's dependency ruling. Give each its own worktree (references/parallel-dispatch.md)."
 has   "$S" "neither depends on the other in the pre-flight's dependency ruling"
 lacks "$S" "in the other's \`blockedBy\` chain"
 lacks "$S" "remains the default; parallelism is the optimization"
@@ -53,7 +53,7 @@ has   "$S" "holds in every mode"
 lacks "$S" "is the default for the sequential loop"
 
 lacks "$S" "The \`files\` metadata IS the test"
-has   "$S" "The \`files\` lists are the first check, not the whole test"
+lacks "$S" "lists share no path AND"
 has   "$S" "(dispatch, fix round, approved, complete, minor, parked, BLOCKED)"
 has   "$S" "agent passes the disjointness test:"
 

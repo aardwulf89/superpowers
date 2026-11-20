@@ -22,7 +22,7 @@ Never put two writers in one working tree. Give each parallel implementer
 a nested worktree, made from the phase worktree's HEAD:
 
 ```bash
-git worktree add <phase worktree>/.superpowers/wt/<task id> -b <task id>
+git worktree add <phase worktree>/.superpowers/wt/<task id> -b <task id> HEAD
 ```
 
 Before the first one, run `git check-ignore` on `.superpowers/wt/`. If it
@@ -137,6 +137,9 @@ handling-reports.md.
 - Linters that walk git-ignored folders fail a commit on scratch code in
   the phase worktree while nested worktrees exist. Keep scratch code out of
   the phase worktree.
+- Pre-commit writes each stash to `~/.cache/pre-commit/patch*`, one cache
+  for every worktree. After a killed commit, apply the patch that names this
+  worktree's files, never just the newest one.
 - The harness refuses `git worktree add` outside the session worktree.
 - The harness refuses compound git commands in an isolated worktree. Run
   one plain command per call.

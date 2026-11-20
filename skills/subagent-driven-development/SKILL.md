@@ -286,7 +286,10 @@ and fix-round diffs need it.
   a pointer to that ledger entry in the dispatch.
 - Record the implementer's agent identity from the dispatch result —
   fix-loop rounds 1-3 resume this agent.
-- Never two writers in one working tree; to run tasks in parallel, read [references/parallel-dispatch.md](references/parallel-dispatch.md) first.
+- When the pre-flight's ruling shows two or more tasks ready, read
+  [references/parallel-dispatch.md](references/parallel-dispatch.md) before
+  you dispatch: each writer gets its own worktree. Never two writers in one
+  working tree.
 - A task reviewer reads only its own task's tree. In one tree, dispatch the
   next task only after the previous task's review is clean, or its findings
   are parked at the cap.
@@ -419,7 +422,7 @@ implementers concurrently only when every running
 agent passes the disjointness test:
 
 - **Read-only agents are always parallel-safe**: audits, log analysis, verification gates, long-running test suites (these are also ideal for free local agent types while implementation continues).
-- **Implementers may run concurrently ONLY when** their tasks' `files` lists share no path AND neither depends on the other in the pre-flight's dependency ruling. Each runs in its own worktree (references/parallel-dispatch.md). The `files` lists are the first check, not the whole test (references/parallel-dispatch.md rule 1).
+- **Run implementers concurrently ONLY when** neither depends on the other in the pre-flight's dependency ruling. Give each its own worktree (references/parallel-dispatch.md).
 - **Never** two writers on one file, and never use parallelism to skip reviews: each task still gets its own task review as it completes.
 - Mark every parallel task `in_progress` BEFORE dispatching its agent — model routing resolves each dispatch against the union of in-progress tiers, and an unmarked task's dispatch will be blocked against the wrong tier.
 - When overlap is uncertain, serialize. Run independent tasks as references/parallel-dispatch.md says.
