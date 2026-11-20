@@ -182,8 +182,8 @@ make a second copy. Load them in executing-plans' order:
    `blockedBy` with `TaskUpdate`.
 3. Else build them from the plan's `### Task <id>:` headings, in
    writing-plans' format (Goal, Files, Acceptance Criteria, Verify, and
-   the `json:metadata` block). Mark a task completed if the ledger has a
-   `Task <id>: complete` line for it.
+   the `json:metadata` block). If the ledger has a
+   `Task <id>: complete` line for a task, mark it completed.
 
 ## Dispatching with Metadata
 

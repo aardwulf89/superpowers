@@ -134,10 +134,10 @@ assignment and a command.
         `git pull --ff-only origin <base>`, so the next phase builds on
         the merged code. For a phase built in place, check out `base`
         first.
-     4. Do the cleanup that option 1 does. Remove the
-        branch's worktree with `git worktree remove <path>`, never
-        `--force`, if it is under `.worktrees/` or `worktrees/`, or
-        under `.claude/worktrees/` and this session entered it. If the
+     4. Do the cleanup that option 1 does. If the branch's worktree is
+        under `.worktrees/` or `worktrees/`, or under
+        `.claude/worktrees/` and this session entered it, remove it
+        with `git worktree remove <path>`, never `--force`. If the
         removal is refused, follow `finishing-a-development-branch`'s
         Step 6, its lock rule included.
      5. When `gh pr view <branch> --json state -q .state` prints
@@ -288,7 +288,7 @@ item, write its lines in the singular: `1 item stays open`, `It is`,
   Effort <id> is closed out: every phase is done or dropped, and no item is open.
   ```
 
-Never call the effort closed out when an item is carried.
+When an item is carried, never call the effort closed out.
 
 ## 6. Run the stages straight through to the merge menu
 
