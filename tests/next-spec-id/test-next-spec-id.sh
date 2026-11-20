@@ -203,7 +203,7 @@ check "--phase with no letter exits 2" 2 "$rc"
 
 # The repo's own tree: the specs and plans carried over from the obra-based
 # fork keep their letters, so the next ones continue after them.
-check "own tree: next spec letter" F "$(cd "$REPO_ROOT" && bash "$NEXT")"
+check "own tree: next spec letter" G "$(cd "$REPO_ROOT" && bash "$NEXT")"
 # Spec E names E1–E3 in its text (labels of its record changes), which
 # the tool retires as phase ids, as it does every K<n> in spec K's text.
 check "own tree: next phase of E" E4 "$(cd "$REPO_ROOT" && bash "$NEXT" --phase E)"
