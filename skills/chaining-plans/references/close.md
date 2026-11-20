@@ -142,8 +142,8 @@ Write the results with `record.py set-closing-key`:
 executor's lines included: the executor does not know the prefix. Read
 them with `record.py get REC ID closing`.
 
-- **A partner item** is anything that only your human partner can
-  settle: an intent question, a borderline call, or a decision that a
+- **A partner item** is anything that only your human partner
+  settles: an intent question, a borderline call, or a decision that a
   stage left to them ("the owner's call", "for the partner to decide").
   Rewrite it as one line that starts with `Partner item: `. The line
   states, in this order:

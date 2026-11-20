@@ -51,7 +51,7 @@ to the skills that made them, and they end with this session.
   - an id: the spec's letter plus a number in work order (`K1`, `K2`, …).
     Ids carry no words. If a plan for this spec already has an id (`K1`),
     its phase keeps that number. The other phases take the numbers that no
-    plan uses, in work order;
+    plan ever used, in work order;
   - a title;
   - its purpose and its limits: what it builds, and what it leaves to other
     phases;

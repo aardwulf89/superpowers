@@ -139,7 +139,7 @@ a ledger file, not only in the task list.
   that happens, recover from `git log`.
 - The ledger records STATE, not reasoning. Entries are the one-line forms
   in this skill (dispatch, fix round, approved, complete, minor, parked, BLOCKED).
-  One event, one line. Only a parked ruling can run to three. No
+  One event, one line. Only a parked ruling is allowed three lines. No
   methodology narration, no reviewer praise, no self-correction essays, no
   restating an earlier entry's facts — every extra line is re-read on
   every later turn. A lesson about your own process is not state: put it
@@ -155,7 +155,7 @@ Read the plan once, note its context and Global Constraints. If the plan names a
 **Ids.** In every form below, `<id>` is the task's id
 as its plan heading writes it: `K3.4` in a plan with ids, `3` in one without.
 `<plan id>` is the plan's id from its first line (`# K3: …`). If the plan has
-no id, a line that normally starts with `<plan id>:` starts bare. Name the id in
+no id, a line that starts with `<plan id>:` in a plan with an id starts bare. Name the id in
 full in every task subject, dispatch, ledger line, commit subject and final-message
 line. Never use a short form. A branch that setup creates
 for a plan with an id is named after the plan's id (`K3`). In Claude Code,
@@ -416,7 +416,7 @@ implementers concurrently only when every running
 agent passes the disjointness test:
 
 - **Read-only agents are always parallel-safe**: audits, log analysis, verification gates, long-running test suites (these are also ideal for free local agent types while implementation continues).
-- **Implementers can run concurrently ONLY when** their tasks' `files` lists share no path AND neither depends on the other in the pre-flight's dependency ruling. Each runs in its own worktree (references/parallel-dispatch.md). The `files` lists are the first check, not the whole test (references/parallel-dispatch.md rule 1).
+- **Implementers may run concurrently ONLY when** their tasks' `files` lists share no path AND neither depends on the other in the pre-flight's dependency ruling. Each runs in its own worktree (references/parallel-dispatch.md). The `files` lists are the first check, not the whole test (references/parallel-dispatch.md rule 1).
 - **Never** two writers on one file, and never use parallelism to skip reviews: each task still gets its own task review as it completes.
 - Mark every parallel task `in_progress` BEFORE dispatching its agent — model routing resolves each dispatch against the union of in-progress tiers, and an unmarked task's dispatch will be blocked against the wrong tier.
 - When overlap is uncertain, serialize. Run independent tasks as references/parallel-dispatch.md says.

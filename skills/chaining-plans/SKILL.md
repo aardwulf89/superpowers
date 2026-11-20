@@ -67,8 +67,8 @@ the same message, so its handoff does not stop the session:
 > invoke `superpowers-extended-cc:subagent-driven-development`.
 
 **What it does not cover:**
-- Intent. A question that changes what your human partner intended is
-  theirs. Ask it, or record it for them. Never rule on it.
+- Intent. A question whose answer changes what your human partner
+  intended is theirs. Ask it, or record it for them. Never rule on it.
 - The executor's own stop conditions. They still stop the build.
 - The merge menu. `finishing-a-development-branch` shows it in its own
   words, and your human partner answers it. "git ops" means:
@@ -156,7 +156,7 @@ final message, travel with the build:
 The close copies them into `closing`. `learned` carries knowledge to later
 Design stages. Each close keeps `learned` small and
 true. A `Partner item:` line in `unfinished`, or a question in
-`partner_questions`, holds what only your human partner can settle. No
+`partner_questions`, holds what only your human partner settles. No
 stage settles it. An effort is closed out only when each item has your
 human partner's disposition and none is `[carried]`.
 

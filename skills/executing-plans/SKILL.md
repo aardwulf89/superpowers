@@ -205,7 +205,7 @@ spec gets a ledger note saying so — rulings made without one are provisional.
 **Ids.** In every form below, `<id>` is the task's id
 as its plan heading writes it: `K3.4` in a plan with ids, `3` in one without.
 `<plan id>` is the plan's id from its first line (`# K3: …`). If the plan has
-no id, a line that normally starts with `<plan id>:` starts bare. Name the id in
+no id, a line that starts with `<plan id>:` in a plan with an id starts bare. Name the id in
 full in every task subject, ledger line, commit subject and final-message
 line. Never use a short form. A branch that setup creates
 for a plan with an id is named after the plan's id (`K3`). In Claude Code,

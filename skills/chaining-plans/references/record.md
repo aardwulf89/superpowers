@@ -272,7 +272,7 @@ from the Plan stage of Resume:
   phase it depends on or waits on.
 - **A split:**
   - Every part gets the split phase's id plus 1 lowercase letter, in work
-    order. K2 splits into `K2a`, `K2b`, …, skipping i, l and o. No part
+    order. Skip the letters i, l and o. K2 splits into `K2a`, `K2b`, …. No part
     keeps the bare id, which still names the whole.
   - A part that splits again alternates to a number (`K2a` into `K2a1`,
     `K2a2`).

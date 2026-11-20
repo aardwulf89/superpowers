@@ -192,9 +192,9 @@ Run `record.py pick`. It prints 1 of these:
   `depends_on`, with its `phase-state`. A `dropped` dependency will
   never be done. Stop. Your human partner decides.
 - **`id:<id>`:** this session runs that phase. Read its `status`:
-  - `waiting`: a close resolves it, so the record is
+  - `waiting`: a close was meant to resolve it, so the record is
     inconsistent. Say so with that word. Report the phase, its
-    `waits_on`, and the close that answers them. Stop. Do
+    `waits_on`, and the close that was meant to answer them. Stop. Do
     not design it.
   - `needs-partner`: start at the Intent round.
   - `known`: start at the first stage whose link (`spec`, `plan`) is
@@ -316,7 +316,7 @@ round starts.
   Intent round that Design starts has no blocker.
 - Set a task in_progress when its stage starts. Mark it completed only
   when its "Done when" holds. A task stays in_progress while its stage
-  waits on your human partner or stops.
+  waits on your human partner or is stopped.
 
 | Stage | What it does | Done when |
 |---|---|---|
