@@ -72,14 +72,14 @@ digraph process {
         "Append completion to ledger, TaskUpdate: mark task completed" [shape=box];
     }
 
-    "Setup: worktree, ledger check, read plan, pre-flight review" [shape=box];
+    "Setup: worktree, ledger check, read plan, pre-flight review and dependency ruling" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Final review and finish: read references/final-review.md" [shape=box];
     "Deferred-findings round: read references/deferred-findings.md" [shape=box];
     "Deferred-findings round done: delete this plan's workspace" [shape=box];
     "Use superpowers-extended-cc:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Setup: worktree, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Setup: worktree, ledger check, read plan, pre-flight review and dependency ruling" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer asks questions?";
     "Implementer asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Implementer implements, tests, commits, self-reviews";
@@ -286,7 +286,7 @@ and fix-round diffs need it.
   a pointer to that ledger entry in the dispatch.
 - Record the implementer's agent identity from the dispatch result —
   fix-loop rounds 1-3 resume this agent.
-- Never dispatch multiple implementation subagents in parallel (conflicts).
+- Never two writers in one working tree; to run tasks in parallel, read [references/parallel-dispatch.md](references/parallel-dispatch.md) first.
 
 Template: [implementer-prompt.md](implementer-prompt.md)
 
@@ -410,16 +410,15 @@ covers the whole-branch review, its single fix wave, and how you finish.
 
 ## Bounded Parallel Dispatch
 
-Overlapping writers are forbidden, not parallelism itself — "Never dispatch
-multiple implementation subagents in parallel (conflicts)" above is the
-default for the sequential loop. Dispatch concurrently when every running
-agent passes the disjointness test:
+Overlapping writers are forbidden, not parallelism itself — "Never two
+writers in one working tree" above is the default for the sequential loop.
+Dispatch concurrently when every running agent passes the disjointness test:
 
 - **Read-only agents are always parallel-safe**: audits, log analysis, verification gates, long-running test suites (these are also ideal for free local agent types while implementation continues).
-- **Implementers may run concurrently ONLY when** their tasks' `files` lists share no path AND neither task appears in the other's `blockedBy` chain. The `files` metadata IS the test — no overlap means no conflict.
+- **Implementers may run concurrently ONLY when** their tasks' `files` lists share no path AND neither depends on the other in the pre-flight's dependency ruling, and each in its own worktree (references/parallel-dispatch.md). The `files` metadata IS the test — no overlap means no conflict.
 - **Never** two writers on one file, and never use parallelism to skip reviews: each task still gets its own task review as it completes.
 - Mark every parallel task `in_progress` BEFORE dispatching its agent — model routing resolves each dispatch against the union of in-progress tiers, and an unmarked task's dispatch will be blocked against the wrong tier.
-- When overlap is uncertain, serialize. The sequential per-task loop above remains the default; parallelism is the optimization, not the baseline.
+- When overlap is uncertain, serialize. Run independent tasks as references/parallel-dispatch.md says.
 
 ## Task Persistence Sync
 

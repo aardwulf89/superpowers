@@ -25,3 +25,9 @@ plan is its argument — record the ruling beside its row as
 `<plan id>: Ruling: …` (a row spans tasks, so it takes the plan's id), and
 dispatch the first task. The review loop remains the net for conflicts that only emerge from
 implementation.
+
+The dependency ruling is part of every scan. From the table's rows for shared
+files and interfaces, rule which tasks depend on each other. Record it in the
+ledger as `<plan id>: Ruling: dependencies — …`. The plan's `blockedBy` chain
+stays as written. When two or more tasks are ready at once, read
+[parallel-dispatch.md](parallel-dispatch.md); rule 1 there holds the full test.
