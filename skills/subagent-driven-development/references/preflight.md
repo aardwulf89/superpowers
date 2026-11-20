@@ -17,17 +17,11 @@ its own text agrees with itself — the tests it specifies against the code it
 specifies, the files it creates against the files it later touches. "The scan
 is clean" without those rows is not a scan you ran.
 
-The dependency ruling is part of every scan, and it is recorded even when the
-scan is clean. First read rule 1 of [parallel-dispatch.md](parallel-dispatch.md):
-it lists what makes two tasks dependent. Then rule which tasks depend on
-each other by that list, from the table's rows and the plan's text. A shared
-allocator or artifact can join two tasks that share no file. Record it in the ledger as
+Every scan ends with the dependency ruling, even a clean one.
+First read rule 1 of [parallel-dispatch.md](parallel-dispatch.md). Rule by
+its list, from the table's rows and the plan's text, and record
 `<plan id>: Ruling: dependencies — <which tasks depend on which> — <why> — cost if wrong: <what breaks>`.
-The plan's `blockedBy` chain stays as written. A task is ready when every
-task it depends on in the ruling has its completion line (it is integrated).
-Its `blockedBy` entries do not hold it back.
-When two or more tasks are ready at once, run them as the rest of
-[parallel-dispatch.md](parallel-dispatch.md) says.
+When two or more tasks are ready, read the rest of that file.
 
 Write the table to the ledger. Rule on everything you find before execution
 begins — each finding against the plan text that mandates it — and record

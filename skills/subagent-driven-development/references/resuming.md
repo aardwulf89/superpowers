@@ -16,7 +16,6 @@ different plan file — or a stray ledger at the old flat path
 `.superpowers/sdd/progress.md` — is another plan's progress: leave it in
 place and start your own, fresh.
 
-A task whose dispatch line names a nested worktree that still exists is in
-flight. A task with a `Task <id>: approved (commits …)` line and no
-completion line is approved but not integrated. Resume both as
-rule 6 of [parallel-dispatch.md](parallel-dispatch.md) says.
+A task in flight in a nested worktree, or with a
+`Task <id>: approved (commits …)` line and no completion line, resumes by
+rule 6 of [parallel-dispatch.md](parallel-dispatch.md).
