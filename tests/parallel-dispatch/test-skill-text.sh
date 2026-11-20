@@ -46,6 +46,8 @@ lacks "$S" "read plan, pre-flight review\" ["
 lacks "$S" "read plan, pre-flight review\" ->"
 has   "$P" "Ruling: dependencies"
 has   "$R" "parallel-dispatch.md"
+has   "$S" "holds in every mode"
+lacks "$S" "is the default for the sequential loop"
 
 if ((failures)); then
   echo "FAIL: $failures of $checks parallel-dispatch skill text checks" >&2

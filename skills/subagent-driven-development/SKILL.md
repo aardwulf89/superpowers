@@ -411,8 +411,9 @@ covers the whole-branch review, its single fix wave, and how you finish.
 ## Bounded Parallel Dispatch
 
 Overlapping writers are forbidden, not parallelism itself — "Never two
-writers in one working tree" above is the default for the sequential loop.
-Dispatch concurrently when every running agent passes the disjointness test:
+writers in one working tree" above holds in every mode. Dispatch
+implementers concurrently only when every running agent passes the
+disjointness test:
 
 - **Read-only agents are always parallel-safe**: audits, log analysis, verification gates, long-running test suites (these are also ideal for free local agent types while implementation continues).
 - **Implementers may run concurrently ONLY when** their tasks' `files` lists share no path AND neither depends on the other in the pre-flight's dependency ruling, and each in its own worktree (references/parallel-dispatch.md). The `files` metadata IS the test — no overlap means no conflict.

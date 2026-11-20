@@ -17,6 +17,15 @@ its own text agrees with itself — the tests it specifies against the code it
 specifies, the files it creates against the files it later touches. "The scan
 is clean" without those rows is not a scan you ran.
 
+The dependency ruling is part of every scan, and it is recorded even when the
+scan is clean. From the table's rows for shared files and interfaces, rule which
+tasks depend on each other. Record it in the ledger as
+`<plan id>: Ruling: dependencies — …`. The plan's `blockedBy` chain stays as
+written. A task is ready when every task it depends on in the ruling has its
+completion line (it is integrated). Its `blockedBy` entries do not hold it back.
+When two or more tasks are ready at once, read
+[parallel-dispatch.md](parallel-dispatch.md); rule 1 there holds the full test.
+
 Write the table to the ledger. Rule on everything you find before execution
 begins — each finding against the plan text that mandates it — and record
 each ruling in the ledger. If the scan is clean, proceed without comment.
@@ -25,9 +34,3 @@ plan is its argument — record the ruling beside its row as
 `<plan id>: Ruling: …` (a row spans tasks, so it takes the plan's id), and
 dispatch the first task. The review loop remains the net for conflicts that only emerge from
 implementation.
-
-The dependency ruling is part of every scan. From the table's rows for shared
-files and interfaces, rule which tasks depend on each other. Record it in the
-ledger as `<plan id>: Ruling: dependencies — …`. The plan's `blockedBy` chain
-stays as written. When two or more tasks are ready at once, read
-[parallel-dispatch.md](parallel-dispatch.md); rule 1 there holds the full test.
