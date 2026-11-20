@@ -20,9 +20,10 @@ is clean" without those rows is not a scan you ran.
 The dependency ruling is part of every scan, and it is recorded even when the
 scan is clean. From the table's rows for shared files and interfaces, rule which
 tasks depend on each other. Record it in the ledger as
-`<plan id>: Ruling: dependencies — …`. The plan's `blockedBy` chain stays as
-written. A task is ready when every task it depends on in the ruling has its
-completion line (it is integrated). Its `blockedBy` entries do not hold it back.
+`<plan id>: Ruling: dependencies — <which tasks depend on which> — <why> — cost if wrong: <what breaks>`.
+The plan's `blockedBy` chain stays as written. A task is ready when every
+task it depends on in the ruling has its completion line (it is integrated).
+Its `blockedBy` entries do not hold it back.
 When two or more tasks are ready at once, read
 [parallel-dispatch.md](parallel-dispatch.md); rule 1 there holds the full test.
 

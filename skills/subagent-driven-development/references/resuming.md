@@ -17,4 +17,6 @@ different plan file — or a stray ledger at the old flat path
 place and start your own, fresh.
 
 A task whose dispatch line names a nested worktree that still exists is in
-flight. Resume it as [parallel-dispatch.md](parallel-dispatch.md) says.
+flight. A task with a `Task <id>: approved (commits …)` line and no
+completion line is approved but not integrated. Resume both as
+rule 6 of [parallel-dispatch.md](parallel-dispatch.md) says.

@@ -2,8 +2,9 @@
 
 Part of superpowers-extended-cc:subagent-driven-development. Read this file
 when the pre-flight's dependency ruling shows two or more tasks ready at
-once. Parallel dispatch is automatic within the plan: your human partner
-decided this. Run the ready tasks in parallel by the rules below.
+once. Parallel dispatch is automatic within the plan. Your human partner
+decided that ready tasks run in parallel without asking them first. Run the
+ready tasks in parallel by the rules below.
 
 Each task keeps its full loop: implementer, task review, fix loop and
 ledger lines. These rules add only what parallel work needs.
@@ -22,7 +23,11 @@ are dependent if they have any of these:
 - a glob you cannot expand;
 - anything unclear.
 
-Record the ruling in the ledger as `<plan id>: Ruling: dependencies — …`.
+Disjoint `files` lists are not enough. Two tasks that share no file are
+still dependent if any other item above holds.
+
+Record the ruling in the ledger as
+`<plan id>: Ruling: dependencies — <which tasks depend on which> — <why> — cost if wrong: <what breaks>`.
 The plan's `blockedBy` chain stays as written.
 
 A task is ready when every task it depends on in the ruling has its
@@ -48,6 +53,8 @@ The dispatch's `Work from:` is the nested path. Every command the
 implementer runs addresses it explicitly: absolute paths and
 `git -C <nested>`. A subagent's working directory resets to the phase
 worktree, so the implementer never edits or runs in the phase worktree.
+Tell the implementer to leave no untracked files in its worktree. They
+block its removal.
 
 Nothing else writes in a tree that has a writer, you included.
 While any nested worktree exists, every writer works in a nested worktree.
@@ -75,17 +82,26 @@ read.
 
 Write the per-task ledger lines as they happen, in their usual forms:
 dispatch, fix rounds, minors, parked findings and rulings. The dispatch
-line also names the task's nested worktree.
+line also names the task's nested worktree:
+`Task <id>: dispatch (<model>, base <base7>, worktree .superpowers/wt/<task id>)`.
 
 When a task's review is approved (or parked with rulings at the cap),
-bring it into the phase branch:
+write `Task <id>: approved (commits <base7>..<head7>, review clean)` (or
+`<K> parked` in place of `review clean`). Then bring it into the phase
+branch:
 
 1. Run `git -C <nested> rebase <phase branch>`. If the rebase stops, run
    `git -C <nested> rebase --abort`. Rule the pair dependent in the ledger.
    Resume the task's implementer to rebase and resolve in its own worktree,
    then run a scoped re-review before you integrate.
 2. In the phase worktree, run `git merge --ff-only <task branch>`.
-3. Remove the nested worktree and delete the task branch.
+3. In the phase worktree, run `git worktree remove <nested>`. Then run
+   `git branch -d <task id>`. If the remove refuses, the worktree still has
+   modified or untracked files. List them with
+   `git -C <nested> status --short`. Resume the task's implementer to
+   delete its scratch files. A file that belongs to the task is unreviewed
+   work: the implementer commits it, a scoped re-review runs, and you run
+   steps 1-3 again. Never use `--force`.
 4. Only then write the task's completion line, with the integrated commit
    range.
 
@@ -94,15 +110,25 @@ Only the controller writes the ledger.
 ## 5. Gates on the merged head
 
 A fast-forward runs no hooks. Never claim the merged head is clean without
-a gate run. Run the project's gates on it before the final review. If a
-gate fails, give the failure to the final review as a finding. Its fix wave
-fixes it, unchanged.
+a gate run. The project's gates are the checks a commit runs (its commit
+hooks), the test commands the plan's tasks verify with, and any gate the
+project's instructions name. Run each one by hand in the phase worktree on
+the merged head, before the final review. If a gate fails, give the failure
+to the final review as a finding. Its fix wave fixes it, unchanged.
 
 ## 6. Resume
 
-If a task's dispatch line names a nested worktree that still exists, the
-task is in flight. Resume its implementer there, or re-dispatch into the
-same worktree. Never run `git worktree add` for it again.
+Read each unfinished task's ledger lines, then check its nested worktree.
+
+- No `approved` line, and the nested worktree from its dispatch line still
+  exists: the task is in flight. Resume its implementer there, or
+  re-dispatch into the same worktree. Never run `git worktree add` for it
+  again.
+- An `approved` line and no completion line: the task is approved but not
+  integrated. Run rule 4 from step 1. If the nested worktree is
+  gone, steps 1-3 already ran. Run `git branch --list <task id>`. If the
+  branch is listed, run `git branch -d <task id>`. Then write the
+  completion line.
 
 ## 7. When parallel dispatch does not run
 
@@ -121,6 +147,14 @@ Some tools lock the whole machine (golangci-lint holds
 `/tmp/golangci-lint.lock`). Concurrent commits then fail. In each
 dispatch, tell the implementer to run its commits with `TMPDIR` set to a
 folder of its own.
+
+Put the folder outside every worktree, at
+`${TMPDIR:-/tmp}/sdd-<plan id>-<task id>`. Give its absolute path in the
+dispatch. The implementer makes it with `mkdir -p <folder>`. It runs each
+commit, and each lint or test command, as `TMPDIR=<folder> <command>`. A
+folder inside a worktree shows as untracked files and blocks the removal
+of that worktree. In the trial, `TMPDIR` on tmpfs worked; one test failed
+with `TMPDIR` on btrfs.
 
 ## 9. Ask first, beyond the plan
 

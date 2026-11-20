@@ -45,10 +45,39 @@ has  "$F" "rebase --abort"
 has  "$F" "A task is ready when"
 has  "$F" "You do not."
 has  "$F" "Do not stop the run to ask"
+has  "$F" "run in parallel without asking"
+has  "$F" "Disjoint \`files\` lists are not enough"
+has  "$F" "cost if wrong"
+has  "$F" "worktree .superpowers/wt/<task id>)"
+has  "$F" "approved (commits"
+has  "$F" "git worktree remove <nested>"
+has  "$F" "git branch -d <task id>"
+has  "$F" "Never use \`--force\`"
+has  "$F" "/sdd-<plan id>-<task id>"
+has  "$F" "outside every worktree"
+has  "$F" "The project's gates are"
 lacks "$F" "cherry-pick <"
 lacks "$F" " && git "
 lacks "$F" "writer cap"
 lacks "$F" "scripts/parallel"
+
+# The ten rules keep the spec's order (Design items 1-10).
+checks=$((checks + 1))
+expected_heads='## 1. Dependencies come from the pre-flight scan, every run
+## 2. One writer per tree
+## 3. Reviewers read the task'"'"'s own worktree
+## 4. The controller integrates; the ledger keeps its forms
+## 5. Gates on the merged head
+## 6. Resume
+## 7. When parallel dispatch does not run
+## 8. A unique temporary folder per writer
+## 9. Ask first, beyond the plan
+## 10. Known hazards'
+actual_heads="$(grep -E '^## [0-9]+\. ' "$REPO_ROOT/$F" 2>/dev/null || true)"
+if [[ "$actual_heads" != "$expected_heads" ]]; then
+  echo "[FAIL] $F rule headings are not rules 1-10 in the spec's order" >&2
+  failures=$((failures + 1))
+fi
 
 if ((failures)); then
   echo "FAIL: $failures of $checks parallel-dispatch text checks" >&2
