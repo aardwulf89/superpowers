@@ -1,10 +1,11 @@
 # Parallel Dispatch
 
-Part of superpowers-extended-cc:subagent-driven-development. Read this file
-when the pre-flight's dependency ruling shows two or more tasks ready at
-once. Parallel dispatch is automatic within the plan. Your human partner
-decided that ready tasks run in parallel without asking them first. Run the
-ready tasks in parallel by the rules below.
+Part of superpowers-extended-cc:subagent-driven-development. Every
+pre-flight scan reads rule 1 before it makes the dependency ruling. Read the
+whole file when that ruling shows two or more tasks ready at once.
+Parallel dispatch is automatic within the plan. Your human partner decided
+that ready tasks run in parallel without asking them first. Run the ready
+tasks in parallel by the rules below.
 
 Each task keeps its full loop: implementer, task review, fix loop and
 ledger lines. These rules add only what parallel work needs.

@@ -57,6 +57,11 @@ has   "$S" "The \`files\` lists are the first check, not the whole test"
 has   "$S" "(dispatch, fix round, approved, complete, minor, parked, BLOCKED)"
 has   "$S" "agent passes the disjointness test:"
 
+has   "$P" "First read rule 1 of [parallel-dispatch.md](parallel-dispatch.md)"
+lacks "$P" "From the table's rows for shared files and interfaces, rule"
+
+has   "$P" "from the table's rows and the plan's text"
+
 if ((failures)); then
   echo "FAIL: $failures of $checks parallel-dispatch skill text checks" >&2
   exit 1
