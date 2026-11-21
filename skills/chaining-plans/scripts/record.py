@@ -10,7 +10,7 @@ Subcommands:
     open-efforts [--efforts-dir DIR]
     phase-state REC ID
     pick REC
-    get REC ID [FIELD]
+    get REC ID [FIELD | closing.KEY]
     questions REC ID
     carried [--efforts-dir DIR]
     new-record REC (--value JSON | --value-file PATH)
@@ -273,6 +273,15 @@ def cmd_get(args: argparse.Namespace) -> int:
     if args.field is None:
         print(dumps(ph))
         return 0
+    if args.field.startswith("closing."):
+        key = args.field[len("closing."):]
+        if key not in CLOSING_KEYS:
+            raise Refused(f"'{key}' is not a closing key ({', '.join(CLOSING_KEYS)})")
+        closing = ph.get("closing")
+        if closing is not None and not isinstance(closing, dict):
+            raise Refused(f"phase '{args.id}' has a closing that is not an object")
+        print(dumps(None if closing is None else closing.get(key)))
+        return 0
     if args.field not in ph:
         raise Refused(f"phase '{args.id}' has no field '{args.field}'")
     print(dumps(ph[args.field]))
@@ -416,7 +425,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("rec")
     p.set_defaults(func=cmd_pick)
 
-    p = sub.add_parser("get", help="print a phase, or one of its fields, as JSON")
+    p = sub.add_parser("get", help="print a phase, one of its fields, or one closing key (closing.KEY), as JSON")
     p.add_argument("rec")
     p.add_argument("id")
     p.add_argument("field", nargs="?")

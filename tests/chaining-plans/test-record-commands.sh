@@ -280,6 +280,9 @@ st=0; out=$(record get "$S" K9 2>/dev/null) || st=$?
 check "get refuses an unknown id" "1:" "$st:$out"
 st=0; out=$(record get "$S" K2 brnch 2>/dev/null) || st=$?
 check "get refuses an unknown field" "1:" "$st:$out"
+check "get prints a null closing key as null" 'null' "$(record get "$S" K1 closing.learned)"
+st=0; out=$(record get "$S" K1 closing.notes 2>/dev/null) || st=$?
+check "get refuses an unknown closing key" "1:" "$st:$out"
 Q="$TMP/questions.json"
 write_rec "$Q" "$(phase K1 known open '[]')" \
   "$(phase K2 waiting open '["K1"]' | jq -c '.waits_on = [{"from":"K1","question":"Which?"}]')"
@@ -321,6 +324,7 @@ record set-closing-key "$S" K1 learned append --value '["x"]'
 check "append to a null key" '["x"]' "$(jq -c '.phases[0].closing.learned' "$S")"
 record set-closing-key "$S" K1 replan replace --value '[]'
 check "replace keeps the other keys" '2 []' "$(jq -c '(.phases[0].closing.rulings|length), .phases[0].closing.replan' "$S" | paste -sd' ')"
+check "get prints one closing key" '["it'\''s \"done\" — café","b"]' "$(record get "$S" K1 closing.rulings)"
 refuses "set-closing-key refuses append to replan" "$S" record set-closing-key "$S" K1 replan append --value '[]'
 refuses "set-closing-key refuses a value that is not a list" "$S" record set-closing-key "$S" K1 learned replace --value 'null'
 refuses "set-closing-key refuses replan back to null" "$S" record set-closing-key "$S" K1 replan replace --value 'null'

@@ -190,7 +190,13 @@ ends:
 `record.py get REC ID [FIELD]`
 
 Prints the phase, or 1 of its fields, as compact JSON:
-`record.py get REC K3 closing`. It refuses an unknown id or field.
+`record.py get REC K3 status`. It refuses an unknown id or field.
+
+FIELD can also be `closing.<key>`, for 1 key of `closing`:
+`record.py get REC K3 closing.learned`. It prints `null` while `closing`
+is null. It refuses a key that `closing` does not have. Read only the key
+that a step uses: `rulings` is the largest key, and most steps do not use
+it.
 
 ### questions
 
