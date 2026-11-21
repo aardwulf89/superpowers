@@ -81,6 +81,15 @@ order:
 - **The surprises:** what the build found that its plan did not expect,
   and that the design of a later phase needs to know.
 
+**Leave out what later phases get elsewhere:**
+
+- **A rule that the project already holds.** The project's instructions
+  state it (`AGENTS.md`, `CLAUDE.md`, a project skill), or a gate checks
+  it (a linter, a hook, a test). Later phases read the instructions and
+  meet the gates.
+- **Bookkeeping:** that no question names this phase, a merge, a commit
+  id, a branch. Git and the record hold it.
+
 **Check each line before you write it,** against `base`, or against
 the branch tip while the phase is not merged. Run these commands, with
 `<ref>` the record's `base` once merged, else the phase branch
@@ -177,6 +186,8 @@ Read the `learned` of every done phase
   - It is stale against `base`: a name it states is gone, or a claim no
     longer holds.
   - It repeats another line or a committed doc.
+  - It repeats the project's instructions or a gate, or it is
+    bookkeeping (step 1).
 - **Correct it** if you know the correction, for example a rename that
   `base` shows.
 - **Else, keep it.**

@@ -51,6 +51,10 @@ has $C 'superpowers-extended-cc:chaining-plans'
 has $C 'closing.learned'
 has $C 'learned edit'
 
+# G1: learned leaves out the project's own rules and bookkeeping.
+has $C 'Leave out what later phases get elsewhere'
+has $C 'It repeats the project'"'"'s instructions or a gate'
+
 if ((failures)); then
   echo "FAIL: $failures of $checks close-text checks" >&2
   exit 1
