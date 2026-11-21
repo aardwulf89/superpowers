@@ -439,7 +439,15 @@ See `skills/shared/task-format-reference.md` for the full metadata schema.
 
 ### Setting Dependencies
 
-After all tasks created, set blockedBy relationships:
+Task B waits for task A only when B cannot be completed in a tree without A's commits: B's steps, tests or Verify step need code, files or behaviour that A adds, changes or removes. Plan order, a shared file, and text that only repeats what the plan already fixes are never reasons. A task with no such need has no `blockedBy`.
+
+Each implementer starts from a tree that holds only the finished tasks, and
+the executor dispatches every task whose `blockedBy` tasks are finished at
+once. An edge that is not a hard dependency makes the build wait for
+nothing.
+
+After all tasks are created, set each task's `blockedBy` to the tasks it
+waits for:
 
 ```
 TaskUpdate:
@@ -485,11 +493,19 @@ If the plan is saved to `docs/superpowers/plans/K3.md`, the tasks file MUST be s
       "status": "pending",
       "blockedBy": [0],
       "description": "**Goal:** ...\n\n```json:metadata\n{\"files\": [], \"verifyCommand\": \"\", \"acceptanceCriteria\": [], \"modelTier\": \"standard\"}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "K3.3: ...",
+      "status": "pending",
+      "description": "**Goal:** ...\n\n```json:metadata\n{\"files\": [], \"verifyCommand\": \"\", \"acceptanceCriteria\": [], \"modelTier\": \"mechanical\"}\n```"
     }
   ],
   "lastUpdated": "<timestamp>"
 }
 ```
+
+K3.3 has no `blockedBy`: it needs nothing from K3.1 or K3.2, so it runs beside them.
 
 Both the plan `.md` and `.tasks.json` must be co-located in `docs/superpowers/plans/`.
 
