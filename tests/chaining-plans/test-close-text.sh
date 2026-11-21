@@ -47,6 +47,10 @@ has $C 'docs/superpowers/efforts/<effort id>.json'
 has $C 'docs(<phase id>): record'
 has $C 'superpowers-extended-cc:chaining-plans'
 
+# G1: reads take 1 closing key; a few lines change by their text.
+has $C 'closing.learned'
+has $C 'learned edit'
+
 if ((failures)); then
   echo "FAIL: $failures of $checks close-text checks" >&2
   exit 1

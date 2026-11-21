@@ -71,6 +71,10 @@ has $R/close.md '`<ref>` the record'"'"'s `base` once merged, else the phase bra
 # The report line counts no blocking item.
 has $R/close.md 'Count only the lines'
 
+# G1: a carried item changes by its text.
+has $R/create.md 'unfinished edit'
+lacks $R/create.md 'Change the line at `index`'
+
 if ((failures > 0)); then
   echo "$failures of $checks checks failed" >&2
   exit 1

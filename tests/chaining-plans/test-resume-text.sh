@@ -73,6 +73,10 @@ has $R 'lock rule'
 lacks $R 'If no worktree has it, it was built in place'
 has $R 'a `worktree-<phase id>` branch that no worktree has'
 
+# G1: suffixes are written by their text, not by a whole-list rewrite.
+lacks $R 'unfinished replace'
+has $R 'unfinished edit'
+
 if ((failures)); then
   echo "FAIL: $failures of $checks resume-text checks" >&2
   exit 1

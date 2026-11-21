@@ -41,8 +41,9 @@ call. Put each list of lines in a value file.
   commit of the close that it belongs to, or commit it alone as
   `docs(<phase id>): record`.
 - **Write `closing` one key at a time,** with `record.py set-closing-key`.
-  If a step needs the current value, read it with
-  `record.py get REC ID closing` each time. Never use a value from memory.
+  If a step needs the current value, read only that key, with
+  `record.py get REC ID closing.<key>` (`closing.learned`), each time.
+  Never use a value from memory.
 - **If `replan` is already set,** the phase is closed. Say so, and go to
   the ending (step 4). Never set `replan` back to null.
 
@@ -54,8 +55,8 @@ this session had no menu: run steps 1 to 4. In the plan's own session:
   anything new starts.
 - **A discard:** do not run a close. The phase now reads `not-started`,
   and its next session builds it again. `set` its `status` to `known`. Then
-  read `record.py get REC ID closing`. If it is not null, keep only its
-  partner items:
+  read `record.py get REC ID closing.unfinished`. If it is not null, keep
+  only its partner items:
   1. The executor's lines have no prefix yet, so
      first sort every `unfinished` line by the sort at the end of step 1.
   2. Write `unfinished` with only the lines that start with
@@ -140,7 +141,7 @@ Write the results with `record.py set-closing-key`:
 
 **Then sort every `unfinished` line** in the record, on every close, the
 executor's lines included: the executor does not know the prefix. Read
-them with `record.py get REC ID closing`.
+them with `record.py get REC ID closing.unfinished`.
 
 - **A partner item** is anything that only your human partner
   settles: an intent question, a borderline call, or a decision that a
@@ -169,7 +170,7 @@ Write the list back whole with
 ### 1a. Revise `learned`
 
 Read the `learned` of every done phase
-(`record.py get REC <phase id> closing`). For each line:
+(`record.py get REC <phase id> closing.learned`). For each line:
 
 - **Drop it** if one of these is true:
   - It is used up: the phase it was for is done and took it.
@@ -180,9 +181,10 @@ Read the `learned` of every done phase
   `base` shows.
 - **Else, keep it.**
 
-Write back each changed list whole with
-`record.py set-closing-key REC <phase id> learned replace`. Do not touch
-partner items here. They live in `unfinished`, and only your human
+Write the changes to each list that changed with
+`record.py set-closing-key REC <phase id> learned edit`: `drop` holds each
+line to drop, and `edit` each correction as `[old, new]`. Copy each old
+line exactly from the `get` output. Do not touch partner items here. They live in `unfinished`, and only your human
 partner changes them.
 
 ## 2. Re-plan the phases that are not done
@@ -227,8 +229,9 @@ apply the **intent test**. Does the change alter one of these?
   the id it came from (`from K2: Task K2.3: …`). The moved text lives
   only at its destination. Its line in `unfinished` keeps only the
   pointer: the id and the phase it went to (`Task K2.3: moved to K3`).
-  Read the list with `record.py get REC ID closing`. Write it back whole
-  with `record.py set-closing-key`, key `unfinished`, mode `replace`.
+  Read the list with `record.py get REC ID closing.unfinished`. Write each
+  moved line and its pointer as 1 `[old, new]` pair, with
+  `record.py set-closing-key REC ID unfinished edit`.
 
 **Yes: do not rule.** The change is a partner item. So is each open
 partner-item line that step 1 wrote. Its interim default decides where
@@ -266,7 +269,8 @@ For a blocking item:
    waiting phase whose answer raised the question also goes to
    `needs-partner`, not `known`.
 4. If the question came from a partner-item line, add
-   `→ partner_questions of <phase id>` at the end of that line.
+   `→ partner_questions of <phase id>` at the end of that line, with
+   `record.py set-closing-key REC ID unfinished edit`.
 
 Write the question so that a reader who did not see this session can
 understand it alone. It states:

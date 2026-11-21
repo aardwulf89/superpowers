@@ -154,12 +154,14 @@ Do all of this in the main checkout, on `base`.
    in the old record, at the `record` path that `carried` printed. The
    `[carried]` at the end of the line becomes `[adopted by <phase id>]` or
    `[dropped]`. For each item:
-   - Run `record.py get <record> <phase> closing`.
-   - Change the line at `index` of `unfinished`. If that line is not the
-     `item` text, find that text.
-   - Write the whole list to a value file.
-   - Run `record.py set-closing-key <record> <phase> unfinished replace
+   - Write a value file with 1 `[old, new]` pair:
+     `{"edit": [["<item>", "<the new line>"]]}`. Copy `item` exactly as
+     `carried` printed it.
+   - Run `record.py set-closing-key <record> <phase> unfinished edit
      --value-file <path>`.
+   - If it refuses because the line is not there, read
+     `record.py get <record> <phase> closing.unfinished`, find the item's
+     line by its text, and edit that line.
 
    Leave an item that was carried again as it is.
 6. **Commit** in 1 commit on `base`, with the letter in the subject

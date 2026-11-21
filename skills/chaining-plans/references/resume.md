@@ -207,7 +207,7 @@ partner item has a disposition and none is `[carried]`. Only your human
 partner gives a disposition.
 
 **Read the items.** For every phase, a dropped one included, run
-`record.py get REC <phase id> closing`. A partner item is an
+`record.py get REC <phase id> closing.unfinished`. A partner item is an
 `unfinished` line that starts with `Partner item: `. It is open if it
 ends in none of the 4 suffixes of `references/record.md`:
 `[settled: <phase id>]`, `[dropped]`, `[carried]`,
@@ -243,10 +243,11 @@ ends in none of the 4 suffixes of `references/record.md`:
 - **Drop:** the suffix is `[dropped]`. **Carry:** the suffix is
   `[carried]`.
 - **Write the suffixes** per phase:
-  1. Read `record.py get REC <phase id> closing` fresh.
-  2. Add each suffix at the very end of its line, after 1 space.
-  3. Write the whole list to a value file.
-  4. Run `record.py set-closing-key REC <phase id> unfinished replace
+  1. Read `record.py get REC <phase id> closing.unfinished` fresh.
+  2. Write a value file with 1 `[old, new]` pair per line:
+     `{"edit": [["<line>", "<line> <suffix>"]]}`. Copy each line exactly
+     as read, and add its suffix at the very end, after 1 space.
+  3. Run `record.py set-closing-key REC <phase id> unfinished edit
      --value-file <path>`.
 - **An answer that calls for work** is a settle: fold it into the
   raising phase's "Answers:" line, and give the line
@@ -342,9 +343,10 @@ rulings go in `<phase id>.build.json` instead (Build, below).
   committed, add `[settled: <this phase's id>]` at the very end of that
   line. That id names the phase whose "Answers:" line now holds the
   answer. To write it:
-  1. Read `record.py get REC <raising phase id> closing`.
-  2. Write the whole list from a value file with
-     `record.py set-closing-key REC <raising phase id> unfinished replace`.
+  1. Read `record.py get REC <raising phase id> closing.unfinished`.
+  2. Write the line and the same line with the suffix as 1 `[old, new]`
+     pair, from a value file, with
+     `record.py set-closing-key REC <raising phase id> unfinished edit`.
 
   The answer is your human partner's, so this is not a disposition that
   you give.
@@ -361,7 +363,7 @@ rulings go in `<phase id>.build.json` instead (Build, below).
 - **Inputs:**
   - the whole umbrella;
   - `closing.learned` of every done phase, above all the phases in this
-    phase's `waits_on`;
+    phase's `waits_on` (`record.py get REC <phase id> closing.learned`);
   - the open partner items of every phase, a dropped one included
     (step 5, "Read the items", says which items are open);
   - the code on `base`.
