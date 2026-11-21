@@ -16,7 +16,7 @@ Subcommands:
     new-record REC (--value JSON | --value-file PATH)
     set REC ID FIELD (--value JSON | --value-file PATH)
     set-phases REC (--value JSON | --value-file PATH)
-    set-closing-key REC ID KEY {replace,append} (--value JSON | --value-file PATH)
+    set-closing-key REC ID KEY {replace,append,edit} (--value JSON | --value-file PATH)
 
 A refused command prints "record <subcommand>: <reason>" on stderr, exits 1,
 and changes nothing. A usage error exits 2. Git runs read-only, in the current
@@ -376,26 +376,61 @@ def cmd_set_phases(args: argparse.Namespace) -> int:
     return 0
 
 
+def edit_lines(current: list, value: Any, key: str) -> list:
+    """The list after an edit: each [old, new] pair, then each drop.
+
+    Each listed line takes the first element equal to it that no earlier
+    listed line took. A line that is not there refuses the whole edit.
+    """
+    if not isinstance(value, dict) or not value or set(value) - {"drop", "edit"}:
+        raise Refused(f"the value for an edit of {key} must be an object with drop, edit or both")
+    pairs, drops = value.get("edit", []), value.get("drop", [])
+    if not isinstance(pairs, list) or not all(
+            isinstance(p, list) and len(p) == 2 and all(isinstance(x, str) for x in p) for p in pairs):
+        raise Refused("edit must be a list of [old, new] pairs of strings")
+    if not isinstance(drops, list) or not all(isinstance(x, str) for x in drops):
+        raise Refused("drop must be a list of strings")
+    if not pairs and not drops:
+        raise Refused(f"the edit of {key} names no line")
+    out = list(current)
+    taken = [False] * len(out)
+    dropped = [False] * len(out)
+
+    def find(line: str) -> int:
+        for i, x in enumerate(out):
+            if not taken[i] and x == line:
+                taken[i] = True
+                return i
+        shown = line if len(line) <= 60 else line[:60] + "…"
+        raise Refused(f"'{shown}' is not a line of {key}")
+
+    for old, new in pairs:
+        out[find(old)] = new
+    for line in drops:
+        dropped[find(line)] = True
+    return [x for i, x in enumerate(out) if not dropped[i]]
+
+
 def cmd_set_closing_key(args: argparse.Namespace) -> int:
     if args.key not in CLOSING_KEYS:
         raise Refused(f"'{args.key}' is not a closing key ({', '.join(CLOSING_KEYS)})")
-    if args.key == "replan" and args.mode == "append":
+    if args.key == "replan" and args.mode != "replace":
         raise Refused("replan is written whole, with replace")
     record = load_record(args.rec)
     ph = phase_of(record, args.id)
     value = read_value(args)
-    if not isinstance(value, list):
+    if args.mode != "edit" and not isinstance(value, list):
         raise Refused(f"the value for {args.key} must be a JSON list")
     closing = ph.get("closing")
     if closing is None:
         closing = {"rulings": [], "unfinished": [], "learned": None, "replan": None}
     elif not isinstance(closing, dict):
         raise Refused(f"phase '{args.id}' has a closing that is not an object")
-    if args.mode == "append":
+    if args.mode in ("append", "edit"):
         current = closing.get(args.key) or []
         if not isinstance(current, list):
             raise Refused(f"phase '{args.id}' has a {args.key} that is not a list")
-        value = current + value
+        value = current + value if args.mode == "append" else edit_lines(current, value, args.key)
     closing[args.key] = value
     ph["closing"] = closing
     write_record(args.rec, record)
@@ -461,7 +496,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("rec")
     p.add_argument("id")
     p.add_argument("key")
-    p.add_argument("mode", choices=["replace", "append"])
+    p.add_argument("mode", choices=["replace", "append", "edit"])
     add_value(p)
     p.set_defaults(func=cmd_set_closing_key)
     return parser

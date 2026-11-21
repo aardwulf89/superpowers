@@ -244,16 +244,30 @@ not JSON. Change `closing` only with `set-closing-key`.
 
 Sets 1 key of the phase's `closing`, and keeps every other key as read.
 - `KEY` is `rulings`, `unfinished`, `learned` or `replan`.
-- The value is a JSON list.
-- `MODE` is `append` or `replace`. `append` adds the list's items after the
-  key's own items (a null key counts as empty). `replace` sets the key to
-  the list.
+- `MODE` is `append`, `replace` or `edit`.
+  - `append` adds the items of a JSON list after the key's own items (a
+    null key counts as empty).
+  - `replace` sets the key to a JSON list.
+  - `edit` changes or drops lines of the key, each named by its exact
+    text. Its value is an object with `edit`, `drop` or both:
+    `{"edit": [["<old line>", "<new line>"]], "drop": ["<line>"]}`.
+    The `edit` pairs apply first, then the drops. Each line takes the first
+    equal line of the key that no earlier line took.
+
+**Use `edit` to change a few lines** of a list: to drop a line, correct it,
+or add a suffix at its end. Copy each old line exactly from a fresh
+`record.py get REC ID closing.<key>`. If a line is not there, the command
+refuses the whole edit, so a line from memory fails and changes nothing.
+Use `replace` when most of the list changes.
 
 A null `closing` starts as
 `{"rulings": [], "unfinished": [], "learned": null, "replan": null}`.
 Write `replan` whole, with `replace`, and never back to null: when you set
-it, the phase is closed. The command fails, and writes nothing, for an
-unknown id or key, a value that is not a list, or `append` to `replan`.
+it, the phase is closed. The command fails, and writes nothing, for:
+- an unknown id or key;
+- for `append` or `replace`, a value that is not a list;
+- for `edit`, a value of another shape, or a line that is not there;
+- `append` or `edit` to `replan`.
 
 ### set-phases
 

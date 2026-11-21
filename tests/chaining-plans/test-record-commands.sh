@@ -330,6 +330,25 @@ refuses "set-closing-key refuses a value that is not a list" "$S" record set-clo
 refuses "set-closing-key refuses replan back to null" "$S" record set-closing-key "$S" K1 replan replace --value 'null'
 refuses "set-closing-key refuses an unknown key" "$S" record set-closing-key "$S" K1 notes replace --value '[]'
 refuses "set-closing-key refuses an unknown id" "$S" record set-closing-key "$S" K9 rulings append --value '[]'
+record set-closing-key "$S" K1 learned replace --value '["a","b","c","b"]'
+record set-closing-key "$S" K1 learned edit --value '{"drop":["b"]}'
+check "edit drops the first equal line" '["a","c","b"]' "$(jq -c '.phases[0].closing.learned' "$S")"
+record set-closing-key "$S" K1 learned edit --value '{"edit":[["c","C"]],"drop":["a"]}'
+check "edit changes in place, then drops" '["C","b"]' "$(jq -c '.phases[0].closing.learned' "$S")"
+printf '%s' '{"edit":[["it'\''s \"done\" — café","café ✓"]]}' > "$TMP/e.json"
+record set-closing-key "$S" K1 rulings edit --value-file "$TMP/e.json"
+check "edit keeps exact bytes" '["café ✓","b"]' "$(jq -c '.phases[0].closing.rulings' "$S")"
+check "edit keeps the other keys" '["C","b"] []' "$(jq -c '.phases[0].closing.learned, .phases[0].closing.replan' "$S" | paste -sd' ')"
+refuses "edit refuses a line that is not there" "$S" record set-closing-key "$S" K1 learned edit --value '{"drop":["zz"]}'
+refuses "edit refuses a second match that is not there" "$S" record set-closing-key "$S" K1 learned edit --value '{"drop":["b","b"]}'
+refuses "edit refuses replan" "$S" record set-closing-key "$S" K1 replan edit --value '{"drop":["x"]}'
+refuses "edit refuses a list value" "$S" record set-closing-key "$S" K1 learned edit --value '["b"]'
+refuses "edit refuses an empty edit" "$S" record set-closing-key "$S" K1 learned edit --value '{}'
+refuses "edit refuses an unknown key" "$S" record set-closing-key "$S" K1 learned edit --value '{"remove":["b"]}'
+refuses "edit refuses a pair that is not two strings" "$S" record set-closing-key "$S" K1 learned edit --value '{"edit":[["b"]]}'
+refuses "edit refuses a line that is not a string" "$S" record set-closing-key "$S" K1 learned edit --value '{"drop":[1]}'
+check "K2 has no closing yet" 'null' "$(jq -c '.phases[1].closing' "$S")"
+refuses "edit refuses a line of a null key" "$S" record set-closing-key "$S" K2 learned edit --value '{"drop":["x"]}'
 refuses "set refuses a missing record" "$TMP/none/effort.json" record set "$TMP/none/effort.json" K1 title --value '"x"'
 if [[ ! -e "$TMP/none" ]]; then pass "set creates nothing for a missing record"; else fail "set creates nothing for a missing record"; fi
 BAD="$TMP/bad.json"
