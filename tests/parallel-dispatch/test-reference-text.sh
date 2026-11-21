@@ -37,19 +37,21 @@ has  "$F" "While any nested worktree exists"
 has  "$F" "git merge --ff-only"
 has  "$F" "TMPDIR"
 has  "$F" "commitStrategy"
-has  "$F" "SUPERPOWERS_BLOCKEDBY_GUARD=0"
 has  "$F" "Unfinished"
 has  "$F" "review-package -C"
 has  "$F" "rebase --abort"
 has  "$F" "A task is ready when"
-has  "$F" "You do not."
 has  "$F" "Do not stop the run to ask"
-has  "$F" "run them in parallel without asking"
+has  "$F" "task at once, without asking."
+has  "$F" "A task is ready when every task in its \`blockedBy\` has its completion line."
+has  "$F" "make the run sequential."
+lacks "$F" "dependency ruling"
+lacks "$F" "rule the pair dependent"
+lacks "$F" "Its \`blockedBy\` entries do not hold it back."
 has  "$F" "A shared file is not a dependency"
 has  "$F" "-b <task id> HEAD"
 has  "$F" "never just the newest one"
 lacks "$F" "Disjoint \`files\` lists are not enough"
-has  "$F" "[preflight.md](preflight.md)"
 has  "$F" "worktree .superpowers/wt/<task id>)"
 has  "$F" "approved (commits"
 has  "$F" "git worktree remove <nested>"
@@ -65,7 +67,7 @@ lacks "$F" "scripts/parallel"
 
 # The ten rules keep the spec's order (Design items 1-10).
 checks=$((checks + 1))
-expected_heads='## 1. Dependencies come from the pre-flight scan, every run
+expected_heads='## 1. Dependencies come from the plan
 ## 2. One writer per tree
 ## 3. Reviewers read the task'"'"'s own worktree
 ## 4. The controller integrates; the ledger keeps its forms

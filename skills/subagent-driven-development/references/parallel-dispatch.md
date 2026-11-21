@@ -1,24 +1,23 @@
 # Parallel Dispatch
 
-Part of superpowers-extended-cc:subagent-driven-development. When the
-pre-flight's dependency ruling shows two or more tasks ready at once, read
-this file and run them in parallel without asking. Each task keeps its full
-loop.
+Part of superpowers-extended-cc:subagent-driven-development. This file is
+how every implementer is dispatched: each in its own worktree, every ready
+task at once, without asking. Each task keeps its full loop.
 
-## 1. Dependencies come from the pre-flight scan, every run
+## 1. Dependencies come from the plan
 
-The pre-flight scan rules which tasks are dependent, by the list in
-[preflight.md](preflight.md). A shared file is not a dependency: each writer
-has its own worktree, and rule 4 handles a rebase conflict. Leave the plan's
-`blockedBy` chain as written.
+The plan's `blockedBy` holds the dependencies: writing-plans sets it only
+where a task cannot be completed without another task's commits. Add none
+at run time. A shared file is not a dependency: each writer has its own
+worktree, and rule 4 handles a rebase conflict.
 
-A task is ready when every task it depends on has its completion line.
-Its `blockedBy` entries do not hold it back. Plan order picks which ready
-task goes first.
+A task is ready when every task in its `blockedBy` has its completion line.
+Dispatch every ready task at once, and when a task completes, every task it
+makes ready. Plan order picks which ready task goes first.
 
 ## 2. One writer per tree
 
-Never put two writers in one working tree. Give each parallel implementer
+Never put two writers in one working tree. Give each implementer
 a nested worktree, made from the phase worktree's HEAD:
 
 ```bash
@@ -64,9 +63,8 @@ When the review is approved, or its findings are parked at the cap, write
 in place of `review clean`). Then:
 
 1. Run `git -C <nested> rebase <phase branch>`. If it stops, run
-   `git -C <nested> rebase --abort` and rule the pair dependent. Resume
-   the implementer to rebase and resolve in its worktree, then run a
-   scoped re-review.
+   `git -C <nested> rebase --abort`. Resume the implementer to rebase and
+   resolve in its worktree, then run a scoped re-review.
 2. In the phase worktree, run `git merge --ff-only <task branch>`.
 3. In the phase worktree, run `git worktree remove <nested>`, then
    `git branch -d <task id>`. If the remove refuses, list the files with
@@ -99,12 +97,14 @@ For each unfinished task:
 
 ## 7. When parallel dispatch does not run
 
-Run sequentially, and record the reason in the ledger, when:
+Under `commitStrategy: "at-end"`, implementers do not commit, so there is
+nothing to rebase. Dispatch one task at a time in the phase worktree, in
+plan order, each after its `blockedBy` tasks are complete, and record the
+reason in the ledger.
 
-- `commitStrategy` is `"at-end"`: implementers do not commit, so there is
-  nothing to rebase;
-- the opt-in `pre-task-blockedby-enforce` hook is installed. Your human
-  partner can turn it off with `SUPERPOWERS_BLOCKEDBY_GUARD=0`. You do not.
+The opt-in `pre-task-blockedby-enforce` hook refuses `in_progress` on a
+task whose `blockedBy` is incomplete. That matches rule 1, so it does not
+make the run sequential.
 
 ## 8. A unique temporary folder per writer
 

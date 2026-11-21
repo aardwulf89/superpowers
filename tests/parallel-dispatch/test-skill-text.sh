@@ -2,7 +2,7 @@
 # Pins the text that points the subagent-driven-development skill at the
 # parallel-dispatch reference (spec F, task F1.2): the trigger in SKILL.md,
 # the phrase changes in §Bounded Parallel Dispatch, the Setup node label,
-# the pre-flight dependency ruling and the resume pointer.
+# the pre-flight's removal of the dependency ruling and the resume pointer.
 #
 # Usage: tests/parallel-dispatch/test-skill-text.sh
 set -euo pipefail
@@ -35,18 +35,22 @@ S=skills/subagent-driven-development/SKILL.md
 P=skills/subagent-driven-development/references/preflight.md
 R=skills/subagent-driven-development/references/resuming.md
 
-has   "$S" "you dispatch: each writer gets its own worktree. Never two writers in one"
+has   "$S" "Before the first dispatch, read"
+has   "$S" "Dispatch every task whose \`blockedBy\` tasks are complete"
+has   "$S" "**Run implementers concurrently ONLY when** neither blocks the other in the plan's \`blockedBy\`. Give each its own worktree (references/parallel-dispatch.md)."
+has   "$S" "read plan, pre-flight review\" [shape=box];"
+lacks "$S" "dependency ruling"
+lacks "$S" "two or more tasks ready"
+lacks "$S" "When overlap is uncertain, serialize"
+lacks "$S" "two writers on one file"
 lacks "$S" "Never dispatch multiple implementation subagents in parallel (conflicts)"
-has   "$S" "**Run implementers concurrently ONLY when** neither depends on the other in the pre-flight's dependency ruling. Give each its own worktree (references/parallel-dispatch.md)."
-has   "$S" "neither depends on the other in the pre-flight's dependency ruling"
 lacks "$S" "in the other's \`blockedBy\` chain"
 lacks "$S" "remains the default; parallelism is the optimization"
-has   "$S" "pre-flight review and dependency ruling"
-lacks "$S" "read plan, pre-flight review\" ["
-lacks "$S" "read plan, pre-flight review\" ->"
-has   "$P" "Ruling: dependencies"
+lacks "$P" "Ruling: dependencies"
+lacks "$P" "anything about the pair is unclear"
+lacks "$P" "dependency ruling"
+has   "$P" "The scan's output is a table, not a verdict."
 has   "$R" "parallel-dispatch.md"
-has   "$P" "cost if wrong"
 has   "$R" "rule 6 of [parallel-dispatch.md]"
 has   "$R" "approved (commits"
 has   "$S" "holds in every mode"
@@ -57,15 +61,9 @@ lacks "$S" "lists share no path AND"
 has   "$S" "(dispatch, fix round, approved, complete, minor, parked, BLOCKED)"
 has   "$S" "agent passes the disjointness test:"
 
-has   "$P" "A shared file is never a reason"
-has   "$P" "One worktree is never a reason"
-has   "$P" "both take from an allocator"
-has   "$P" "[parallel-dispatch.md](parallel-dispatch.md) before you dispatch."
 has   "$S" "A task reviewer reads only its own task's tree."
 has   "$S" "are parked at the cap."
 lacks "$P" "From the table's rows for shared files and interfaces, rule"
-
-has   "$P" "from the table's rows and the plan's text"
 
 if ((failures)); then
   echo "FAIL: $failures of $checks parallel-dispatch skill text checks" >&2
