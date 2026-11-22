@@ -4,15 +4,15 @@
     {
       "id": 0,
       "subject": "H1.1: writing-plans defines a hard dependency",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** writing-plans' \"Setting Dependencies\" states the hard-dependency definition, and its `.tasks.json` example shows a task with no `blockedBy`.\n\n**Files:**\n- Modify: `skills/writing-plans/SKILL.md` (section \"### Setting Dependencies\"; the `.tasks.json` example under \"## Task Persistence\")\n- Create: `tests/parallel-dispatch/test-plan-dependencies.sh`\n\n**Acceptance Criteria:**\n- [ ] `skills/writing-plans/SKILL.md` contains the definition from Global Constraints verbatim.\n- [ ] The `.tasks.json` example has a third task, `K3.3`, with no `blockedBy`.\n- [ ] `bash tests/parallel-dispatch/test-plan-dependencies.sh` prints `PASS: all 4 plan-dependency text checks`.\n\n**Verify:** `bash tests/parallel-dispatch/test-plan-dependencies.sh` → `PASS: all 4 plan-dependency text checks`\n\n```json:metadata\n{\"files\": [\"skills/writing-plans/SKILL.md\", \"tests/parallel-dispatch/test-plan-dependencies.sh\"], \"verifyCommand\": \"bash tests/parallel-dispatch/test-plan-dependencies.sh\", \"acceptanceCriteria\": [\"SKILL.md contains the hard-dependency definition verbatim\", \"the .tasks.json example has K3.3 with no blockedBy\", \"test prints PASS: all 4 plan-dependency text checks\"], \"modelTier\": \"mechanical\"}\n```"
     },
     {
       "id": 1,
       "subject": "H1.2: subagent-driven-development dispatches by `blockedBy`",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** subagent-driven-development and its references drop the pre-flight dependency ruling and the \"two or more tasks ready\" trigger; every implementer is dispatched by `parallel-dispatch.md`, by the plan's `blockedBy`.\n\n**Files:**\n- Modify: `skills/subagent-driven-development/SKILL.md` (process graph lines 75 and 82; the dispatch bullet at lines 289-292; Bounded Parallel Dispatch lines 425-428)\n- Modify: `skills/subagent-driven-development/references/preflight.md` (lines 20-34)\n- Modify: `skills/subagent-driven-development/references/parallel-dispatch.md` (opening, rules 1, 2, 4 and 7)\n- Modify: `tests/parallel-dispatch/test-skill-text.sh`\n- Modify: `tests/parallel-dispatch/test-reference-text.sh`\n\n**Acceptance Criteria:**\n- [ ] `grep -rn -E 'dependency ruling|Ruling: dependencies|two or more tasks|overlap is uncertain|two writers on one file|anything about the pair is unclear' skills/subagent-driven-development` prints nothing.\n- [ ] `bash tests/parallel-dispatch/test-skill-text.sh` prints `PASS`.\n- [ ] `bash tests/parallel-dispatch/test-reference-text.sh` prints `PASS`.\n\n**Verify:** `bash tests/parallel-dispatch/test-skill-text.sh && bash tests/parallel-dispatch/test-reference-text.sh` → two `PASS` lines\n\n```json:metadata\n{\"files\": [\"skills/subagent-driven-development/SKILL.md\", \"skills/subagent-driven-development/references/preflight.md\", \"skills/subagent-driven-development/references/parallel-dispatch.md\", \"tests/parallel-dispatch/test-skill-text.sh\", \"tests/parallel-dispatch/test-reference-text.sh\"], \"verifyCommand\": \"bash tests/parallel-dispatch/test-skill-text.sh && bash tests/parallel-dispatch/test-reference-text.sh\", \"acceptanceCriteria\": [\"grep for the removed phrases in skills/subagent-driven-development prints nothing\", \"test-skill-text.sh prints PASS\", \"test-reference-text.sh prints PASS\"], \"modelTier\": \"mechanical\"}\n```"
     }
   ],
-  "lastUpdated": "2026-11-21T23:57:06Z"
+  "lastUpdated": "2026-11-22T00:00:54Z"
 }
