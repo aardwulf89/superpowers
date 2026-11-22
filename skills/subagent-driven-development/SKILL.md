@@ -288,7 +288,8 @@ and fix-round diffs need it.
   fix-loop rounds 1-3 resume this agent.
 - Before the first dispatch, read
   [references/parallel-dispatch.md](references/parallel-dispatch.md): every
-  implementer works in its own worktree. Dispatch every task whose `blockedBy` tasks are complete,
+  implementer works in its own worktree, except under
+  `commitStrategy: "at-end"` (its rule 7). Dispatch every task whose `blockedBy` tasks are complete,
   and when a task completes, dispatch every task it unblocks. Never two
   writers in one working tree.
 - A task reviewer reads only its own task's tree. In one tree, dispatch the
@@ -420,7 +421,7 @@ covers the whole-branch review, its single fix wave, and how you finish.
 Overlapping writers are forbidden, not parallelism itself. "Never two
 writers in one working tree" above holds in every mode. Dispatch
 implementers concurrently only when every running
-agent passes the disjointness test:
+agent passes the `blockedBy` test:
 
 - **Read-only agents are always parallel-safe**: audits, log analysis, verification gates, long-running test suites (these are also ideal for free local agent types while implementation continues).
 - **Run implementers concurrently ONLY when** neither blocks the other in the plan's `blockedBy`. Give each its own worktree (references/parallel-dispatch.md).

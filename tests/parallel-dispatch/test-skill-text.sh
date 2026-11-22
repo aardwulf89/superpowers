@@ -59,7 +59,7 @@ lacks "$S" "is the default for the sequential loop"
 lacks "$S" "The \`files\` metadata IS the test"
 lacks "$S" "lists share no path AND"
 has   "$S" "(dispatch, fix round, approved, complete, minor, parked, BLOCKED)"
-has   "$S" "agent passes the disjointness test:"
+has   "$S" "agent passes the \`blockedBy\` test:"
 
 has   "$S" "A task reviewer reads only its own task's tree."
 has   "$S" "are parked at the cap."

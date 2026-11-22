@@ -442,8 +442,8 @@ See `skills/shared/task-format-reference.md` for the full metadata schema.
 Task B waits for task A only when B cannot be completed in a tree without A's commits: B's steps, tests or Verify step need code, files or behaviour that A adds, changes or removes. Plan order, a shared file, and text that only repeats what the plan already fixes are never reasons. A task with no such need has no `blockedBy`.
 
 Each implementer starts from a tree that holds only the finished tasks, and
-the executor dispatches every task whose `blockedBy` tasks are finished at
-once. An edge that is not a hard dependency makes the build wait for
+the executor dispatches, at once, every task whose `blockedBy` tasks are
+finished. An edge that is not a hard dependency makes the build wait for
 nothing.
 
 After all tasks are created, set each task's `blockedBy` to the tasks it

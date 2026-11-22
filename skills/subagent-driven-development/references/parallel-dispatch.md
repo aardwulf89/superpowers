@@ -2,7 +2,9 @@
 
 Part of superpowers-extended-cc:subagent-driven-development. This file is
 how every implementer is dispatched: each in its own worktree, every ready
-task at once, without asking. Each task keeps its full loop.
+task at once, without asking. Each task keeps its full loop. Rule 7 is
+the exception: under `commitStrategy: "at-end"`, implementers work one at a
+time in the phase worktree.
 
 ## 1. Dependencies come from the plan
 
@@ -36,7 +38,7 @@ In the dispatch:
 
 While any nested worktree exists, nothing else writes in a tree that has
 a writer, you included, and the phase worktree takes only integration
-commits. After the last nested worktree is removed, the run continues as
+commits. After the plan's last task is integrated, the run continues as
 usual with the final review.
 
 ## 3. Reviewers read the task's own worktree
