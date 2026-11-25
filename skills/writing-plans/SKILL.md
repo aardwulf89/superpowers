@@ -92,6 +92,8 @@ A part waits on another only when it needs that part's code, never for
 work order.
 <!-- /split-rule -->
 
+If the rule splits the work, say so and plan only the first part.
+
 ## File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.

@@ -200,15 +200,6 @@ partner changes them.
 
 ## 2. Re-plan the phases that are not done
 
-Go through every phase that is not `done` or `dropped`, other than this
-one, with what this phase learned. For each change that this causes,
-apply the **intent test**. Does the change alter one of these?
-
-- the umbrella's goals, non-goals or anti-goals;
-- a phase's purpose or limits in the Phases section;
-- an answer your human partner gave;
-- which phases exist, in a way that changes the outcome.
-
 <!-- split-rule -->
 **Splitting into plans.** Each plan costs a design, reviews, a branch
 and a merge. Split only where:
@@ -226,6 +217,15 @@ part that only researches or wraps up.
 A part waits on another only when it needs that part's code, never for
 work order.
 <!-- /split-rule -->
+
+Go through every phase that is not `done` or `dropped`, other than this
+one, with what this phase learned. For each change that this causes,
+apply the **intent test**. Does the change alter one of these?
+
+- the umbrella's goals, non-goals or anti-goals;
+- a phase's purpose or limits in the Phases section;
+- an answer your human partner gave;
+- which phases exist, in a way that changes the outcome.
 
 **No: rule on it yourself, and apply it.** That covers:
 
@@ -267,8 +267,8 @@ work order.
 partner-item line that step 1 wrote. Its interim default decides where
 it goes:
 
-- **A split for size, or to merge a part first,** is a partner item. Its
-  interim default is no split.
+- **A split made for size, or so that one part merges first,** is a
+  partner item. Its interim default is no split.
 - **The interim default** is what later stages do until your human
   partner answers. It is the option that commits to nothing new and can
   be reversed, usually the status quo. Never choose among the options: a

@@ -241,7 +241,8 @@ A part waits on another only when it needs that part's code, never for
 work order.
 <!-- /split-rule -->
 
-The design doc describes the work. It proposes no phases or plans.
+If the rule splits it, say so and agree on an order. The design doc
+describes the work. It proposes no phases or plans.
 
 ## The Written Design
 

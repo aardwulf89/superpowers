@@ -419,8 +419,8 @@ rulings go in `<phase id>.build.json` instead (Build, below).
      "Building K3a").
   4. Log the ruling.
   5. Plan the first part, with `K3a` as its plan id.
-- **A split for size, or to merge a part first,** is a partner item: plan
-  the phase whole, and write the proposal as a `Partner item:` line
+- **A split made for size, or so that one part merges first,** is a
+  partner item: plan the phase whole, and write the proposal as a `Partner item:` line
   under the plan's Global Constraints, in `close.md` step 1's form, with
   the interim default no split.
 
