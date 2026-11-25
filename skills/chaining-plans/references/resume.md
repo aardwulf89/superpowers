@@ -360,8 +360,6 @@ rulings go in `<phase id>.build.json` instead (Build, below).
 
 - **No brainstorm.** The umbrella's approval and the intent sitting
   replace it.
-- **The design never divides the phase into plans.** Only the Plan stage
-  splits.
 - **Inputs:**
   - the whole umbrella;
   - `closing.learned` of every done phase, above all the phases in this
@@ -407,8 +405,8 @@ rulings go in `<phase id>.build.json` instead (Build, below).
   `writing-plans` in the same message which phase it plans. Give this
   phase's id and its Phases entry, word for word. Say that the other
   phases get plans of their own.
-- **A split that passes the rule below is a re-plan ruling,** with no
-  change to intent:
+- **A further split from the Scope Check of `writing-plans` is a re-plan
+  ruling,** with no change to intent:
   1. Split the phase in the record by the rules under `set-phases` in
      `references/record.md`. Commit the Phases section to match, on
      `base`.
@@ -419,28 +417,6 @@ rulings go in `<phase id>.build.json` instead (Build, below).
      "Building K3a").
   4. Log the ruling.
   5. Plan the first part, with `K3a` as its plan id.
-- **A split made for size, or so that one part merges first,** is a
-  partner item: plan the phase whole, and write the proposal as a `Partner item:` line
-  under the plan's Global Constraints, in `close.md` step 1's form, with
-  the interim default no split.
-
-<!-- split-rule -->
-**Splitting into plans.** Each plan costs a design, reviews, a branch
-and a merge. Split only where:
-
-1. neither part needs the other's code; or
-2. a later part needs facts only an earlier part's running code shows.
-   Research that needs no code belongs in the brainstorm.
-
-A split for size, or to merge a part first, is your human partner's
-call: propose it, never rule it.
-
-Never reasons: a seam or section in a design, a precedent, a topic, a
-part that only researches or wraps up.
-
-A part waits on another only when it needs that part's code, never for
-work order.
-<!-- /split-rule -->
 
 ### Build
 
@@ -473,8 +449,7 @@ work order.
      strings, each line as the message words it, and an empty list for
      a section that has no lines. Use the Write tool, in the working
      tree you built in. If an orchestrator subagent ran the plan, take
-     the lists from its final message. Add to `unfinished` each
-     `Partner item:` line of the plan's Global Constraints.
+     the lists from its final message.
   2. Commit the file on the phase branch, one plain command per call:
      `git add` the file, then
      `git commit -m "docs(<phase id>): build results"`.

@@ -74,25 +74,7 @@ conventional commits, the id is the scope (`feat(K3.4): …`). Else it is a
 
 ## Scope Check
 
-<!-- split-rule -->
-**Splitting into plans.** Each plan costs a design, reviews, a branch
-and a merge. Split only where:
-
-1. neither part needs the other's code; or
-2. a later part needs facts only an earlier part's running code shows.
-   Research that needs no code belongs in the brainstorm.
-
-A split for size, or to merge a part first, is your human partner's
-call: propose it, never rule it.
-
-Never reasons: a seam or section in a design, a precedent, a topic, a
-part that only researches or wraps up.
-
-A part waits on another only when it needs that part's code, never for
-work order.
-<!-- /split-rule -->
-
-If the rule splits the work, say so and plan only the first part.
+If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
 
 ## File Structure
 

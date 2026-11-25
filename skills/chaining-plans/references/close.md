@@ -200,24 +200,6 @@ partner changes them.
 
 ## 2. Re-plan the phases that are not done
 
-<!-- split-rule -->
-**Splitting into plans.** Each plan costs a design, reviews, a branch
-and a merge. Split only where:
-
-1. neither part needs the other's code; or
-2. a later part needs facts only an earlier part's running code shows.
-   Research that needs no code belongs in the brainstorm.
-
-A split for size, or to merge a part first, is your human partner's
-call: propose it, never rule it.
-
-Never reasons: a seam or section in a design, a precedent, a topic, a
-part that only researches or wraps up.
-
-A part waits on another only when it needs that part's code, never for
-work order.
-<!-- /split-rule -->
-
 Go through every phase that is not `done` or `dropped`, other than this
 one, with what this phase learned. For each change that this causes,
 apply the **intent test**. Does the change alter one of these?
@@ -233,8 +215,7 @@ apply the **intent test**. Does the change alter one of these?
   answered (each `from` is this phase or a closed one), `set` its
   `status` to `known`. Leave its `waits_on` in place, because its Design
   stage reads the answers through them.
-- **A new order, a split by the rule above, a merge, or a drop that
-  keeps the outcome:**
+- **A new order, a split, a merge, or a drop that keeps the outcome:**
   follow the rules under `set-phases` in `references/record.md`. Then
   commit the umbrella's Phases section to match, on `base`. Split parts
   get their own entries (`### K2a: …`). In a close, this phase counts as
@@ -267,8 +248,6 @@ apply the **intent test**. Does the change alter one of these?
 partner-item line that step 1 wrote. Its interim default decides where
 it goes:
 
-- **A split made for size, or so that one part merges first,** is a
-  partner item. Its interim default is no split.
 - **The interim default** is what later stages do until your human
   partner answers. It is the option that commits to nothing new and can
   be reversed, usually the status quo. Never choose among the options: a
