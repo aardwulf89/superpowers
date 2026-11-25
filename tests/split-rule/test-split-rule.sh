@@ -75,6 +75,9 @@ has $C/close.md 'a split by the rule above'
 has $C/close.md 'interim default is no split.'
 lacks $C/record.md 'If a later part builds on the code of an earlier part'
 has $C/record.md 'never for work order'
+has $C/record.md "code or waits on it"
+has $C/resume.md "under the plan's Global Constraints"
+has $C/resume.md "line of the plan's Global Constraints"
 
 if ((failures)); then
   echo "FAIL: $failures of $checks split-rule checks" >&2

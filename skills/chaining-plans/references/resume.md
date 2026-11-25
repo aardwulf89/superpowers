@@ -420,8 +420,9 @@ rulings go in `<phase id>.build.json` instead (Build, below).
   4. Log the ruling.
   5. Plan the first part, with `K3a` as its plan id.
 - **A split for size, or to merge a part first,** is a partner item: plan
-  the phase whole, and put the proposal in the build's "Unfinished" as a
-  `Partner item:` line.
+  the phase whole, and write the proposal as a `Partner item:` line
+  under the plan's Global Constraints, in `close.md` step 1's form, with
+  the interim default no split.
 
 <!-- split-rule -->
 **Splitting into plans.** Each plan costs a design, reviews, a branch
@@ -472,7 +473,8 @@ work order.
      strings, each line as the message words it, and an empty list for
      a section that has no lines. Use the Write tool, in the working
      tree you built in. If an orchestrator subagent ran the plan, take
-     the lists from its final message.
+     the lists from its final message. Add to `unfinished` each
+     `Partner item:` line of the plan's Global Constraints.
   2. Commit the file on the phase branch, one plain command per call:
      `git add` the file, then
      `git commit -m "docs(<phase id>): build results"`.

@@ -305,7 +305,7 @@ from the Plan stage of Resume:
   - Each part gets the `depends_on`, `waits_on` and `partner_questions`
     that concern it.
   - A part depends on another part only when it builds on that part's
-    code, never for work order.
+    code or waits on it, never for work order.
 - **A merge:**
   - The merged phase keeps the id of the first of them, in array order. The
     others leave the record, and their ids are never issued again.
