@@ -209,13 +209,32 @@ apply the **intent test**. Does the change alter one of these?
 - an answer your human partner gave;
 - which phases exist, in a way that changes the outcome.
 
+<!-- split-rule -->
+**Splitting into plans.** Each plan costs a design, reviews, a branch
+and a merge. Split only where:
+
+1. neither part needs the other's code; or
+2. a later part needs facts only an earlier part's running code shows.
+   Research that needs no code belongs in the brainstorm.
+
+A split for size, or to merge a part first, is your human partner's
+call: propose it, never rule it.
+
+Never reasons: a seam or section in a design, a precedent, a topic, a
+part that only researches or wraps up.
+
+A part waits on another only when it needs that part's code, never for
+work order.
+<!-- /split-rule -->
+
 **No: rule on it yourself, and apply it.** That covers:
 
 - **Answered `waits_on`:** if every `waits_on` of a `waiting` phase is
   answered (each `from` is this phase or a closed one), `set` its
   `status` to `known`. Leave its `waits_on` in place, because its Design
   stage reads the answers through them.
-- **A new order, a split, a merge, or a drop that keeps the outcome:**
+- **A new order, a split by the rule above, a merge, or a drop that
+  keeps the outcome:**
   follow the rules under `set-phases` in `references/record.md`. Then
   commit the umbrella's Phases section to match, on `base`. Split parts
   get their own entries (`### K2a: …`). In a close, this phase counts as
@@ -248,6 +267,8 @@ apply the **intent test**. Does the change alter one of these?
 partner-item line that step 1 wrote. Its interim default decides where
 it goes:
 
+- **A split for size, or to merge a part first,** is a partner item. Its
+  interim default is no split.
 - **The interim default** is what later stages do until your human
   partner answers. It is the option that commits to nothing new and can
   be reversed, usually the status quo. Never choose among the options: a

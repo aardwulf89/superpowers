@@ -30,6 +30,9 @@ lacks() {
 FILES=(
   skills/writing-plans/SKILL.md
   skills/brainstorming/SKILL.md
+  skills/chaining-plans/references/create.md
+  skills/chaining-plans/references/resume.md
+  skills/chaining-plans/references/close.md
 )
 
 block() {
@@ -61,6 +64,17 @@ done
 lacks skills/writing-plans/SKILL.md 'one per subsystem'
 lacks skills/brainstorming/SKILL.md 'If this is really several independent projects'
 has skills/brainstorming/SKILL.md 'It proposes no phases or plans.'
+
+C=skills/chaining-plans/references
+lacks $C/create.md 'Work from the spec and from the reasons for the split'
+has $C/create.md 'Draft phases only by the rule below.'
+has $C/resume.md 'The design never divides the phase into plans.'
+lacks $C/resume.md 'A further split from the Scope Check'
+has $C/resume.md 'is a partner item: plan'
+has $C/close.md 'a split by the rule above'
+has $C/close.md 'interim default is no split.'
+lacks $C/record.md 'If a later part builds on the code of an earlier part'
+has $C/record.md 'never for work order'
 
 if ((failures)); then
   echo "FAIL: $failures of $checks split-rule checks" >&2

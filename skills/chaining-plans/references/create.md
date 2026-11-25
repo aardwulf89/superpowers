@@ -44,9 +44,8 @@ to the skills that made them, and they end with this session.
 - **Check for an existing effort.** If `docs/superpowers/efforts/<id>.json`
   already exists in the main checkout, this spec is already an effort. Say
   so, and point your human partner at Resume.
-- **Work from the spec and from the reasons for the split** that the
-  session holds, such as the Scope Check of `writing-plans` that found
-  several subsystems.
+- **Draft phases only by the rule below.** Test each phase the spec
+  proposes against it. Never copy them.
 - **For each phase, draft:**
   - an id: the spec's letter plus a number in work order (`K1`, `K2`, …).
     Ids carry no words. If a plan for this spec already has an id (`K1`),
@@ -63,6 +62,24 @@ to the skills that made them, and they end with this session.
     pick reads only `depends_on`.
 - **Order the phases** in the order of work. Each phase comes after every
   phase it depends on and every phase it waits on.
+
+<!-- split-rule -->
+**Splitting into plans.** Each plan costs a design, reviews, a branch
+and a merge. Split only where:
+
+1. neither part needs the other's code; or
+2. a later part needs facts only an earlier part's running code shows.
+   Research that needs no code belongs in the brainstorm.
+
+A split for size, or to merge a part first, is your human partner's
+call: propose it, never rule it.
+
+Never reasons: a seam or section in a design, a precedent, a topic, a
+part that only researches or wraps up.
+
+A part waits on another only when it needs that part's code, never for
+work order.
+<!-- /split-rule -->
 
 ## 2. Find the open intent questions
 
