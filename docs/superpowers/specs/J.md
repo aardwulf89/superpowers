@@ -97,7 +97,7 @@ This is the block, word for word, that each place below holds:
 ## Design
 
 **One block, word for word, at every split point.** The rule above goes,
-as one identical block of text, into each place below. No place points to
+as one identical block of text, into each place below (one copy per file). No place points to
 another skill for it, and no copy is reworded. Each place keeps its own
 lines about what it does around the block.
 
@@ -106,8 +106,7 @@ lines about what it does around the block.
 | `writing-plans`, Scope Check | The block replaces the current text ("suggest breaking this into separate plans — one per subsystem"). |
 | `brainstorming`, Size the Work | The block replaces "If this is really several independent projects, say so…". The spec describes the work and proposes no phases or plans. Research that needs no code happens before the doc. |
 | `chaining-plans` Create, step 1 | The block governs the drafted phases. Phases that the spec proposes are tested against it, not copied. |
-| `chaining-plans` Resume, Design stage | The block, and: the design describes the phase and never divides it into plans. |
-| `chaining-plans` Resume, Plan stage | The block, and: a split that passes it is a re-plan ruling. A size split goes to the partner as a question. |
+| `chaining-plans` Resume, Plan stage | The block, and: a split that passes it is a re-plan ruling. A size split goes to the partner as a question. The Design stage gets one line, with no block: the design describes the phase and never divides it into plans. Only the Plan stage splits. |
 | `chaining-plans` Close, re-plan rulings | The block governs "a split … that keeps the outcome". |
 
 `chaining-plans/references/record.md`, the split rules: "If a later part
@@ -116,7 +115,7 @@ the block's last sentence ("A part waits on another only when it needs
 that part's code, never for work order.").
 
 **Tests:**
-- One test extracts the block from each of the six places and fails if any
+- One test extracts the block from each of the five places and fails if any
   copy differs from the others.
 - Text checks: the old Scope Check line ("one per subsystem") and the old
   brainstorming line are gone. The Design stage forbids dividing the phase
