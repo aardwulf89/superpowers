@@ -223,8 +223,25 @@ the doc.
 
 If it grows mid-task, stop, say so, and step up a size.
 
-If this is really several independent projects, say so, agree on an
-order, and brainstorm them one at a time.
+<!-- split-rule -->
+**Splitting into plans.** Each plan costs a design, reviews, a branch
+and a merge. Split only where:
+
+1. neither part needs the other's code; or
+2. a later part needs facts only an earlier part's running code shows.
+   Research that needs no code belongs in the brainstorm.
+
+A split for size, or to merge a part first, is your human partner's
+call: propose it, never rule it.
+
+Never reasons: a seam or section in a design, a precedent, a topic, a
+part that only researches or wraps up.
+
+A part waits on another only when it needs that part's code, never for
+work order.
+<!-- /split-rule -->
+
+The design doc describes the work. It proposes no phases or plans.
 
 ## The Written Design
 
