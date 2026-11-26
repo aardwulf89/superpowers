@@ -143,7 +143,9 @@ handling-reports.md.
   for every worktree. After a killed commit, apply the patch that names this
   worktree's files, never just the newest one.
 - The harness refuses `git worktree add` outside the session worktree.
-- The harness refuses compound git commands in an isolated worktree. Run
-  one plain command per call.
+- The harness refuses any compound command in an isolated worktree, git or
+  not. A subagent's `cd` does not carry to its next call, so a worker in a
+  nested worktree that prefixes `cd DIR;` is refused on every call. Run one
+  plain command per call, with absolute paths or a `-C DIR` flag.
 - A lesson in an effort record can be untested. Check it before you copy it
   into a dispatch.

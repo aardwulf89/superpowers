@@ -56,6 +56,13 @@ Task tool (general-purpose):
 
     Work from: [directory]
 
+    Your shell does not keep a `cd` between calls: each call starts in the
+    session's start folder, and the harness refuses a `cd DIR;` prefix as a
+    compound command. Give each command absolute paths or its own directory
+    flag (`git -C DIR`, `go -C DIR`, `make -C DIR`), one plain command per
+    call. Edit files with Edit and Write, never with sed or an interpreter
+    heredoc.
+
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 

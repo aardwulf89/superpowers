@@ -79,7 +79,9 @@ Subagent (general-purpose):
     package-wide suite, race detector run, or repeated/high-count loop. If
     heavy validation seems warranted, recommend it in your report instead of
     running it. If you cannot run commands in this environment, name the
-    test you would run.
+    test you would run. Your shell does not keep a `cd` between calls, and
+    the harness refuses a `cd DIR;` prefix: give the command its directory
+    flag (`git -C DIR`, `go -C DIR`), one plain command per call.
 
     Warnings or other noise in the implementer's reported test output are
     findings — test output should be pristine.
