@@ -445,7 +445,7 @@ refuses "new-record refuses malformed JSON" "$N2" record new-record "$N2" --valu
 EL="$TMP/effort-learned.json"
 write_rec "$EL" "$(phase K1 known open '[]')"   # old record: no learned key
 check "get-effort prints null for an old record" 'null' "$(record get-effort "$EL" learned)"
-refuses "edit refuses a line of an absent learned" "$EL" record set-effort-key "$EL" learned edit --value '{"drop":["x"]}'
+refused_cleanly "edit refuses a line of an absent learned" "$EL" set-effort-key "$EL" learned edit --value '{"drop":["x"]}'
 before="$(jq -c '{umbrella,base,phases}' "$EL")"
 record set-effort-key "$EL" learned append --value '["a","b"]'
 check "append onto an absent learned" '["a","b"]' "$(record get-effort "$EL" learned)"
@@ -455,13 +455,18 @@ record set-effort-key "$EL" learned edit --value '{"edit":[["a","A"]],"drop":["b
 check "edit changes and drops lines" '["A"]' "$(record get-effort "$EL" learned)"
 record set-effort-key "$EL" learned replace --value '["z"]'
 check "replace sets the list" '["z"]' "$(record get-effort "$EL" learned)"
-refuses "set-effort-key refuses umbrella" "$EL" record set-effort-key "$EL" umbrella replace --value '["x"]'
-refuses "set-effort-key refuses phases" "$EL" record set-effort-key "$EL" phases replace --value '[]'
-refuses "set-effort-key refuses base" "$EL" record set-effort-key "$EL" base replace --value '["x"]'
-refuses "get-effort refuses base" "$EL" record get-effort "$EL" base
-refuses "set-effort-key refuses a non-list" "$EL" record set-effort-key "$EL" learned replace --value '"x"'
-refuses "set-effort-key refuses a non-string line" "$EL" record set-effort-key "$EL" learned append --value '[1]'
-refuses "get-effort refuses a missing record" "$TMP/none/effort.json" record get-effort "$TMP/none/effort.json" learned
+refused_cleanly "set-effort-key refuses umbrella" "$EL" set-effort-key "$EL" umbrella replace --value '["x"]'
+refused_cleanly "set-effort-key refuses phases" "$EL" set-effort-key "$EL" phases replace --value '[]'
+refused_cleanly "set-effort-key refuses base" "$EL" set-effort-key "$EL" base replace --value '["x"]'
+refused_cleanly "get-effort refuses base" "$EL" get-effort "$EL" base
+refused_cleanly "set-effort-key refuses a non-list" "$EL" set-effort-key "$EL" learned replace --value '"x"'
+refused_cleanly "set-effort-key refuses a non-string line" "$EL" set-effort-key "$EL" learned append --value '[1]'
+refused_cleanly "get-effort refuses a missing record" "$TMP/none/effort.json" get-effort "$TMP/none/effort.json" learned
+EO="$TMP/effort-oops.json"
+jq -c '.learned = "oops"' "$EL" > "$EO"
+refused_cleanly "append refuses a learned that is not a list" "$EO" set-effort-key "$EO" learned append --value '["a"]'
+record set-effort-key "$EO" learned replace --value '["ok"]'
+check "replace repairs a learned that is not a list" '["ok"]' "$(record get-effort "$EO" learned)"
 N3="$TMP/new/e3/effort.json"
 record new-record "$N3" --value "$(jq -c '.learned = ["seed"]' <<<"$good")"
 check "new-record keeps a seeded learned" '["seed"]' "$(record get-effort "$N3" learned)"

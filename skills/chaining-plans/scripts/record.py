@@ -473,11 +473,11 @@ def cmd_set_effort_key(args: argparse.Namespace) -> int:
     value = read_value(args)
     if args.mode != "edit" and not string_list(value):
         raise Refused(f"the value for {args.key} must be a JSON list of strings")
-    current = record.get(args.key)
-    if current is None:
-        current = []
-    if not isinstance(current, list):
-        raise Refused(f"the record's {args.key} is not a list")
+    current = []
+    if args.mode != "replace":
+        current = record.get(args.key) or []
+        if not isinstance(current, list):
+            raise Refused(f"the record's {args.key} is not a list")
     result = apply_mode(current, value, args.mode, args.key)
     if not string_list(result):
         raise Refused(f"the record's {args.key} would hold a line that is not a string")

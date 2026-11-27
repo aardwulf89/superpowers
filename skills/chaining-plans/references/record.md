@@ -292,9 +292,8 @@ for `append`. Read the current lines first with
 `record.py get-effort REC learned`. The command fails, and writes nothing,
 for:
 - any key but `learned`;
-- a value that is not a list of strings (`edit`: an object of the shape
-  above);
-- for `edit`, a line that is not there.
+- for `append` or `replace`, a value that is not a list of strings;
+- for `edit`, a value of another shape, or a line that is not there.
 
 ### set-phases
 

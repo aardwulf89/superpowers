@@ -156,6 +156,8 @@ Do all of this in the main checkout, on `base`.
    - the map of the code the effort touches: each line states a behavior
      and how to find its code;
    - where the research lives: record ids, capture paths;
+   - facts from outside the repo, as the brainstorm found them (the check
+     against `base` does not cover them);
    - what was ruled out, and why.
 
    Leave out what `references/close.md` step 1 ("Write `learned`") leaves
@@ -202,8 +204,8 @@ The order below is the order of work. Each phase gets its own plan, branch
 and session.
 
 **Across phases:** <rules that cut across phases, from your human partner's
-answers and the brainstorm's standing rules: intent only, never a
-technical choice; or "none">
+answers; every standing rule from the brainstorm, technical ones too,
+because your human partner set them; or "none">
 
 ### K1: Storage
 

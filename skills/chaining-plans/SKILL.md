@@ -20,8 +20,9 @@ cut across phases. Intent does not depend on what earlier phases find. Their
 attention is the scarce resource: 1 sitting, then a long unattended run.
 
 **You alone do the technical design, just in time.** When its session starts, write a
-phase's design. Use what earlier phases learned, and stay inside
-the intent your human partner set.
+phase's design. Use what earlier phases learned and what the brainstorm
+found (the effort's `learned`). Stay inside the intent your human partner
+set.
 
 **This split gives the test between plans.** If a plan's results
 change an intent decision, ask your human partner. If they change only
@@ -154,10 +155,10 @@ final message, travel with the build:
 2. Commit it on the phase branch.
 
 The close copies them into `closing`. `learned` carries knowledge to later
-Design stages. The effort has a `learned` of its own: Create seeds it, and
-every Design stage reads it. Each close keeps both `learned` lists small
-and true. A `Partner item:` line in `unfinished`, or a question in
-`partner_questions`, holds what only your human partner settles. No
+Design stages. The effort has a `learned` of its own: Create seeds it from
+the brainstorm, and every Design stage reads it. Each close keeps both
+`learned` lists small and true. A `Partner item:` line in `unfinished`, or
+a question in `partner_questions`, holds what only your human partner settles. No
 stage settles it. An effort is closed out only when each item has your
 human partner's disposition and none is `[carried]`.
 

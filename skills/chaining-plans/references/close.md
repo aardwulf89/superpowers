@@ -198,8 +198,8 @@ line to drop, and `edit` each correction as `[old, new]`. Copy each old
 line exactly from the `get` output. Do not touch partner items here. They live in `unfinished`, and only your human
 partner changes them.
 
-Revise the effort's `learned` by the same rules, except that a line is
-used up only when every phase is done or dropped. Read it with
+Revise the effort's `learned` by the same rules, except that no line is
+used up: every later Design reads it. Read it with
 `record.py get-effort REC learned`. Write the changes with
 `record.py set-effort-key REC learned edit`.
 
@@ -339,7 +339,8 @@ In this order:
    If `<n>` is 1, write `1 new item`. If `<m>` is 1, write
    `1 in all). It waits for the end of the effort; nothing waits on it.`
 
-3. **The other rulings.**
+3. **The other rulings,** and the changes to the effort `learned`: each
+   line dropped or corrected.
 4. **What the next session will do:** first the missed git ops of this
    phase, if it is not merged. Then the next phase, and the stage it
    starts at (an intent round for a `needs-partner` phase). Run `pick` to
