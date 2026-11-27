@@ -14,7 +14,7 @@ RECORD_MD="$SKILL/references/record.md"
 failures=0
 fail() { echo "[FAIL] $1" >&2; failures=$((failures + 1)); }
 
-SUBCOMMANDS="open-efforts phase-state pick get questions carried new-record set set-phases set-closing-key"
+SUBCOMMANDS="open-efforts phase-state pick get questions carried new-record set set-phases set-closing-key get-effort set-effort-key"
 
 # The old inline forms are gone from every file but the script itself.
 for pattern in 'jq' '<!-- cmd:' 'value_json' 'phases_json' 'record_json' 'same Bash call'; do

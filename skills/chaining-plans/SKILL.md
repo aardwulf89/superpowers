@@ -154,8 +154,9 @@ final message, travel with the build:
 2. Commit it on the phase branch.
 
 The close copies them into `closing`. `learned` carries knowledge to later
-Design stages. Each close keeps `learned` small and
-true. A `Partner item:` line in `unfinished`, or a question in
+Design stages. The effort has a `learned` of its own, seeded by Create from
+the brainstorm and read by every Design stage. Each close keeps both
+`learned` lists small and true. A `Partner item:` line in `unfinished`, or a question in
 `partner_questions`, holds what only your human partner settles. No
 stage settles it. An effort is closed out only when each item has your
 human partner's disposition and none is `[carried]`.
@@ -199,7 +200,7 @@ These thoughts mean STOP: you are leaving the rails.
 | "I'll just write the plan" | Invoke `writing-plans`. |
 | "The close is just updating the JSON" | Invoke `chaining-plans` with `close <effort id> <phase id>`. |
 | "I remember what the reference file says" | Read it. It is the entry point. |
-| "I'll fix the record by hand" | Run `record.py set` or `record.py set-closing-key` (`references/record.md`). |
+| "I'll fix the record by hand" | Run `record.py set`, `record.py set-closing-key` or `record.py set-effort-key` (`references/record.md`). |
 | "This phase needs a brainstorm first" | The intent sitting replaced it. Design inside the Phases entry. |
 | "I should ask how to execute the plan" | The standing approval answers the handoff: Subagent-Driven (this session). Continue. |
 | "While they're here, I'll design every phase" | Up front is intent only. Technical design waits for the phase's session. |

@@ -362,6 +362,7 @@ rulings go in `<phase id>.build.json` instead (Build, below).
   replace it.
 - **Inputs:**
   - the whole umbrella;
+  - the effort's `learned` (`record.py get-effort REC learned`);
   - `closing.learned` of every done phase, above all the phases in this
     phase's `waits_on` (`record.py get REC <phase id> closing.learned`);
   - the open partner items of every phase, a dropped one included

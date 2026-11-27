@@ -26,6 +26,7 @@ and never rewrite the whole file from memory. Git holds its history.
 {
   "umbrella": "docs/superpowers/specs/K.md",
   "base": "main",
+  "learned": ["what the brainstorm found that every phase needs"],
   "phases": [
     {
       "id": "K2",
@@ -51,6 +52,10 @@ read them from git (Phase states).
 
 - `umbrella`: the path of the umbrella spec, relative to the repo root.
 - `base`: the branch every phase merges into.
+- `learned`: null or a list of strings. It holds what the effort's
+  brainstorm found that every phase needs: a map of the code, where the
+  research lives, what was ruled out. Create seeds it, and each close
+  revises it. A record without `learned` reads as null.
 - `phases`: **the array order is the order of work.**
 - `id`, `title`: the phase's name.
 - `status` holds only what nothing else can show:
@@ -198,6 +203,13 @@ is null. It refuses a key that `closing` does not have. Read only the key
 that a step uses: `rulings` is the largest key, and most steps do not use
 it.
 
+### get-effort
+
+`record.py get-effort REC learned`
+
+Prints the effort's `learned` as compact JSON: `null` if it is null or the
+record lacks it. It refuses any key but `learned`.
+
 ### questions
 
 `record.py questions REC ID`
@@ -227,6 +239,7 @@ record in the value file, in the shape above. It fails, and writes nothing,
 if:
 - `REC` already exists;
 - the record lacks `umbrella` or `base`;
+- `learned` is neither null nor a list of strings;
 - a phase does not have exactly the nine keys, or 2 phases have the same id.
 
 ### set
@@ -268,6 +281,20 @@ it, the phase is closed. The command fails, and writes nothing, for:
 - for `append` or `replace`, a value that is not a list;
 - for `edit`, a value of another shape, or a line that is not there;
 - `append` or `edit` to `replan`.
+
+### set-effort-key
+
+`record.py set-effort-key REC learned MODE (--value <json> | --value-file <path>)`
+
+Sets the effort's `learned`, with the `MODE`s of `set-closing-key`:
+`append`, `replace` and `edit`, each with the same value and the same
+exact-line rule. A null or missing `learned` counts as empty for `append`.
+Read the current lines first with `record.py get-effort REC learned`. The
+command fails, and writes nothing, for:
+- any key but `learned`;
+- a value that is not a list of strings (`edit`: an object of the shape
+  above);
+- for `edit`, a line that is not there.
 
 ### set-phases
 
