@@ -155,7 +155,7 @@ Do all of this in the main checkout, on `base`.
    that every phase needs. It holds:
    - the map of the code the effort touches: each line states a behavior
      and how to find its code;
-   - where the research lives: ids, capture paths;
+   - where the research lives: record ids, capture paths;
    - what was ruled out, and why.
 
    Leave out what `references/close.md` step 1 ("Write `learned`") leaves

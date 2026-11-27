@@ -301,9 +301,9 @@ for:
 `record.py set-phases REC --value-file <path>`
 
 Replaces `phases` with the JSON array of whole phases in the value file, in
-place. It leaves `umbrella`, `base` and `learned` alone. It fails, and writes nothing,
-unless every phase has exactly the nine keys of the shape above and no id
-repeats. For a split, merge, reorder or drop:
+place. It leaves `umbrella`, `base` and `learned` alone. It fails, and
+writes nothing, unless every phase has exactly the nine keys of the shape
+above and no id repeats. For a split, merge, reorder or drop:
 1. Read the record fresh with the Read tool.
 2. Write the new array to a value file.
 3. Pass the file to `record.py set-phases` with `--value-file`.
