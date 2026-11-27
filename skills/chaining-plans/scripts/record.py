@@ -14,9 +14,11 @@ Subcommands:
     questions REC ID
     carried [--efforts-dir DIR]
     new-record REC (--value JSON | --value-file PATH)
+    get-effort REC KEY
     set REC ID FIELD (--value JSON | --value-file PATH)
     set-phases REC (--value JSON | --value-file PATH)
     set-closing-key REC ID KEY {replace,append,edit} (--value JSON | --value-file PATH)
+    set-effort-key REC KEY {replace,append,edit} (--value JSON | --value-file PATH)
 
 A refused command prints "record <subcommand>: <reason>" on stderr, exits 1,
 and changes nothing. A usage error exits 2. Git runs read-only, in the current
@@ -304,6 +306,7 @@ def cmd_questions(args: argparse.Namespace) -> int:
 PHASE_KEYS = sorted(["closing", "depends_on", "id", "partner_questions",
                      "plan", "spec", "status", "title", "waits_on"])
 CLOSING_KEYS = ("rulings", "unfinished", "learned", "replan")
+EFFORT_KEYS = ("learned",)
 
 
 def read_value(args: argparse.Namespace) -> Any:
@@ -331,6 +334,11 @@ def write_record(path: str, record: dict) -> None:
         raise Refused(f"cannot write {path}: {e.strerror}; nothing written")
 
 
+def string_list(value: Any) -> bool:
+    """A list whose items are all strings."""
+    return isinstance(value, list) and all(isinstance(x, str) for x in value)
+
+
 def whole_phases(value: Any) -> bool:
     """An array of whole phases: exactly the nine keys each, and no id repeated."""
     if not isinstance(value, list):
@@ -348,6 +356,8 @@ def cmd_new_record(args: argparse.Namespace) -> int:
     if not (isinstance(value, dict) and isinstance(value.get("umbrella"), str)
             and isinstance(value.get("base"), str) and whole_phases(value.get("phases"))):
         raise Refused("the value is not a whole record of the shape in record.md")
+    if "learned" in value and value["learned"] is not None and not string_list(value["learned"]):
+        raise Refused("the value's learned is neither null nor a list of strings")
     try:
         Path(args.rec).parent.mkdir(parents=True, exist_ok=True)
     except OSError as e:
@@ -411,6 +421,18 @@ def edit_lines(current: list, value: Any, key: str) -> list:
     return [x for i, x in enumerate(out) if not dropped[i]]
 
 
+def apply_mode(current: list, value: Any, mode: str, key: str) -> list:
+    """The list after MODE: VALUE (replace), CURRENT then VALUE (append), or CURRENT edited.
+
+    The caller has checked that VALUE is a list (for append and replace) and that CURRENT is one.
+    """
+    if mode == "replace":
+        return value
+    if mode == "append":
+        return current + value
+    return edit_lines(current, value, key)
+
+
 def cmd_set_closing_key(args: argparse.Namespace) -> int:
     if args.key not in CLOSING_KEYS:
         raise Refused(f"'{args.key}' is not a closing key ({', '.join(CLOSING_KEYS)})")
@@ -426,13 +448,40 @@ def cmd_set_closing_key(args: argparse.Namespace) -> int:
         closing = {"rulings": [], "unfinished": [], "learned": None, "replan": None}
     elif not isinstance(closing, dict):
         raise Refused(f"phase '{args.id}' has a closing that is not an object")
+    current = []
     if args.mode in ("append", "edit"):
         current = closing.get(args.key) or []
         if not isinstance(current, list):
             raise Refused(f"phase '{args.id}' has a {args.key} that is not a list")
-        value = current + value if args.mode == "append" else edit_lines(current, value, args.key)
-    closing[args.key] = value
+    closing[args.key] = apply_mode(current, value, args.mode, args.key)
     ph["closing"] = closing
+    write_record(args.rec, record)
+    return 0
+
+
+def cmd_get_effort(args: argparse.Namespace) -> int:
+    if args.key not in EFFORT_KEYS:
+        raise Refused(f"'{args.key}' is not an effort key ({', '.join(EFFORT_KEYS)})")
+    print(dumps(load_record(args.rec).get(args.key)))
+    return 0
+
+
+def cmd_set_effort_key(args: argparse.Namespace) -> int:
+    if args.key not in EFFORT_KEYS:
+        raise Refused(f"'{args.key}' is not an effort key ({', '.join(EFFORT_KEYS)})")
+    record = load_record(args.rec)
+    value = read_value(args)
+    if args.mode != "edit" and not string_list(value):
+        raise Refused(f"the value for {args.key} must be a JSON list of strings")
+    current = record.get(args.key)
+    if current is None:
+        current = []
+    if not isinstance(current, list):
+        raise Refused(f"the record's {args.key} is not a list")
+    result = apply_mode(current, value, args.mode, args.key)
+    if not string_list(result):
+        raise Refused(f"the record's {args.key} would hold a line that is not a string")
+    record[args.key] = result
     write_record(args.rec, record)
     return 0
 
@@ -499,6 +548,18 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("mode", choices=["replace", "append", "edit"])
     add_value(p)
     p.set_defaults(func=cmd_set_closing_key)
+
+    p = sub.add_parser("get-effort", help="print one effort-level key (learned) as JSON")
+    p.add_argument("rec")
+    p.add_argument("key")
+    p.set_defaults(func=cmd_get_effort)
+
+    p = sub.add_parser("set-effort-key", help="set or extend one effort-level key (learned)")
+    p.add_argument("rec")
+    p.add_argument("key")
+    p.add_argument("mode", choices=["replace", "append", "edit"])
+    add_value(p)
+    p.set_defaults(func=cmd_set_effort_key)
     return parser
 
 
