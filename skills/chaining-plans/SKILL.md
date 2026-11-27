@@ -158,8 +158,8 @@ The close copies them into `closing`. `learned` carries knowledge to later
 Design stages. The effort has a `learned` of its own: Create seeds it from
 the brainstorm, and every Design stage reads it. Each close keeps both
 `learned` lists small and true. A `Partner item:` line in `unfinished`, or
-a question in `partner_questions`, holds what only your human partner settles. No
-stage settles it. An effort is closed out only when each item has your
+a question in `partner_questions`, holds what only your human partner
+settles. No stage settles it. An effort is closed out only when each item has your
 human partner's disposition and none is `[carried]`.
 
 ## Tasks
