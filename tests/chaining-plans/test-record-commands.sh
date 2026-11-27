@@ -443,7 +443,7 @@ refuses "new-record refuses malformed JSON" "$N2" record new-record "$N2" --valu
 
 # effort learned
 EL="$TMP/effort-learned.json"
-write_rec "$EL" "$(phase K1 known open '[]')"   # an old record: no learned key
+write_rec "$EL" "$(phase K1 known open '[]')"   # old record: no learned key
 check "get-effort prints null for an old record" 'null' "$(record get-effort "$EL" learned)"
 refuses "edit refuses a line of an absent learned" "$EL" record set-effort-key "$EL" learned edit --value '{"drop":["x"]}'
 before="$(jq -c '{umbrella,base,phases}' "$EL")"

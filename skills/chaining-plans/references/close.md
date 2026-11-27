@@ -199,9 +199,9 @@ line exactly from the `get` output. Do not touch partner items here. They live i
 partner changes them.
 
 Revise the effort's `learned` the same way. Read it with
-`record.py get-effort REC learned`. Drop and correct by the same rules,
-except that a line is used up only when every phase is done or dropped.
-Write the changes with `record.py set-effort-key REC learned edit`.
+`record.py get-effort REC learned`. Write it with
+`record.py set-effort-key REC learned edit`. A line is used up only when
+every phase is done or dropped.
 
 ## 2. Re-plan the phases that are not done
 

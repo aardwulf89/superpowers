@@ -90,7 +90,7 @@ Show your human partner, in 1 message:
   phase it shapes;
 - an invitation to correct the phase list (add, drop, merge, split,
   reorder) in the same reply;
-- the standing rules that your human partner set in the brainstorm, as
+- the standing rules your human partner set in the brainstorm, if any, as
   drafted into the "Across phases" line, for them to correct;
 - each carried item, with its effort and phase, and a question in the same
   round: adopt it into a phase of this effort (which one), carry it again,
@@ -151,16 +151,16 @@ Do all of this in the main checkout, on `base`.
      if it has `waits_on`, else `known`;
    - `spec` and `plan`: null, except for a linked plan. `closing`: null.
 
-   **The seed** is what the session's brainstorm found that every phase
-   needs, as a list of lines. Every phase's Design reads it. It holds:
+   **The seed** is a list of lines: what the session's brainstorm found
+   that every phase needs. It holds:
    - the map of the code the effort touches: each line states a behavior
      and how to find its code;
-   - where the research lives: record ids, capture paths;
+   - where the research lives: ids, capture paths;
    - what was ruled out, and why.
 
    Leave out what `references/close.md` step 1 ("Write `learned`") leaves
-   out, and what the spec already says. Check each line against `base` as
-   that step does. If the session holds no brainstorm, the seed is `[]`.
+   out, and what the spec says. Check each line against `base`, as that
+   step does. If the session holds no brainstorm, the seed is `[]`.
 
    If the command fails, it wrote nothing. Correct the value file and run
    it again.
@@ -202,8 +202,8 @@ The order below is the order of work. Each phase gets its own plan, branch
 and session.
 
 **Across phases:** <rules that cut across phases, from your human partner's
-answers and the standing rules they set in the brainstorm: intent only,
-never a technical choice; or "none">
+answers and the brainstorm's standing rules: intent only, never a
+technical choice; or "none">
 
 ### K1: Storage
 
@@ -222,8 +222,7 @@ never a technical choice; or "none">
 Report, briefly:
 - the commit that added the Phases section;
 - the record's path, `docs/superpowers/efforts/<id>.json`;
-- the seed: how many lines it holds, or that the session held no
-  brainstorm;
+- the seed: its line count, or that the session held no brainstorm;
 - the standing rules copied into the "Across phases" line;
 - each carried item, and whether it was adopted, carried again or dropped;
 - each plan you linked, and each plan you did not link, for your human

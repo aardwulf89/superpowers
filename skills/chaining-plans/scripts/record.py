@@ -424,7 +424,7 @@ def edit_lines(current: list, value: Any, key: str) -> list:
 def apply_mode(current: list, value: Any, mode: str, key: str) -> list:
     """The list after MODE: VALUE (replace), CURRENT then VALUE (append), or CURRENT edited.
 
-    The caller has checked that VALUE is a list (for append and replace) and that CURRENT is one.
+    The caller has checked that CURRENT is a list, and VALUE too for append and replace.
     """
     if mode == "replace":
         return value
